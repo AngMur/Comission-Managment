@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Comisiones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(96, 166, 30, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96, 166, 30, 0.06) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);
+            z-index: -1;
+        }
+
+        /* Animación de carga */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 0.6s ease-out 2s forwards;
+        }
+
+        .loader {
+            width: 70px;
+            height: 70px;
+            border: 3px solid rgba(96, 166, 30, 0.1);
+            border-top: 3px solid #60a61e;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            margin-bottom: 20px;
+        }
+
+        .loader-text {
+            color: #60a61e;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        /* Contenido principal */
+        .main-content {
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 2.3s forwards;
+            padding: 60px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 70px;
+        }
+
+        .header-badge {
+            display: inline-block;
+            background: rgba(96, 166, 30, 0.15);
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            color: #60a61e;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        .card {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 45px 35px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(96, 166, 30, 0.08), transparent);
+            transition: left 0.6s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #60a61e, #4a8518);
+            border-radius: 24px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.4s;
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            border-color: rgba(96, 166, 30, 0.4);
+            box-shadow: 
+                0 20px 60px rgba(96, 166, 30, 0.2),
+                0 0 0 1px rgba(96, 166, 30, 0.1) inset;
+        }
+
+        .card:hover::after {
+            opacity: 0.1;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(96, 166, 30, 0.15), rgba(96, 166, 30, 0.05));
+            border: 2px solid rgba(96, 166, 30, 0.3);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 32px;
+            color: #60a61e;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: linear-gradient(135deg, rgba(96, 166, 30, 0.25), rgba(96, 166, 30, 0.1));
+            border-color: #60a61e;
+            box-shadow: 0 10px 30px rgba(96, 166, 30, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            color: #888;
+            line-height: 1.7;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .decorative-line {
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #60a61e, transparent);
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+                letter-spacing: -1px;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .cards-container {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .card {
+                padding: 35px 25px;
+            }
+
+            .main-content {
+                padding: 40px 20px;
+            }
+
+            header {
+                margin-bottom: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+
+            .card-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader-container">
+        <div class="loader"></div>
+        <div class="loader-text">Cargando...</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <header>
+            <div class="header-badge">NOVU</div>
+            <h1>Panel de Selección  </h1>
+            <div class="decorative-line"></div>
+            <p class="subtitle">Da click en la opción que deseas visualizar</p>
+        </header>
+
+        <div class="cards-container">
+            <!-- Comisiones Activas -->
+            <div class="card" onclick="selectOption('comisiones-activas')">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="card-title">Comisiones Activas</h2>
+                <p class="card-description">Ve las comisiones que se encuentran en curso o registra una nueva</p>
+            </div>
+
+            <!-- Modificar Porcentajes -->
+            <div class="card" onclick="selectOption('modificar-porcentajes')">
+                <div class="card-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <h2 class="card-title">Modificar Porcentajes</h2>
+                <p class="card-description">Ajusta los porcentajes de comisión según tus necesidades</p>
+            </div>
+
+            <!-- Historial de Comisiones -->
+            <div class="card" onclick="selectOption('historial')">
+                <div class="card-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h2 class="card-title">Historial de Comisiones</h2>
+                <p class="card-description">Consulta el registro completo de comisiones anteriores</p>
+            </div>
+
+            <!-- Permisos -->
+            <div class="card" onclick="selectOption('permisos')">
+                <div class="card-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h2 class="card-title">Permisos</h2>
+                <p class="card-description">Administra los permisos y accesos de los usuarios</p>
+            </div>
+
+            <!-- Registrar Usuario -->
+            <div class="card" onclick="selectOption('registrar-usuario')">
+                <div class="card-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2 class="card-title">Registrar Usuario</h2>
+                <p class="card-description">Añade nuevos usuarios al sistema de comisiones</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectOption(option) {
+            console.log('Opción seleccionada:', option);
+            // Aquí puedes agregar la lógica para navegar a diferentes secciones
+            const card = event.currentTarget;
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 200);
+            
+            // Simulación de navegación
+            setTimeout(() => {
+                alert(`Navegando a: ${option.replace(/-/g, ' ').toUpperCase()}`);
+            }, 300);
+        }
+    </script>
+</body>
+</html>

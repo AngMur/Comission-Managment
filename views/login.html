@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Comisiones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f1e1e;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+        }
+
+        /* Animación de carga */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f1e1e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 0.6s ease-out 2s forwards;
+        }
+
+        .loader {
+            width: 70px;
+            height: 70px;
+            border: 3px solid rgba(96, 166, 30, 0.2);
+            border-top: 3px solid #60a61e;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            margin-bottom: 20px;
+        }
+
+        .loader-text {
+            color: #60a61e;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        /* Contenedor principal */
+        .main-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 2.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Panel izquierdo - Formulario */
+        .left-panel {
+            width: 450px;
+            background: #0f1e1e;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Logo */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            height: 100px;
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Contenido del formulario */
+        .form-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .form-subtitle {
+            font-size: 0.95rem;
+            color: #7a9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-subtitle a {
+            color: #60a61e;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .form-subtitle a:hover {
+            color: #7bc42a;
+        }
+
+        /* Formulario */
+        .login-form {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #7a9999;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #60a61e;
+            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #4a6565;
+        }
+
+        /* Botón */
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            background: #60a61e;
+            border: none;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover {
+            background: #4a8518;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(96, 166, 30, 0.3);
+        }
+
+        .submit-button:active {
+            transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Nota */
+        .form-note {
+            font-size: 0.8rem;
+            color: #5a7575;
+            line-height: 1.5;
+            margin-top: 20px;
+        }
+
+        /* Footer */
+        .form-footer {
+            margin-top: auto;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 20px;
+            font-size: 0.8rem;
+        }
+
+        .form-footer a {
+            color: #7a9999;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .form-footer a:hover {
+            color: #60a61e;
+        }
+
+        /* Panel derecho - Imagen */
+        .right-panel {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        /* Overlay con gradiente */
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(96, 166, 30, 0.1) 0%,
+                rgba(15, 30, 30, 0.3) 100%
+            );
+        }
+
+        /* Botones flotantes */
+        .floating-buttons {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 3;
+        }
+
+        .float-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .float-btn:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .float-btn i {
+            color: #0f1e1e;
+            font-size: 1.1rem;
+        }
+
+        /* Mensajes */
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(96, 166, 30, 0.1);
+            color: #7bc42a;
+            border: 1px solid rgba(96, 166, 30, 0.3);
+        }
+
+        .message.error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #f56565;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        /* Estado de conexión */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            background: rgba(96, 166, 30, 0.2);
+            color: #7bc42a;
+            border: 1px solid rgba(96, 166, 30, 0.3);
+        }
+
+        .connection-status.disconnected {
+            background: rgba(220, 53, 69, 0.2);
+            color: #f56565;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .left-panel {
+                width: 400px;
+                padding: 50px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-wrapper {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                width: 100%;
+                max-height: 100vh;
+                overflow-y: auto;
+                padding: 40px 30px;
+            }
+
+            .right-panel {
+                display: none;
+            }
+
+            .floating-buttons {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .left-panel {
+                padding: 30px 20px;
+            }
+
+            .logo-container {
+                margin-bottom: 40px;
+            }
+
+            .form-title {
+                font-size: 1.6rem;
+            }
+
+            .form-footer {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader-container">
+        <div class="loader"></div>
+        <div class="loader-text">Cargando...</div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="main-wrapper">
+        <!-- Panel izquierdo - Formulario -->
+        <div class="left-panel">
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="images/NOVA.png" alt="Logo" class="logo-icon"> 
+            </div>
+
+            <!-- Contenido del formulario -->
+            <div class="form-content">
+                <div class="form-header">
+                    <h1 class="form-title">Inicia sesión en tu cuenta</h1>
+                    <p class="form-subtitle">
+                        Sistema de Gestión de Usuarios
+                    </p>
+                </div>
+
+                <form class="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="usuario">Usuario</label>
+                        <input 
+                            type="text" 
+                            id="usuario" 
+                            class="form-input" 
+                            placeholder="Tu nombre de usuario"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Contraseña</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-input" 
+                            placeholder="••••••••"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="submit-button" id="login-button">
+                        Iniciar Sesión
+                    </button>
+
+                    <!-- Mensaje de estado -->
+                    <div id="login-message" class="message"></div>
+                </form>
+
+                <p class="form-note">
+                    Si aún no estás registrado, comunícate con el administrador.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="form-footer">
+                <a href="#">Ayuda</a>
+                <a href="#">Términos y Condiciones</a>
+                <a href="#">Legal</a>
+                <a href="#">Contacto</a>
+            </div>
+        </div>
+
+        <!-- Panel derecho - Imagen -->
+        <div class="right-panel">
+            <div class="image-container">
+                <img 
+                    src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&h=900&fit=crop" 
+                    alt="Ciudad" 
+                    class="background-image"
+                >
+                <div class="image-overlay"></div>
+            </div>
+
+            <!-- Botones flotantes -->
+            <div class="floating-buttons">
+                <button class="float-btn" title="Pantalla completa">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button class="float-btn" title="Actualizar">
+                    <i class="fas fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        // Elementos del DOM
+        const loginForm = document.querySelector('.login-form');
+        const loginButton = document.getElementById('login-button');
+        const loginMessage = document.getElementById('login-message');
+        const usuarioInput = document.getElementById('usuario');
+        const passwordInput = document.getElementById('password');
+
+        // Estado de la aplicación
+        let currentUser = null;
+
+        // Verificar si hay una sesión activa al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            checkExistingSession();
+            setTimeout(updateConnectionStatus, 1000);
+            setInterval(updateConnectionStatus, 30000);
+            
+            // Configurar funcionalidad de botones flotantes
+            setupFloatingButtons();
+        });
+
+        // Verificar si hay una sesión activa
+        function checkExistingSession() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                // Redirigir al dashboard si hay sesión activa
+                redirectToDashboard();
+            }
+        }
+
+        // Manejar login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const usuario = usuarioInput.value;
+            const contraseña = passwordInput.value;
+            
+            if (!usuario || !contraseña) {
+                showMessage(loginMessage, 'Por favor, completa todos los campos', 'error');
+                return;
+            }
+
+            try {
+                showLoading(loginButton, true);
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ usuario, contraseña })
+                });
+
+                const result = await response.json();
+                console.log(result)
+                if (result.user) {
+                    showMessage(loginMessage, result.message, 'success');
+                    currentUser = result.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // Redirigir al dashboard después de un breve delay
+                    setTimeout(() => {
+                        redirectToDashboard();
+                    }, 1000);
+                    
+                } else {
+                    showMessage(loginMessage, result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error en login:', error);
+                showMessage(loginMessage, 'Error de conexión con el servidor', 'error');
+            } finally {
+                showLoading(loginButton, false);
+            }
+        }
+
+        // Redirigir al dashboard
+        function redirectToDashboard() {
+            // Aquí puedes redirigir a tu página principal/dashboard
+            console.log("redirect")
+            // Por ahora mostraremos un mensaje de éxito
+            showMessage(loginMessage, '¡Login exitoso! Redirigiendo...', 'success');
+            
+            // Simular redirección (reemplaza con tu URL real)
+            setTimeout(() => {
+                // alert('Redirigiendo al dashboard...\n\nEn una implementación real, aquí se cargaría el sistema principal.');
+                window.location.href = '/s.html';
+            }, 1500);
+        }
+
+        // Mostrar mensajes
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message ${type}`;
+            element.style.display = 'block';
+            
+            // Auto-ocultar mensajes después de 5 segundos (excepto éxito)
+            if (type !== 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Mostrar/ocultar estado de carga
+        function showLoading(element, isLoading) {
+            if (isLoading) {
+                element.disabled = true;
+                element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando sesión...';
+                element.style.opacity = '0.7';
+            } else {
+                element.disabled = false;
+                element.textContent = 'Iniciar Sesión';
+                element.style.opacity = '1';
+            }
+        }
+
+        // Verificar conexión con el servidor
+        async function checkServerConnection() {
+            try {
+                const response = await fetch(`${API_URL}/users`);
+                return response.ok;
+            } catch (error) {
+                console.error('Servidor no disponible:', error);
+                return false;
+            }
+        }
+
+        // Mostrar estado de conexión
+        async function updateConnectionStatus() {
+            const isConnected = await checkServerConnection();
+            let statusElement = document.querySelector('.connection-status');
+            
+            if (!statusElement) {
+                statusElement = document.createElement('div');
+                statusElement.className = 'connection-status';
+                document.body.appendChild(statusElement);
+            }
+            
+            statusElement.className = `connection-status ${isConnected ? 'connected' : 'disconnected'}`;
+            statusElement.innerHTML = isConnected ? 
+                '<i class="fas fa-wifi"></i> Conectado' : 
+                '<i class="fas fa-wifi-slash"></i> Sin conexión';
+        }
+
+        // Configurar botones flotantes
+        function setupFloatingButtons() {
+            const floatBtns = document.querySelectorAll('.float-btn');
+            
+            floatBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('fa-expand')) {
+                        if (!document.fullscreenElement) {
+                            document.documentElement.requestFullscreen();
+                            icon.classList.remove('fa-expand');
+                            icon.classList.add('fa-compress');
+                        } else {
+                            document.exitFullscreen();
+                            icon.classList.remove('fa-compress');
+                            icon.classList.add('fa-expand');
+                        }
+                    } else if (icon.classList.contains('fa-rotate-right')) {
+                        location.reload();
+                    }
+                });
+            });
+        }
+
+        // Manejar tecla Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin(new Event('submit'));
+            }
+        });
+
+        // Validación de campos en tiempo real
+        function setupFormValidation() {
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.value.trim() === '') {
+                        this.style.borderColor = 'rgba(220, 53, 69, 0.5)';
+                    } else {
+                        this.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                });
+
+                input.addEventListener('focus', function() {
+                    this.style.borderColor = '#60a61e';
+                });
+            });
+        }
+
+        // Inicializar validaciones
+        document.addEventListener('DOMContentLoaded', setupFormValidation);
+
+        // Función para mostrar/ocultar contraseña
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+        }
+
+        // Exportar funciones para uso global
+        window.handleLogin = handleLogin;
+        window.togglePasswordVisibility = togglePasswordVisibility;
+    </script>
+</body>
+</html>
