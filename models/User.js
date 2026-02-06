@@ -1,20 +1,20 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  nombre: String,
-  correo: String,
-  telefono: String,
-  tipo_sangre: String,
-  fecha_nacimiento: String,
-  nombre_contacto_emergencia: String,
-  telefono_contacto_emergencia: String,
-  foto: String,
-  rol: String,
-  nombre_usuario: String,
+  name: String,
+  email: String,
+  phone: String,
+  blood_type: String,
+  birthday: String,
+  emergency_contact_name: String,
+  emergency_contact_phone: String,
+  picture: String,
+  role: String,
+  username: String,
   password: String,
-  permisos: [],
-  activo: Boolean
+  permissions: [],
+  active: Boolean
 }, { strict: false });
 
 
-module.exports = mongoose.model('usuarios', userSchema);
+module.exports = mongoose.model('users', userSchema);

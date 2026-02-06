@@ -446,7 +446,7 @@
                         <label class="form-label" for="usuario">Usuario</label>
                         <input 
                             type="text" 
-                            id="usuario" 
+                            id="username" 
                             class="form-input" 
                             placeholder="Tu nombre de usuario"
                             required
@@ -516,7 +516,7 @@
         const loginForm = document.querySelector('.login-form');
         const loginButton = document.getElementById('login-button');
         const loginMessage = document.getElementById('login-message');
-        const usuarioInput = document.getElementById('usuario');
+        const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
 
         // Estado de la aplicación
@@ -524,7 +524,7 @@
 
         // Verificar si hay una sesión activa al cargar
         document.addEventListener('DOMContentLoaded', function() {
-            checkExistingSession();
+            // checkExistingSession();
             setTimeout(updateConnectionStatus, 1000);
             setInterval(updateConnectionStatus, 30000);
             
@@ -546,10 +546,10 @@
         async function handleLogin(event) {
             event.preventDefault();
             
-            const usuario = usuarioInput.value;
-            const contraseña = passwordInput.value;
+            const username = usernameInput.value;
+            const password = passwordInput.value;
             
-            if (!usuario || !contraseña) {
+            if (!username || !password) {
                 showMessage(loginMessage, 'Por favor, completa todos los campos', 'error');
                 return;
             }
@@ -561,7 +561,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ usuario, contraseña })
+                    body: JSON.stringify({ username, password })
                 });
 
                 const result = await response.json();
@@ -569,7 +569,8 @@
                 if (result.user) {
                     showMessage(loginMessage, result.message, 'success');
                     currentUser = result.user;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    // Guarda la sesión del usuario en el local storage 
+                    // localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
                     // Redirigir al dashboard después de un breve delay
                     setTimeout(() => {

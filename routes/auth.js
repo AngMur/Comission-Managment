@@ -4,12 +4,12 @@ const User = require('../models/User');
 
 router.post('/login', async (req, res) => {
   try {
-    const { usuario, contraseña } = req.body;
+    const { username, password } = req.body;
 
     const user = await User.findOne({
-      nombre_usuario: usuario,
-      contraseña: contraseña,
-      activo: true
+      username: username,
+      password: password,
+      active: true
     });
 
     if (!user) {
