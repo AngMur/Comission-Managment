@@ -74,8 +74,8 @@ db.roles.insertMany([
   }
 ]);
 
-db.createCollection("users<d");
-db.usuarios.insertOne({
+db.createCollection("users");
+db.users.insertOne({
     name:"Hendrick Martinez Perez",
     email:"henrick@gmail.com",
     phone:"5589543342",
