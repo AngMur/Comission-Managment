@@ -852,15 +852,16 @@
         // Cargar roles desde la API
         async function loadRoles() {
             try {
-                const response = await fetch(`${API_URL}/auth/roles`);
-                const result = await response.json();
+                // const response = await fetch(`${API_URL}/roles`);
                 
-                if (result.success) {
+                const response = await fetch('http://localhost:3000/api/roles');
+                const result = await response.json();
+                if (result) {
                     rolSelect.innerHTML = '<option value="">Seleccionar rol</option>';
-                    result.roles.forEach(rol => {
+                    result.forEach(rol => {
                         const option = document.createElement('option');
-                        option.value = rol.id;
-                        option.textContent = rol.rol;
+                        option.value = rol._id;
+                        option.textContent = rol.name;
                         rolSelect.appendChild(option);
                     });
                 } else {
@@ -886,7 +887,7 @@
                 // Crear objeto con los datos del formulario
                 const formData = {
                     nombres: document.getElementById('nombres').value,
-                    apellidos: document.getElementById('apellidos').value,
+                    // apellidos: document.getElementById('apellidos').value,
                     correo: document.getElementById('correo').value,
                     telefono: document.getElementById('telefono').value,
                     tipo_sangre: document.getElementById('tipo_sangre').value || null,
@@ -902,18 +903,18 @@
                 if (fotoBase64) {
                     formData.foto_perfil = fotoBase64;
                 }
-
-                const response = await fetch(`${API_URL}/auth/registrar`, {
+                console.log(formData);
+                const response = await fetch(`${API_URL}/users`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({})
                 });
 
                 const result = await response.json();
 
-                if (result.success) {
+                if (response.status == 200) {
                     showSuccess(result.message);
                     form.reset();
                     
@@ -927,6 +928,7 @@
                         window.location.href = 'l.html';
                     }, 2000);
                 } else {
+                    console.log(result)
                     showError(result.error);
                 }
             } catch (error) {
@@ -946,7 +948,7 @@
 
             // Validar campos requeridos
             const requiredFields = [
-                'nombres', 'apellidos', 'correo', 'telefono', 'rol_id', 'usuario', 'contraseña'
+                'nombres', 'correo', 'telefono', 'rol_id', 'usuario', 'contraseña'
             ];
 
             requiredFields.forEach(field => {
@@ -1023,7 +1025,8 @@
         // Verificar conexión con el servidor
         async function checkServerConnection() {
             try {
-                const response = await fetch(`${API_URL}/auth/roles`);
+                const response = await fetch(`${API_URL}/roles`);
+                // console.log(response);
                 return response.ok;
             } catch (error) {
                 console.error('Servidor no disponible:', error);
