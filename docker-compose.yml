@@ -7,6 +7,10 @@ services:
       - MONGO_URI=mongodb://db:27017/nova_db
     depends_on:
       - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
   db:
     image: mongo:latest
     ports:

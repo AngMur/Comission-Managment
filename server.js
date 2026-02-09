@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -17,6 +18,15 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+
+// Esto permite que al escribir localhost:3000/login, Express busque login.html automáticamente
+app.use(express.static(path.join(__dirname, 'views'), {
+    extensions: ['html']
+}));
+
+app.get('/', (req, res) => {
+    res.redirect('/login');
 });
 
 const userRoutes = require('./routes/userRoutes');
