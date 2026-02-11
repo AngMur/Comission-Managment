@@ -13,16 +13,28 @@ router.post('/login', async (req, res) => {
     });
 
     if (!user) {
-      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
+      return res.status(401).json({ 
+        success: false,
+        message: "Usuario o contraseña incorrectos",
+        data: null
+      });
     }
 
-    res.json({
+    res.status(200).json({
+      success: true,
       message: "Login correcto",
-      user: user
+      data: {
+        user: user
+      }
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: "Error en el servidor",
+      data: null,
+      error: error.message
+    });
   }
 });
 

@@ -566,7 +566,7 @@
 
                 const result = await response.json();
                 console.log(result)
-                if (result.user) {
+                if (result.success) {
                     showMessage(loginMessage, result.message, 'success');
                     currentUser = result.user;
                     // Guarda la sesión del usuario en el local storage 

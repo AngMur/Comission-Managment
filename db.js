@@ -80,7 +80,7 @@ db.users.insertOne({
     email:"henrick@gmail.com",
     phone:"5589543342",
     blood_type:"O+",
-    birthday:"24-08-2025",
+    birth_date:"24-08-2025",
     emergency_contact_name: "Ramses Moral Rosado",
     emergency_contant_phone : "5557358978",
     picture:"./RamsesEncuedaro.jpg",

@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   phone: String,
   blood_type: String,
-  birthday: String,
+  birth_date: String,
   emergency_contact_name: String,
   emergency_contact_phone: String,
   picture: String,
