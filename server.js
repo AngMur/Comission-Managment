@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, 'views'), {
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
+
 
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
