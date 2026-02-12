@@ -39,4 +39,7 @@ app.use('/api/auth', authRoutes);
 const rolesRoutes = require('./routes/rolesRoutes');
 app.use('/api/roles', rolesRoutes);
 
+const v10Routes = require('./routes/v10Routes');
+app.use('/v10/', v10Routes);
+
 
