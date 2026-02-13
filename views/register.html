@@ -856,9 +856,9 @@
                 
                 const response = await fetch('http://localhost:3000/api/roles');
                 const result = await response.json();
-                if (result) {
+                if (result.success) {
                     rolSelect.innerHTML = '<option value="">Seleccionar rol</option>';
-                    result.forEach(rol => {
+                    result.data.roles.forEach(rol => {
                         const option = document.createElement('option');
                         option.value = rol._id;
                         option.textContent = rol.name;
@@ -886,17 +886,17 @@
                 
                 // Crear objeto con los datos del formulario
                 const formData = {
-                    nombres: document.getElementById('nombres').value,
+                    username: document.getElementById('nombres').value,
                     // apellidos: document.getElementById('apellidos').value,
-                    correo: document.getElementById('correo').value,
-                    telefono: document.getElementById('telefono').value,
-                    tipo_sangre: document.getElementById('tipo_sangre').value || null,
-                    fecha_nacimiento: document.getElementById('fecha_nacimiento').value || null,
-                    nombre_contacto_emergencia: document.getElementById('nombre_contacto_emergencia').value || null,
-                    telefono_contacto_emergencia: document.getElementById('telefono_contacto_emergencia').value || null,
-                    rol_id: document.getElementById('rol_id').value,
-                    usuario: document.getElementById('usuario').value,
-                    contraseña: document.getElementById('contraseña').value
+                    email: document.getElementById('correo').value,
+                    phone: document.getElementById('telefono').value,
+                    blood_type: document.getElementById('tipo_sangre').value || null,
+                    birth_date: document.getElementById('fecha_nacimiento').value || null,
+                    emergency_contact_name: document.getElementById('nombre_contacto_emergencia').value || null,
+                    emergency_contact_phone: document.getElementById('telefono_contacto_emergencia').value || null,
+                    role: document.getElementById('rol_id').value,
+                    username: document.getElementById('usuario').value,
+                    password: document.getElementById('contraseña').value
                 };
                 
                 // Si hay foto de perfil, agregarla al objeto
@@ -904,17 +904,17 @@
                     formData.foto_perfil = fotoBase64;
                 }
                 console.log(formData);
-                const response = await fetch(`${API_URL}/users`, {
+                const response = await fetch(`${API_URL}/users/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({})
+                    body: JSON.stringify(formData)
                 });
 
                 const result = await response.json();
-
-                if (response.status == 200) {
+                console.log(result);
+                if (response.success) {
                     showSuccess(result.message);
                     form.reset();
                     
@@ -928,8 +928,8 @@
                         window.location.href = 'l.html';
                     }, 2000);
                 } else {
-                    console.log(result)
-                    showError(result.error);
+                    console.log(result.error);
+                    showError(result.message);
                 }
             } catch (error) {
                 console.error('Error en registro:', error);
