@@ -63,6 +63,65 @@ router.get('/companias', async (req, res) => {
     }
 });
 
+router.get('/desarrollos', async (req, res) => {
+    try {
+        const result = await pool.request().query('SELECT * FROM scv_Desarrollos');
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Departamentos
+router.get('/ubicaciones/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const resUbicaciones = await pool.request()
+            .input('idUbicacion', sql.Int, id)
+            .query('SELECT Nombre, ID, IdDesarrollo FROM uvw_SCV_Ubicaciones WHERE ID = @idUbicacion');
+
+        const resVentas = await pool.request()
+            .input('idUbicacion', sql.Int, id)
+            .query('SELECT IdVenta, IdUbicacion, Importe FROM scv_Ventas_Ubicaciones WHERE IdUbicacion = @idUbicacion');
+
+        const ubicacion = resUbicaciones.recordset[0];
+        const ventas = resVentas.recordset;
+
+        if (!ubicacion) {
+            return res.status(404).json({ message: "Ubicación no encontrada" });
+        }
+
+        const resultado = ventas.map(venta => ({
+            ...venta,
+            datosUbicacion: {
+                Nombre: ubicacion.Nombre,
+                IdDesarrollo: ubicacion.IdDesarrollo
+            }
+        }));
+
+
+        res.json({
+            idBuscado: id,
+            totalVentas: resultado.length,
+            ventas: resultado
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Precios por Departamento
+router.get('/ventas', async (req, res) => {
+    try {
+        const result = await pool.request().query('SELECT IdVenta, IdUbicacion, Importe FROM scv_Ventas_Ubicaciones');
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 // Query con parámetro
 router.get('/user/:id', async (req, res) => {
@@ -78,8 +137,7 @@ router.get('/user/:id', async (req, res) => {
     }
 });
 
+
+
 module.exports = router;
 
-// precios por departamento
-// ubicacion
-// referencia
