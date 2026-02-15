@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Comisión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding: 40px 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(96, 166, 30, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96, 166, 30, 0.06) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header-badge {
+            display: inline-block;
+            background: rgba(96, 166, 30, 0.15);
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            color: #60a61e;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+        }
+
+        .decorative-line {
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #60a61e, transparent);
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        .form-card {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 60px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+
+        .column-divider {
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(96, 166, 30, 0.3), transparent);
+            border-radius: 10px;
+            justify-self: center;
+        }
+
+        .column-left, .column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label i {
+            color: #60a61e;
+            font-size: 0.85rem;
+        }
+
+        select, input[type="text"], input[type="date"] {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:focus, input[type="text"]:focus, input[type="date"]:focus {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #60a61e;
+            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
+        }
+
+        select:hover, input[type="text"]:hover, input[type="date"]:hover {
+            border-color: rgba(96, 166, 30, 0.4);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2360a61e' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 10px;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(0.8);
+            cursor: pointer;
+        }
+
+        /* Checkbox MP dentro de personnel row */
+        .mp-checkbox-inline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 20px;
+            /* background: rgba(96, 166, 30, 0.1); */
+            background: rgba(30, 30, 30, 0.8);
+
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mp-checkbox-inline:hover {
+            /* background: rgba(96, 166, 30, 0.15); */
+            background: rgba(30, 30, 30, 0.8);
+
+            border-color: rgba(96, 166, 30, 0.5);
+        }
+
+        .mp-checkbox-inline input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #60a61e;
+        }
+
+        .mp-checkbox-inline .checkbox-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-transform: none;
+            letter-spacing: 0;
+            margin: 0;
+        }
+
+        /* Sección de Gerentes y Asesores */
+        .personnel-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #60a61e;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.1rem;
+        }
+
+        .personnel-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(30, 30, 30, 0.3);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .personnel-row.first-row {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .personnel-row:hover {
+            background: rgba(30, 30, 30, 0.5);
+            border-color: rgba(96, 166, 30, 0.2);
+        }
+
+        .row-buttons{
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .row-number {
+            grid-column: 1 / -1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #60a61e;
+            margin-bottom: 10px;
+        }
+
+        .row-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            
+            
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .add-row-btn{
+            color: #60a61e;
+            background: rgba(96, 166, 30, 0.15);
+            border: 1px solid rgba(96, 166, 30, 0.3);
+        }
+        
+        .delete-row-btn{
+            color: #a62e1e;
+            background: rgba(166, 30, 30, 0.15);
+            border: 1px solid rgba(166, 30, 30, 0.3);
+        }
+        
+        .add-row-btn:hover {
+            border-color: #60a61e;
+            background: rgba(96, 166, 30, 0.25);
+        }
+        .delete-row-btn:hover {
+            border-color: #a61e1e;
+            background: rgba(166, 30, 30, 0.25);
+        }
+
+        .row-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .row-btn i {
+            font-size: 0.9rem;
+        }
+
+        /* Botones de acción */
+        .actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn {
+            padding: 16px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #60a61e, #4a8518);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(96, 166, 30, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(96, 166, 30, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+                /* Modal de Confirmación */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.4s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #60a61e;
+            margin-bottom: 10px;
+        }
+
+        .modal-header p {
+            font-size: 0.95rem;
+            color: #888;
+        }
+
+        .modal-body {
+            margin-bottom: 30px;
+        }
+
+        .info-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 12px;
+            border-left: 3px solid #60a61e;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-label i {
+            color: #60a61e;
+            font-size: 0.75rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .info-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #60a61e;
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-section-title i {
+            font-size: 1rem;
+        }
+
+        .personnel-info {
+            background: rgba(30, 30, 30, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .personnel-info-header {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #60a61e;
+            margin-bottom: 10px;
+        }
+
+        .personnel-info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-btn {
+            padding: 14px 35px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #60a61e, #4a8518);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(96, 166, 30, 0.3);
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(96, 166, 30, 0.4);
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .mp-badge {
+            display: inline-block;
+            background: rgba(96, 166, 30, 0.2);
+            border: 1px solid rgba(96, 166, 30, 0.4);
+            color: #60a61e;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .form-card {
+                padding: 30px 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .column-divider {
+                display: none;
+            }
+
+            .personnel-row,
+            .personnel-row.first-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .modal-content {
+                padding: 25px;
+                width: 95%;
+            }
+
+            .modal-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .personnel-info-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-badge">NOVU</div>
+            <h1>Registro de Comisión</h1>
+            <div class="decorative-line"></div>
+        </header>
+
+        <div class="form-card">
+            <form id="commissionForm">
+                <!-- Primera sección: Datos principales en dos columnas -->
+                <div class="form-grid">
+                    <!-- Columna Izquierda -->
+                    <div class="column-left">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-building"></i>
+                                Compañía
+                            </label>
+                            <select id="compania" required>
+                                <option value="">Seleccionar compañía</option>
+                                <option value="empresa1">Empresa 1</option>
+                                <option value="empresa2">Empresa 2</option>
+                                <option value="empresa3">Empresa 3</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-rocket"></i>
+                                Desarrollo
+                            </label>
+                            <select id="desarrollo" required>
+                                <option value="">Seleccionar desarrollo</option>
+                                <option value="proyecto1">Proyecto Alpha</option>
+                                <option value="proyecto2">Proyecto Beta</option>
+                                <option value="proyecto3">Proyecto Gamma</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-map-marker-alt"></i>
+                                Ubicación
+                            </label>
+                            <select id="ubicacion" required>
+                                <option value="">Seleccionar ubicación</option>
+                                <option value="cdmx">Ciudad de México</option>
+                                <option value="gdl">Guadalajara</option>
+                                <option value="mty">Monterrey</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Divisor -->
+                    <div class="column-divider"></div>
+
+                    <!-- Columna Derecha -->
+                    <div class="column-right">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-calendar-day"></i>
+                                Fecha registro
+                            </label>
+                            <input type="date" id="fechaRegistro" value="" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-receipt"></i>
+                                Concepto
+                            </label>
+                            <select id="concepto" required>
+                                <option value="">Seleccionar concepto</option>
+                                <option value="venta">Escritura</option>
+                                <option value="renta">Contrato</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-calendar-check"></i>
+                                Fecha contrato
+                            </label>
+                            <input type="date" id="fechaContrato" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Gerentes y Asesores -->
+                <div class="personnel-section">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i>
+                        Gerentes y Asesores
+                    </div>
+
+                    <div id="personnelRows">
+                        <!-- Fila 1 con MP Checkbox -->
+                        <div class="personnel-row first-row">
+                            <div class="row-number">
+                                <i class="fas fa-hashtag"></i> Fila 1
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-user-tie"></i>
+                                    Gerente
+                                </label>
+                                <select required>
+                                    <option value="">Seleccionar gerente</option>
+                                    <option value="gerente1">Juan Pérez</option>
+                                    <option value="gerente2">María González</option>
+                                    <option value="gerente3">Carlos Rodríguez</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-user"></i>
+                                    Asesor
+                                </label>
+                                <select required>
+                                    <option value="">Seleccionar asesor</option>
+                                    <option value="asesor1">Ana Martínez</option>
+                                    <option value="asesor2">Pedro Sánchez</option>
+                                    <option value="asesor3">Laura Torres</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-shield-alt"></i>
+                                    Multipunto
+                                </label>
+                                <div class="mp-checkbox-inline">
+                                    <input type="checkbox" id="mpCheckbox">
+                                    <label for="mpCheckbox" class="checkbox-label">
+                                        MP
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    
+                    </div>
+                    <div class="row-buttons">
+                        <button type="button" class="row-btn add-row-btn" onclick="addPersonnelRow()">
+                            <i class="fas fa-plus"></i>
+                            Agregar otra fila
+                        </button>
+                        <button type="button" class="row-btn delete-row-btn" onclick="deletePersonnelRow()">
+                            <i class="fas fa-minus"></i>
+                            Quitar última fila
+                        </button>
+                    </div>
+                    
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="actions">
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-calculator"></i>
+                        Calcular Porcentajes
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" onclick="cancelForm()">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+    <!-- Modal de Confirmación -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Confirmar Comisión</h2>
+                <p>Revisa la información antes de guardar</p>
+            </div>
+
+            <div class="modal-body" id="modalBody">
+                <!-- El contenido se llenará dinámicamente -->
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmSave()">
+                    <i class="fas fa-save"></i>
+                    Confirmar y Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Establecer fecha de hoy en el campo "Fecha registro"
+        document.getElementById('fechaRegistro').valueAsDate = new Date();
+
+        let rowCounter = 1;
+
+        function addPersonnelRow() {
+            rowCounter++;
+            const container = document.getElementById('personnelRows');
+            const newRow = document.createElement('div');
+            newRow.className = 'personnel-row';
+            newRow.innerHTML = `
+                <div class="row-number">
+                    <i class="fas fa-hashtag"></i> Fila ${rowCounter}
+                </div>
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user-tie"></i>
+                        Gerente
+                    </label>
+                    <select>
+                        <option value="">Seleccionar gerente</option>
+                        <option value="gerente1">Juan Pérez</option>
+                        <option value="gerente2">María González</option>
+                        <option value="gerente3">Carlos Rodríguez</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user"></i>
+                        Asesor
+                    </label>
+                    <select>
+                        <option value="">Seleccionar asesor</option>
+                        <option value="asesor1">Ana Martínez</option>
+                        <option value="asesor2">Pedro Sánchez</option>
+                        <option value="asesor3">Laura Torres</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(newRow);
+            
+            // Animación de entrada
+            newRow.style.opacity = '0';
+            newRow.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                newRow.style.transition = 'all 0.4s ease';
+                newRow.style.opacity = '1';
+                newRow.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function deletePersonnelRow(){
+            rowCounter--;
+            const container = document.getElementById('personnelRows');
+            const rows = container.querySelectorAll('.personnel-row');
+
+            if (rows.length > 1) {
+            rows[rows.length - 1].remove();
+            }
+
+        }
+
+        function cancelForm() {
+            if (confirm('¿Estás seguro de que deseas cancelar? Se perderán todos los cambios.')) {
+                window.history.back();
+            }
+        }
+
+       
+        function getSelectText(selectId) {
+            const select = document.getElementById(selectId);
+            return select.options[select.selectedIndex].text;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('es-ES', options);
+        }
+
+        function collectFormData() {
+            const personnelRows = [];
+            const rows = document.querySelectorAll('.personnel-row');
+            
+            rows.forEach((row, index) => {
+                const selects = row.querySelectorAll('select');
+                const gerente = selects[0];
+                const asesor = selects[1];
+                
+                if (gerente && asesor && gerente.value && asesor.value) {
+                    personnelRows.push({
+                        numero: index + 1,
+                        gerente: gerente.options[gerente.selectedIndex].text,
+                        gerenteValue: gerente.value,
+                        asesor: asesor.options[asesor.selectedIndex].text,
+                        asesorValue: asesor.value
+                    });
+                }
+            });
+
+            return {
+                compania: document.getElementById('compania').value,
+                companiaText: getSelectText('compania'),
+                fechaRegistro: document.getElementById('fechaRegistro').value,
+                desarrollo: document.getElementById('desarrollo').value,
+                desarrolloText: getSelectText('desarrollo'),
+                concepto: document.getElementById('concepto').value,
+                conceptoText: getSelectText('concepto'),
+                ubicacion: document.getElementById('ubicacion').value,
+                ubicacionText: getSelectText('ubicacion'),
+                fechaContrato: document.getElementById('fechaContrato').value,
+                mp: document.getElementById('mpCheckbox').checked,
+                personal: personnelRows
+            };
+        }
+
+        function showConfirmationModal(formData) {
+            const modalBody = document.getElementById('modalBody');
+            
+            let personnelHTML = '';
+            if (formData.personal.length > 0) {
+                formData.personal.forEach(person => {
+                    personnelHTML += `
+                        <div class="personnel-info">
+                            <div class="personnel-info-header">
+                                <i class="fas fa-hashtag"></i> Fila ${person.numero}
+                            </div>
+                            <div class="personnel-info-row">
+                                <div class="info-group" style="margin-bottom: 0;">
+                                    <div class="info-label">
+                                        <i class="fas fa-user-tie"></i>
+                                        Gerente
+                                    </div>
+                                    <div class="info-value">${person.gerente}</div>
+                                </div>
+                                <div class="info-group" style="margin-bottom: 0;">
+                                    <div class="info-label">
+                                        <i class="fas fa-user"></i>
+                                        Asesor
+                                    </div>
+                                    <div class="info-value">${person.asesor}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            modalBody.innerHTML = `
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-building"></i>
+                        Compañía
+                    </div>
+                    <div class="info-value">${formData.companiaText}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-rocket"></i>
+                        Desarrollo
+                    </div>
+                    <div class="info-value">${formData.desarrolloText}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Ubicación
+                    </div>
+                    <div class="info-value">${formData.ubicacionText}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-day"></i>
+                        Fecha de Registro
+                    </div>
+                    <div class="info-value">${formatDate(formData.fechaRegistro)}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-receipt"></i>
+                        Concepto
+                    </div>
+                    <div class="info-value">${formData.conceptoText}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-check"></i>
+                        Fecha de Contrato
+                    </div>
+                    <div class="info-value">${formatDate(formData.fechaContrato)}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">
+                        <i class="fas fa-shield-alt"></i>
+                        Multipunto (MP)
+                    </div>
+                    <div class="info-value">
+                        ${formData.mp ? '<span class="mp-badge"><i class="fas fa-check"></i> Activado</span>' : '<span style="color: #888;">No activado</span>'}
+                    </div>
+                </div>
+
+                ${formData.personal.length > 0 ? `
+                    <div class="info-section-title">
+                        <i class="fas fa-users"></i>
+                        Personal Asignado
+                    </div>
+                    ${personnelHTML}
+                ` : ''}
+            `;
+
+            document.getElementById('confirmationModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('confirmationModal').classList.remove('active');
+        }
+
+        function confirmSave() {
+            console.log('Datos guardados:', formDataGlobal);
+            
+            // Aquí puedes agregar la lógica para enviar los datos al servidor
+            // Por ejemplo: fetch('/api/comisiones', { method: 'POST', body: JSON.stringify(formDataGlobal) })
+            
+            closeModal();
+            alert('¡Comisión guardada exitosamente!');
+            
+            // Opcional: resetear el formulario
+            // document.getElementById('commissionForm').reset();
+            // document.getElementById('fechaRegistro').valueAsDate = new Date();
+        }
+
+        // Cerrar modal al hacer click fuera de él
+        document.getElementById('confirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('commissionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            formDataGlobal = collectFormData();
+            showConfirmationModal(formDataGlobal);
+        });
+    </script>
+</body>
+</html>

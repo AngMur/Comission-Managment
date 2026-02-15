@@ -78,5 +78,14 @@ router.get('/user/:id', async (req, res) => {
     }
 });
 
+router.get('/precio', async (req, res) => {
+    try {
+        data = {"A-34": 5000000};
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
 
