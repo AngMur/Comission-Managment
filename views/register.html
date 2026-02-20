@@ -776,7 +776,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+
 
         // Elementos del DOM
         const form = document.getElementById('registrationForm');
@@ -852,9 +852,8 @@
         // Cargar roles desde la API
         async function loadRoles() {
             try {
-                // const response = await fetch(`${API_URL}/roles`);
                 
-                const response = await fetch('http://localhost:3000/api/roles');
+                const response = await fetch('/api/roles');
                 const result = await response.json();
                 if (result.success) {
                     rolSelect.innerHTML = '<option value="">Seleccionar rol</option>';
@@ -886,7 +885,7 @@
                 
                 // Crear objeto con los datos del formulario
                 const formData = {
-                    username: document.getElementById('nombres').value,
+                    name: document.getElementById('nombres').value,
                     // apellidos: document.getElementById('apellidos').value,
                     email: document.getElementById('correo').value,
                     phone: document.getElementById('telefono').value,
@@ -904,7 +903,7 @@
                     formData.foto_perfil = fotoBase64;
                 }
                 console.log(formData);
-                const response = await fetch(`${API_URL}/users/register`, {
+                const response = await fetch(`/api/users/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1025,7 +1024,7 @@
         // Verificar conexión con el servidor
         async function checkServerConnection() {
             try {
-                const response = await fetch(`${API_URL}/roles`);
+                const response = await fetch(`/api/roles`);
                 // console.log(response);
                 return response.ok;
             } catch (error) {

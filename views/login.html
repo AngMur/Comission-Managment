@@ -510,8 +510,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
-
+   
         // Elementos del DOM
         const loginForm = document.querySelector('.login-form');
         const loginButton = document.getElementById('login-button');
@@ -556,7 +555,7 @@
 
             try {
                 showLoading(loginButton, true);
-                const response = await fetch(`${API_URL}/auth/login`, {
+                const response = await fetch(`api/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -632,7 +631,7 @@
         // Verificar conexión con el servidor
         async function checkServerConnection() {
             try {
-                const response = await fetch(`${API_URL}/users`);
+                const response = await fetch(`/api/users`);
                 return response.ok;
             } catch (error) {
                 console.error('Servidor no disponible:', error);

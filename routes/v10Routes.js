@@ -44,48 +44,77 @@ router.get('/version', async (req, res) => {
 });
 
 
+router.get('/companias', async (req, res) => {
+  try {
+    const result = await pool.request().query('SELECT Id as id, Nombre as nombre FROM Companias');
+    
+    res.status(200).json({
+      success: true,
+      message: "Compañías obtenidas correctamente",
+      data: {
+        companias: result.recordset
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener las compañías",
+      data: null,
+      error: err.message
+    });
+  }
+});
+
 // Consulta genérica
 router.get('/desarrollos', async (req, res) => {
-    try {
-        const result = await pool.request().query('SELECT * FROM scv_Desarrollos');
-        res.json(result.recordset);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const result = await pool.request().query('SELECT Id as id, Descripcion as nombre, IdCompania as compania FROM scv_Desarrollos');
+    
+    res.status(200).json({
+      success: true,
+      message: "Desarrollos obtenidos correctamente",
+      data: {
+        desarrollos: result.recordset
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los desarrollos",
+      data: null,
+      error: err.message
+    });
+  }
 });
 
-router.get('/companias', async (req, res) => {
-    try {
-        const result = await pool.request().query('SELECT * FROM Companias');
-        res.json(result.recordset);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+
+
+router.get('/ubicaciones', async (req, res) => {
+  try {
+    const result = await pool.request().query('SELECT Id as id, Nombre as nombre, IdDesarrollo as desarrollo FROM scv_ubicaciones');
+    
+    res.status(200).json({
+      success: true,
+      message: "Ubicaciones obtenidas correctamente",
+      data: {
+        ubicaciones: result.recordset
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener las ubicaciones",
+      data: null,
+      error: err.message
+    });
+  }
 });
 
 
-// Query con parámetro
-router.get('/user/:id', async (req, res) => {
-    try {
-        const result = await pool
-            .request()
-            .input('id', sql.Int, req.params.id)
-            .query('SELECT * FROM Users WHERE Id = @id');
 
-        res.json(result.recordset[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-router.get('/precio', async (req, res) => {
-    try {
-        data = {"A-34": 5000000};
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
 
 module.exports = router;
 

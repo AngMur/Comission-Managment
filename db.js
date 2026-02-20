@@ -1,8 +1,7 @@
 use('nova_db');
 
-
-db.createCollection("permissions")
-db.permissions.insertMany([
+// 1. CREAR PERMISOS Y GUARDAR SUS IDs
+const permissionsResult = db.permissions.insertMany([
   {
     name: "Crear Usuario",
     description: "Permite registrar nuevos usuarios en el sistema",
@@ -44,8 +43,8 @@ db.permissions.insertMany([
     module: "Comisiones"
   },
   {
-    name: "Ver permissions",
-    description: "Permite visualizar el catálogo de permissions",
+    name: "Ver Permisos",
+    description: "Permite visualizar el catálogo de permisos",
     module: "Seguridad"
   },
   {
@@ -55,40 +54,73 @@ db.permissions.insertMany([
   }
 ]);
 
-db.createCollection("roles");
-db.roles.insertMany([
+// Obtener todos los IDs de permisos creados
+const allPermissionIds = Object.values(permissionsResult.insertedIds);
+
+// 2. CREAR ROLES CON SUS PERMISOS ASIGNADOS
+const rolesResult = db.roles.insertMany([
+  {
+    name: "SuperUsuario",
+    description: "Acceso completo al sistema",
+    permissions: allPermissionIds // Todos los permisos
+  },
+  {
+    name: "Gerente",
+    description: "Puede ver y editar información",
+    permissions: [
+      allPermissionIds[0], // Crear Usuario
+      allPermissionIds[1], // Editar Usuario
+      allPermissionIds[3], // Ver Reportes
+      allPermissionIds[4], // Exportar Reportes
+      allPermissionIds[5], // Crear Comisión
+      allPermissionIds[6]  // Editar Comisión
+    ]
+  },
+  {
+    name: "Asesor",
+    description: "Solo lectura",
+    permissions: [
+      allPermissionIds[3], // Ver Reportes
+      allPermissionIds[8]  // Ver Permisos
+    ]
+  },
+  {
+    name: "Director",
+    description: "Permisos de supervisión",
+    permissions: [
+      allPermissionIds[3], // Ver Reportes
+      allPermissionIds[4], // Exportar Reportes
+      allPermissionIds[8]  // Ver Permisos
+    ]
+  },
   {
     name: "Administrador",
-    description: "Acceso completo al sistema",
-    permissions: []
-  },
-  {
-    name: "Supervisor",
-    description: "Puede ver y editar información",
-    permissions: []
-  },
-  {
-    name: "Usuario",
-    description: "Solo lectura",
-    permissions: []
+    description: "Gestión de comisiones",
+    permissions: [
+      allPermissionIds[5], // Crear Comisión
+      allPermissionIds[6], // Editar Comisión
+      allPermissionIds[3]  // Ver Reportes
+    ]
   }
 ]);
 
-db.createCollection("users");
+// Obtener el ID del rol Administrador (primer rol insertado)
+const adminRoleId = rolesResult.insertedIds[0];
+
+// 3. CREAR USUARIO CON ROL Y PERMISOS ASIGNADOS
 db.users.insertOne({
-    name:"Hendrick Martinez Perez",
-    email:"henrick@gmail.com",
-    phone:"5589543342",
-    blood_type:"O+",
-    birth_date:"24-08-2025",
-    emergency_contact_name: "Ramses Moral Rosado",
-    emergency_contant_phone : "5557358978",
-    picture:"./RamsesEncuedaro.jpg",
-    role:"asesor ",
-    username:"RAMRAN",
-    password:"12345",
-    permissions:[],
-    active: true 
+  name: "Hendrick Martinez Perez",
+  email: "henrick@gmail.com",
+  phone: "5589543342",
+  blood_type: "O+",
+  birth_date: new Date("2025-08-24"), // Mejor usar Date object
+  emergency_contact_name: "Ramses Moral Rosado",
+  emergency_contact_phone: "5557358978", // Corregido el typo
+  picture: "./RamsesEncuedaro.jpg",
+  role: adminRoleId, // ID del rol Administrador
+  username: "RAMRAN",
+  password: "12345", // En producción, hasheala!
+  permissions: allPermissionIds, // Todos los permisos
+  active: true,
+  created_at: new Date()
 });
-
-

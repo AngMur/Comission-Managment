@@ -1,0 +1,22 @@
+[
+    {
+        "compania_id": 1,
+        "compania": "Desarrolladora Tokio",
+        "desarrollo_id": 1,
+        "desarrollo": "Tokio 616",
+        "ubicacion_id": 2,
+        "ubicacion": "TOKIO-N1-A303",
+        "price": 1000000,
+        "comission_type":"Tradicional",
+        "status": "register",
+        "participants" : {
+            1
+            2
+            3
+            4
+            5
+            6
+        }
+
+    }
+]
