@@ -22,11 +22,11 @@ app.listen(PORT, () => {
 });
 
 app.use(express.static(path.join(__dirname, 'views'), {
-    extensions: ['html']
+  extensions: ['html']
 }));
 
 app.get('/', (req, res) => {
-    res.redirect('/login');
+  res.redirect('/login');
 });
 
 
@@ -41,5 +41,19 @@ app.use('/api/roles', rolesRoutes);
 
 const v10Routes = require('./routes/v10Routes');
 app.use('/v10/', v10Routes);
+
+// Force an error to test endpoint (DELETE ON PRODUCTION!!!!)
+app.get('/500test', (req, res) => {
+  throw new Error('Error de prueba');
+});
+
+app.use((req, res, next) => {
+  res.status(404).sendFile(path.join(__dirname, 'server_errors', '404.html'));
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).sendFile(path.join(__dirname, 'server_errors', '500.html'));
+});
 
 
