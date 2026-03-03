@@ -17,30 +17,36 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
+    required: [true, 'Ingresa un número telefónico válido'],
     trim: true
   },
   blood_type: {
     type: String,
+    required: [true, 'Tipo sanguineo es requerido'],
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', ''],
     default: ''
   },
   birth_date: {
-    type: Date  // Cambiado de String a Date
+    type: Date,  // Cambiado de String a Date
+    required: [true, 'Ingresa una fecha de nacimiento válida']
   },
   
   // Contacto de emergencia
   emergency_contact_name: {
     type: String,
+    required: [true, 'Contacto de emergencia requerido'],
     trim: true
   },
   emergency_contact_phone: {
     type: String,
+    required: [true, 'Ingresa un número telefónico válido'],
     trim: true
   },
   
   // Imagen de perfil
   picture: {
     type: String,
+    required: [true, 'Imágen requerida'],
     default: ''
   },
   
@@ -68,6 +74,7 @@ const userSchema = new mongoose.Schema({
   // CORREGIDO: Permissions como array de ObjectIds
   permissions: [{
     type: mongoose.Schema.Types.ObjectId,
+    required: [true, 'Especificar permisos requeridos'],
     ref: 'Permission'
   }],
   

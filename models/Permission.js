@@ -8,6 +8,7 @@ const permissionSchema = new mongoose.Schema({
   },
   description: {
     type: String,
+    required: [true, 'La descripción es requerida'],
     trim: true,
     default: ''
   },
