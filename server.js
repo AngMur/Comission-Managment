@@ -42,11 +42,6 @@ app.use('/api/roles', rolesRoutes);
 const v10Routes = require('./routes/v10Routes');
 app.use('/v10/', v10Routes);
 
-// Force an error to test endpoint (DELETE ON PRODUCTION!!!!)
-app.get('/500test', (req, res) => {
-  throw new Error('Error de prueba');
-});
-
 app.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, 'server_errors', '404.html'));
 });
