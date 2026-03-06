@@ -47,30 +47,7 @@ app.use('/api/percentages', require('./routes/percentages'));
 // ── Test de error (ELIMINAR EN PRODUCCIÓN) ────────────────────────
 app.get('/500test', (req, res) => { throw new Error('Error de prueba'); });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
 
-app.use(express.static(path.join(__dirname, 'views'), {
-  extensions: ['html']
-}));
-
-app.get('/', (req, res) => {
-  res.redirect('/login');
-});
-
-
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
-
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
-const rolesRoutes = require('./routes/rolesRoutes');
-app.use('/api/roles', rolesRoutes);
-
-const v10Routes = require('./routes/v10Routes');
-app.use('/v10/', v10Routes);
 
 app.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, 'server_errors', '404.html'));
