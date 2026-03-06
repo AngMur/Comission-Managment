@@ -47,10 +47,6 @@ app.use('/api/percentages', require('./routes/percentages'));
 // ── Test de error (ELIMINAR EN PRODUCCIÓN) ────────────────────────
 app.get('/500test', (req, res) => { throw new Error('Error de prueba'); });
 
-<<<<<<< HEAD
-// ── Manejo de errores ─────────────────────────────────────────────
-app.use((req, res) => {
-=======
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
@@ -77,7 +73,6 @@ const v10Routes = require('./routes/v10Routes');
 app.use('/v10/', v10Routes);
 
 app.use((req, res, next) => {
->>>>>>> c18fb032519ca8868c0238e4b500c71e8cd5f637
   res.status(404).sendFile(path.join(__dirname, 'server_errors', '404.html'));
 });
 app.use((err, req, res, next) => {
