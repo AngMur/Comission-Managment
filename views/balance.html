@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartera de Asesores - Commify</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1e1e;--bg2:#162828;--bg3:#1a3a2a;
+  --green:#60a61e;--green-glow:rgba(96,166,30,0.35);--green-bright:#7bc42a;--green-hover:#4a8518;
+  --white:#ffffff;--muted:#8fada0;
+  --warn:#e8a020;--warn-glow:rgba(232,160,32,0.3);
+  --red:#e74c3c;--blue:#4299e1;--yellow:#ffc107;--purple:#9f7aea;
+}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;overflow:hidden;}
+
+/* ── STARS BG ── */
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;animation:twinkle var(--dur) ease-in-out infinite alternate;}
+@keyframes twinkle{from{opacity:.2;transform:scale(1);}to{opacity:1;transform:scale(1.4);}}
+.beam{position:fixed;top:0;right:12%;width:220px;height:100vh;background:linear-gradient(180deg,rgba(96,166,30,.05) 0%,transparent 70%);transform:skewX(-8deg);pointer-events:none;z-index:0;}
+
+/* ── SCREEN SYSTEM ── */
+.screen{display:none;min-height:100vh;position:relative;z-index:1;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ══ ROLE SELECTOR ══ */
+#screen-role{align-items:center;justify-content:center;}
+.role-card{background:rgba(22,40,40,.92);border:1px solid rgba(96,166,30,.18);border-radius:28px;padding:48px 40px;width:100%;max-width:500px;text-align:center;backdrop-filter:blur(12px);box-shadow:0 0 80px rgba(96,166,30,.08);}
+.role-brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:36px;}
+.role-logo{width:44px;height:44px;border:3px solid var(--green);border-right-color:transparent;border-radius:50%;animation:spin 3s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.role-brand-name{font-size:1.6rem;font-weight:900;color:var(--white);}
+.role-brand-name span{color:var(--green);}
+.role-brand-sub{font-size:.68rem;color:var(--green);font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.role-heading{font-size:1.05rem;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.role-sub{font-size:.8rem;color:#3a5a4a;margin-bottom:30px;}
+.role-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
+.role-btn{padding:26px 18px;border-radius:18px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);cursor:pointer;transition:all .28s;display:flex;flex-direction:column;align-items:center;gap:11px;}
+.role-btn:hover,.role-btn.sel{transform:translateY(-3px);}
+.role-btn.admin.sel,.role-btn.admin:hover{background:rgba(96,166,30,.1);border-color:rgba(96,166,30,.4);box-shadow:0 0 30px rgba(96,166,30,.12);}
+.role-btn.asesor.sel,.role-btn.asesor:hover{background:rgba(66,153,225,.09);border-color:rgba(66,153,225,.3);box-shadow:0 0 30px rgba(66,153,225,.1);}
+.role-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.ri-admin{background:rgba(96,166,30,.18);color:var(--green);}
+.ri-asesor{background:rgba(66,153,225,.18);color:var(--blue);}
+.role-label{font-size:.9rem;font-weight:900;}
+.role-desc{font-size:.68rem;color:var(--muted);line-height:1.5;}
+.role-enter{width:100%;padding:14px;border-radius:50px;border:none;background:var(--green);color:var(--bg);font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:900;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 24px var(--green-glow);}
+.role-enter:disabled{opacity:.3;cursor:not-allowed;box-shadow:none;}
+.role-enter:not(:disabled):hover{background:var(--green-hover);transform:translateY(-2px);box-shadow:0 0 40px var(--green-glow);}
+
+/* ══ APP LAYOUT ══ */
+#screen-admin,#screen-asesor{flex-direction:row;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:288px;min-width:288px;background:rgba(15,26,26,.95);border-right:1px solid rgba(96,166,30,.12);display:flex;flex-direction:column;z-index:2;}
+.sb-top{padding:18px 16px 14px;border-bottom:1px solid rgba(96,166,30,.1);}
+.sb-brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sb-brand-left{display:flex;align-items:center;gap:9px;}
+.sb-logo{width:30px;height:30px;border:2px solid var(--green);border-right-color:transparent;border-radius:50%;animation:spin 3s linear infinite;flex-shrink:0;}
+.sb-name{font-size:.95rem;font-weight:900;letter-spacing:-.3px;}
+.sb-name span{color:var(--green);}
+.sb-badge{padding:4px 11px;border-radius:50px;font-size:.62rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;}
+.sb-badge.admin{background:rgba(96,166,30,.15);color:var(--green);border:1px solid rgba(96,166,30,.3);}
+.sb-badge.asesor{background:rgba(66,153,225,.13);color:var(--blue);border:1px solid rgba(66,153,225,.25);}
+.sb-switch{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;cursor:pointer;font-size:.7rem;color:#3a5a4a;transition:all .2s;font-family:'Nunito',sans-serif;}
+.sb-switch:hover{color:var(--muted);border-color:rgba(255,255,255,.14);}
+.search-box{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(96,166,30,.15);border-radius:50px;padding:8px 14px;transition:all .25s;}
+.search-box:focus-within{border-color:rgba(96,166,30,.4);box-shadow:0 0 0 3px rgba(96,166,30,.07);}
+.search-box input{background:none;border:none;color:var(--white);outline:none;font-size:.8rem;width:100%;font-family:'Nunito',sans-serif;}
+.search-box input::placeholder{color:#3a5a4a;}
+.search-box i{color:#3a5a4a;font-size:.75rem;}
+.sb-filters{padding:10px 12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid rgba(96,166,30,.1);}
+.sf-btn{padding:4px 12px;border-radius:50px;border:1px solid rgba(255,255,255,.07);background:transparent;color:#3a5a4a;font-size:.67rem;font-weight:800;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;text-transform:uppercase;letter-spacing:.5px;}
+.sf-btn.active,.sf-btn:hover{background:rgba(96,166,30,.14);border-color:rgba(96,166,30,.4);color:var(--green);}
+.advisor-list{flex:1;overflow-y:auto;padding:8px;}
+.advisor-list::-webkit-scrollbar{width:3px;}
+.advisor-list::-webkit-scrollbar-thumb{background:rgba(96,166,30,.2);border-radius:3px;}
+.av-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;cursor:pointer;transition:all .22s;border:1px solid transparent;margin-bottom:3px;}
+.av-item:hover{background:rgba(96,166,30,.06);}
+.av-item.active{background:rgba(96,166,30,.12);border-color:rgba(96,166,30,.3);}
+.av-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(96,166,30,.35);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;color:var(--green-bright);background:linear-gradient(135deg,rgba(96,166,30,.2),rgba(74,133,24,.2));flex-shrink:0;}
+.av-info{flex:1;min-width:0;}
+.av-name{font-size:.8rem;font-weight:700;color:#d0e8d8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.av-neto{font-size:.7rem;font-weight:800;margin-top:1px;}
+.av-neto.pos{color:var(--green-bright);} .av-neto.neg{color:var(--red);} .av-neto.zero{color:#3a5a4a;}
+.av-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.av-dot.pos{background:var(--green);box-shadow:0 0 6px var(--green-glow);}
+.av-dot.neg{background:var(--red);}
+.av-dot.zero{background:#3a5a4a;}
+.sb-pag{padding:8px 10px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(96,166,30,.1);}
+.pag-info-sm{font-size:.63rem;color:#3a5a4a;}
+.pag-btns{display:flex;gap:3px;}
+.pag-btn{width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.07);background:transparent;color:#3a5a4a;font-size:.68rem;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.pag-btn.active,.pag-btn:hover{background:rgba(96,166,30,.15);border-color:rgba(96,166,30,.4);color:var(--green);}
+.pag-btn:disabled{opacity:.2;cursor:not-allowed;}
+
+/* ── MAIN AREA ── */
+.main-area{flex:1;overflow-y:auto;background:var(--bg);}
+.main-area::-webkit-scrollbar{width:4px;}
+.main-area::-webkit-scrollbar-thumb{background:rgba(96,166,30,.18);border-radius:4px;}
+.empty-main{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#2a4a3a;}
+.empty-main i{font-size:2.8rem;}
+.empty-main p{font-size:.88rem;font-weight:700;}
+
+/* ── PROFILE HEADER ── */
+.profile-header{padding:26px 30px 20px;border-bottom:1px solid rgba(96,166,30,.12);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.ph-left{display:flex;align-items:center;gap:16px;}
+.ph-avatar{width:58px;height:58px;border-radius:50%;border:3px solid rgba(96,166,30,.4);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;color:var(--green-bright);background:linear-gradient(135deg,rgba(96,166,30,.22),rgba(74,133,24,.22));flex-shrink:0;}
+.ph-avatar.blue{border-color:rgba(66,153,225,.4);color:#63b3ed;background:linear-gradient(135deg,rgba(66,153,225,.2),rgba(43,108,176,.2));}
+.ph-name{font-size:1.3rem;font-weight:900;letter-spacing:-.4px;}
+.ph-role{font-size:.7rem;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px;}
+.act-btn{padding:9px 20px;border-radius:50px;font-size:.78rem;font-weight:900;cursor:pointer;border:none;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:7px;transition:all .25s;letter-spacing:.3px;}
+.btn-prestamo{background:rgba(66,153,225,.15);color:var(--blue);border:1px solid rgba(66,153,225,.3);}
+.btn-prestamo:hover{background:rgba(66,153,225,.28);transform:translateY(-2px);}
+
+/* ── SALDO CARDS ── */
+.saldo-section{padding:20px 30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;border-bottom:1px solid rgba(96,166,30,.1);}
+.sc{background:rgba(22,40,40,.8);border-radius:16px;padding:18px;border:1px solid rgba(96,166,30,.1);transition:all .25s;}
+.sc:hover{border-color:rgba(96,166,30,.25);box-shadow:0 4px 24px rgba(96,166,30,.07);}
+.sc-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:800;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.sc-val{font-size:1.35rem;font-weight:900;font-family:'Space Mono',monospace;}
+.sc-val.green{color:var(--green-bright);text-shadow:0 0 20px rgba(96,166,30,.3);}
+.sc-val.red{color:var(--red);}
+.sc-val.white{color:var(--white);}
+.sc-val.yellow{color:var(--yellow);}
+.sc-sub{font-size:.64rem;color:#3a5a4a;margin-top:4px;}
+
+/* ── DEUDAS ── */
+.deudas-section{padding:10px 30px 0;}
+.section-title{font-size:.65rem;text-transform:uppercase;letter-spacing:1.2px;font-weight:900;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.section-title.red{color:var(--red);}
+.deuda-row{display:flex;align-items:center;gap:12px;padding:13px 16px;background:rgba(231,76,60,.05);border:1px solid rgba(231,76,60,.18);border-radius:14px;margin-bottom:7px;flex-wrap:wrap;transition:border-color .2s;}
+.deuda-row:hover{border-color:rgba(231,76,60,.3);}
+.dr-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;}
+.dr-icon.desc{background:rgba(231,76,60,.15);color:var(--red);}
+.dr-icon.prest{background:rgba(66,153,225,.15);color:var(--blue);}
+.dr-info{flex:1;min-width:160px;}
+.dr-desc{font-size:.82rem;font-weight:700;color:#d0e8d8;}
+.dr-meta{font-size:.68rem;color:var(--muted);margin-top:2px;}
+.dr-amount{font-size:.95rem;font-weight:900;color:var(--red);font-family:'Space Mono',monospace;white-space:nowrap;}
+.dr-btn{padding:7px 14px;border-radius:50px;font-size:.72rem;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .22s;border:none;white-space:nowrap;}
+.dr-btn.abonar{background:rgba(96,166,30,.18);color:var(--green);border:1px solid rgba(96,166,30,.35);}
+.dr-btn.abonar:hover{background:rgba(96,166,30,.32);transform:translateY(-1px);}
+.dr-btn.abonar:disabled{opacity:.3;cursor:not-allowed;}
+.dr-btn.edit{background:rgba(159,122,234,.15);color:var(--purple);border:1px solid rgba(159,122,234,.3);margin-right:5px;}
+.dr-btn.edit:hover{background:rgba(159,122,234,.28);transform:translateY(-1px);}
+
+/* ── HISTORIAL ── */
+.historial-section{padding:18px 30px 32px;}
+.hs-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.hf-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.hf-btn{padding:4px 11px;border-radius:50px;border:1px solid rgba(255,255,255,.07);background:transparent;color:#3a5a4a;font-size:.66rem;font-weight:800;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;text-transform:uppercase;letter-spacing:.4px;}
+.hf-btn.active,.hf-btn:hover{background:rgba(96,166,30,.12);border-color:rgba(96,166,30,.35);color:var(--green);}
+.mov-list{display:flex;flex-direction:column;gap:7px;}
+.mov-row{display:flex;align-items:center;gap:12px;padding:13px 16px;background:rgba(22,40,40,.7);border:1px solid rgba(96,166,30,.08);border-radius:13px;transition:border-color .2s;}
+.mov-row:hover{border-color:rgba(96,166,30,.2);}
+.mov-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;}
+.ico-ganancia{background:rgba(96,166,30,.15);color:var(--green);}
+.ico-descomision{background:rgba(231,76,60,.15);color:var(--red);}
+.ico-prestamo{background:rgba(66,153,225,.15);color:var(--blue);}
+.ico-abono{background:rgba(255,193,7,.15);color:var(--yellow);}
+.ico-ajuste{background:rgba(159,122,234,.15);color:var(--purple);}
+.mov-info{flex:1;min-width:0;}
+.mov-desc{font-size:.81rem;font-weight:700;color:#d0e8d8;}
+.mov-meta{font-size:.67rem;color:var(--muted);margin-top:1px;}
+.mov-badge{padding:3px 9px;border-radius:50px;font-size:.6rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;}
+.bg-ganancia{background:rgba(96,166,30,.14);color:var(--green);}
+.bg-descomision{background:rgba(231,76,60,.14);color:var(--red);}
+.bg-prestamo{background:rgba(66,153,225,.14);color:var(--blue);}
+.bg-abono{background:rgba(255,193,7,.14);color:var(--yellow);}
+.bg-ajuste{background:rgba(159,122,234,.14);color:var(--purple);}
+.mov-amount{font-size:.88rem;font-weight:900;white-space:nowrap;font-family:'Space Mono',monospace;}
+.ma-pos{color:var(--green-bright);}
+.ma-neg{color:var(--red);}
+.ma-blue{color:var(--blue);}
+.ma-yellow{color:var(--yellow);}
+.ma-purple{color:var(--purple);}
+.empty-mov{text-align:center;padding:36px;color:#2a4a3a;font-size:.82rem;font-weight:700;}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:all .25s;}
+.modal-ov.show{opacity:1;visibility:visible;}
+.modal{background:rgba(18,34,34,.98);border:1px solid rgba(96,166,30,.2);border-radius:24px;padding:30px;width:100%;max-width:430px;transform:translateY(18px) scale(.97);transition:transform .25s;box-shadow:0 0 60px rgba(96,166,30,.1);}
+.modal-ov.show .modal{transform:translateY(0) scale(1);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-size:1rem;font-weight:900;display:flex;align-items:center;gap:9px;}
+.modal-x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#3a5a4a;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-x:hover{background:rgba(255,255,255,.1);color:var(--white);}
+.form-g{margin-bottom:16px;}
+.form-lbl{display:block;font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:800;margin-bottom:7px;}
+.form-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(96,166,30,.18);border-radius:12px;padding:10px 14px;color:var(--white);font-size:.86rem;outline:none;font-family:'Nunito',sans-serif;transition:all .25s;font-weight:700;}
+.form-in:focus{border-color:rgba(96,166,30,.5);box-shadow:0 0 0 3px rgba(96,166,30,.07);}
+.form-in::placeholder{color:#2a4a3a;}
+.form-in option{background:#162828;}
+.form-note{font-size:.7rem;color:#3a5a4a;margin-top:5px;font-weight:700;}
+.form-note.g{color:var(--green);} .form-note.r{color:var(--red);} .form-note.b{color:var(--blue);}
+.abono-slider{width:100%;accent-color:var(--green);cursor:pointer;margin:8px 0;}
+.slider-preview{display:flex;justify-content:space-between;font-size:.74rem;margin-top:4px;}
+.slider-preview span{color:var(--muted);}
+.slider-preview strong{color:var(--green-bright);font-family:'Space Mono',monospace;}
+.modal-acts{display:flex;gap:9px;margin-top:22px;}
+.m-btn{flex:1;padding:12px;border-radius:50px;font-size:.85rem;font-weight:900;cursor:pointer;border:none;font-family:'Nunito',sans-serif;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.m-btn-cancel{background:rgba(255,255,255,.05);color:#3a5a4a;border:1px solid rgba(255,255,255,.09);}
+.m-btn-cancel:hover{background:rgba(255,255,255,.1);color:var(--muted);}
+.m-btn-ok{background:var(--green);color:var(--bg);box-shadow:0 0 20px var(--green-glow);}
+.m-btn-ok.blue{background:var(--blue);box-shadow:0 0 20px rgba(66,153,225,.3);}
+.m-btn-ok.yellow{background:var(--yellow);color:#111;box-shadow:0 0 20px rgba(255,193,7,.25);}
+.m-btn-ok.purple{background:var(--purple);box-shadow:0 0 20px rgba(159,122,234,.25);}
+.m-btn-ok:not(:disabled):hover{opacity:.88;transform:translateY(-2px);}
+.m-btn-ok:disabled{opacity:.3;cursor:not-allowed;}
+
+@media(max-width:700px){
+  .sidebar{width:240px;min-width:240px;}
+  .profile-header,.saldo-section,.deudas-section,.historial-section{padding-left:16px;padding-right:16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="beam"></div>
+
+<!-- ══ ROL ══ -->
+<div id="screen-role" class="screen active">
+  <div class="role-card">
+    <div class="role-brand">
+      <div class="role-logo"></div>
+      <div>
+        <div class="role-brand-name"><span>COM</span>MIFY</div>
+        <div class="role-brand-sub">Cartera de Asesores</div>
+      </div>
+    </div>
+    <div class="role-heading">¿Cómo deseas ingresar?</div>
+    <div class="role-sub">Selecciona tu rol para continuar</div>
+    <div class="role-options">
+      <div class="role-btn admin" id="roleAdminBtn" onclick="selectRole('admin')">
+        <div class="role-icon ri-admin"><i class="fas fa-shield-halved"></i></div>
+        <div class="role-label">Administrador</div>
+        <div class="role-desc">Registra préstamos y ajusta descomisiones de todos los asesores</div>
+      </div>
+      <div class="role-btn asesor" id="roleAsesorBtn" onclick="selectRole('asesor')">
+        <div class="role-icon ri-asesor"><i class="fas fa-user-tie"></i></div>
+        <div class="role-label">Asesor</div>
+        <div class="role-desc">Consulta tu cartera y abona a tus deudas pendientes</div>
+      </div>
+    </div>
+    <button class="role-enter" id="roleEnterBtn" disabled onclick="enterRole()">
+      <i class="fas fa-arrow-right-to-bracket"></i> Entrar
+    </button>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div id="screen-admin" class="screen">
+  <aside class="sidebar">
+    <div class="sb-top">
+      <div class="sb-brand">
+        <div class="sb-brand-left">
+          <div class="sb-logo"></div>
+          <div class="sb-name"><span>COM</span>MIFY</div>
+        </div>
+        <span class="sb-badge admin">Admin</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:.67rem;color:#3a5a4a;font-weight:700;">Cartera de Asesores</span>
+        <div class="sb-switch" onclick="goRole()"><i class="fas fa-arrow-left"></i> Salir</div>
+      </div>
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="adminSearch" placeholder="Buscar asesor...">
+      </div>
+    </div>
+    <div class="sb-filters">
+      <button class="sf-btn active" data-sf="todos">Todos</button>
+      <button class="sf-btn" data-sf="positivo">Positivos</button>
+      <button class="sf-btn" data-sf="deuda">Con deuda</button>
+    </div>
+    <div class="advisor-list" id="adminAdvisorList"></div>
+    <div class="sb-pag" id="adminPag"></div>
+  </aside>
+  <main class="main-area" id="adminMain">
+    <div class="empty-main"><i class="fas fa-user-tie"></i><p>Selecciona un asesor</p></div>
+  </main>
+</div>
+
+<!-- ══ ASESOR ══ -->
+<div id="screen-asesor" class="screen">
+  <aside class="sidebar">
+    <div class="sb-top">
+      <div class="sb-brand">
+        <div class="sb-brand-left">
+          <div class="sb-logo"></div>
+          <div class="sb-name"><span>COM</span>MIFY</div>
+        </div>
+        <span class="sb-badge asesor">Asesor</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <div class="sb-switch" onclick="goRole()"><i class="fas fa-arrow-left"></i> Salir</div>
+      </div>
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="asesorSearch" placeholder="Buscar asesor...">
+      </div>
+    </div>
+    <div class="sb-filters">
+      <button class="sf-btn active" data-sf2="todos">Todos</button>
+      <button class="sf-btn" data-sf2="positivo">Positivos</button>
+      <button class="sf-btn" data-sf2="deuda">Con deuda</button>
+    </div>
+    <div class="advisor-list" id="asesorAdvisorList"></div>
+    <div class="sb-pag" id="asesorPag"></div>
+  </aside>
+  <main class="main-area" id="asesorMain">
+    <div class="empty-main"><i class="fas fa-user-tie"></i><p>Selecciona tu perfil</p></div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modalOv">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────
+const EMPRESAS=["Grupo Inmobiliario Cima","Desarrollos del Norte SA","Vértice Desarrollos","Habitat Urbano","Crest Inmuebles","Innova Living"];
+const DESARROLLOS=["Torres Cima Residencial","Parque Central Lofts","Vértice Punta Norte","Midtown Suites","Crest Valle Alto","Innova Residences","Solara Heights","Foresta District","Blu Marina","Nexus Living"];
+const NOMBRES=["Laura Méndez","Ricardo Soto","Alejandro Ruiz","Valentina Cruz","Mónica Garza","Sergio Domínguez","Pablo Ibáñez","Fernanda Peña","Héctor Ramírez","Sofía Álvarez","José Camelo","Araceli López","Diana Lozano","Carlos Medina","Georgina Beltrán","Daniel Mora","Renata Flores","Gustavo Pedraza","Isadora Ríos","Emilio Santana","Claudia Vargas","Marcos Villanueva","Patricia Salinas","Rodrigo Fuentes","Leticia Campos","Andrés Castillo","Natalia Herrera","Octavio Mejía","Verónica Núñez","Samuel Arias","Lorena Ponce","Felipe Barrios","Cecilia Rojas","Eduardo Delgado","Miriam Sandoval","Tomás Guerrero","Yolanda Jiménez","Roberto Alvarado","Carmen Estrada","Agustín Palma","Blanca Serrano","Ignacio Reyes","Mariana Torres","Cristóbal Vega","Lucía Mendoza","Ramón Ibarra","Elena Contreras","Arturo Gutiérrez","Pilar Acosta","Ernesto Cervantes","Adriana Montes","Jaime Quintero","Rosa Peña","Manuel Domínguez","Dolores Ramos"];
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function uid(){return Math.random().toString(36).slice(2,9);}
+function today(off=0){const d=new Date();d.setDate(d.getDate()-off);return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});}
+const fmt=v=>v.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+const initials=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+function genMovs(){
+  const movs=[];
+  for(let i=0;i<rnd(2,5);i++){
+    const dev=DESARROLLOS[rnd(0,DESARROLLOS.length-1)];
+    movs.push({id:uid(),tipo:'ganancia',desc:`Comisión: ${dev}`,empresa:EMPRESAS[rnd(0,EMPRESAS.length-1)],monto:rnd(5,50)*1000,fecha:today(rnd(5,120))});
+  }
+  for(let i=0;i<rnd(0,2);i++){
+    const dev=DESARROLLOS[rnd(0,DESARROLLOS.length-1)];
+    movs.push({id:uid(),tipo:'descomision',desc:`Descomisión: ${dev}`,empresa:EMPRESAS[rnd(0,EMPRESAS.length-1)],monto:rnd(3,30)*1000,fecha:today(rnd(0,60))});
+  }
+  for(let i=0;i<rnd(0,1);i++){
+    const emp=EMPRESAS[rnd(0,EMPRESAS.length-1)];
+    movs.push({id:uid(),tipo:'prestamo',desc:`Préstamo de ${emp}`,empresa:emp,monto:rnd(5,25)*1000,fecha:today(rnd(0,45))});
+  }
+  return movs;
+}
+
+const ASESORES=NOMBRES.map((nombre,i)=>({id:`a${i}`,nombre,movimientos:genMovs()}));
+
+// ─── STATE ─────────────────────────────────────────────────────────
+const S={
+  role:null,
+  adminSel:null,adminPage:1,adminFilter:'todos',adminSearch:'',
+  asesorSel:null,asesorPage:1,asesorFilter:'todos',asesorSearch:'',
+  histFilter:'todos',perPage:12
+};
+
+// ─── CALCS ─────────────────────────────────────────────────────────
+function calcSaldos(a){
+  let verde=0,rojo=0;
+  a.movimientos.forEach(m=>{
+    if(m.tipo==='ganancia')    verde+=m.monto;
+    if(m.tipo==='prestamo')  { verde+=m.monto; rojo+=m.monto; }
+    if(m.tipo==='descomision') rojo+=m.monto;
+    if(m.tipo==='abono')       rojo=Math.max(0,rojo-m.monto);
+    if(m.tipo==='ajuste')      rojo=Math.max(0,rojo+(m.delta||0));
+  });
+  return {verde,rojo:Math.max(0,rojo),neto:verde-Math.max(0,rojo)};
+}
+
+function deudasPendientes(a){
+  const fuentes=a.movimientos.filter(m=>m.tipo==='descomision'||m.tipo==='prestamo').map(m=>({...m,pendiente:m.monto}));
+  let pool=a.movimientos.filter(m=>m.tipo==='abono').reduce((s,m)=>s+m.monto,0);
+  // ajustes negativos (reducen rojo)
+  a.movimientos.filter(m=>m.tipo==='ajuste'&&(m.delta||0)<0).forEach(m=>{ pool+=Math.abs(m.delta); });
+  return fuentes.map(d=>{const ap=Math.min(pool,d.monto);pool-=ap;return {...d,pendiente:d.monto-ap};}).filter(d=>d.pendiente>0);
+}
+
+function saldoAbonable(a){
+  const g=a.movimientos.filter(m=>m.tipo==='ganancia').reduce((s,m)=>s+m.monto,0);
+  const ab=a.movimientos.filter(m=>m.tipo==='abono').reduce((s,m)=>s+m.monto,0);
+  return Math.max(0,g-ab);
+}
+
+// ─── ROL ───────────────────────────────────────────────────────────
+let _selRole=null;
+function selectRole(r){
+  _selRole=r;
+  document.getElementById('roleAdminBtn').classList.toggle('sel',r==='admin');
+  document.getElementById('roleAsesorBtn').classList.toggle('sel',r==='asesor');
+  document.getElementById('roleEnterBtn').disabled=false;
+}
+function enterRole(){
+  S.role=_selRole;
+  showScreen(_selRole==='admin'?'screen-admin':'screen-asesor');
+  _selRole==='admin'?renderAdminSidebar():renderAsesorSidebar();
+}
+function goRole(){
+  showScreen('screen-role');
+  S.adminSel=null;S.asesorSel=null;
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── SIDEBAR HELPERS ───────────────────────────────────────────────
+function filteredList(search,filter){
+  let list=[...ASESORES];
+  if(search){const q=search.toLowerCase();list=list.filter(a=>a.nombre.toLowerCase().includes(q));}
+  if(filter==='positivo') list=list.filter(a=>calcSaldos(a).neto>=0);
+  if(filter==='deuda')    list=list.filter(a=>calcSaldos(a).rojo>0);
+  return list;
+}
+function sidebarHTML(list,selId,clickFn){
+  if(!list.length) return '<div style="padding:20px;text-align:center;color:#2a4a3a;font-size:.75rem;font-weight:700;">Sin resultados</div>';
+  return list.map(a=>{
+    const {neto}=calcSaldos(a);
+    const cls=neto>0?'pos':neto<0?'neg':'zero';
+    const sign=neto>0?'+':'';
+    return `<div class="av-item${selId===a.id?' active':''}" onclick="${clickFn}('${a.id}')">
+      <div class="av-avatar">${initials(a.nombre)}</div>
+      <div class="av-info">
+        <div class="av-name">${a.nombre}</div>
+        <div class="av-neto ${cls}">${sign}${fmt(neto)}</div>
+      </div>
+      <div class="av-dot ${cls}"></div>
+    </div>`;
+  }).join('');
+}
+function pagHTML(page,pages,pv,nx,go){
+  if(pages<=1) return '';
+  let btns='';
+  for(let i=1;i<=pages;i++){
+    if(pages>6&&i>2&&i<pages-1&&Math.abs(i-page)>1){if(!btns.endsWith('·')) btns+='<span style="color:#2a4a3a;font-size:.65rem;padding:0 1px">·</span>';continue;}
+    btns+=`<button class="pag-btn${i===page?' active':''}" onclick="${go}(${i})">${i}</button>`;
+  }
+  return `<span class="pag-info-sm">Pág ${page}/${pages}</span><div class="pag-btns">
+    <button class="pag-btn" onclick="${pv}()" ${page<=1?'disabled':''}><i class="fas fa-chevron-left"></i></button>
+    ${btns}
+    <button class="pag-btn" onclick="${nx}()" ${page>=pages?'disabled':''}><i class="fas fa-chevron-right"></i></button>
+  </div>`;
+}
+
+// ─── ADMIN SIDEBAR ─────────────────────────────────────────────────
+function renderAdminSidebar(){
+  const all=filteredList(S.adminSearch,S.adminFilter);
+  const pages=Math.max(1,Math.ceil(all.length/S.perPage));
+  if(S.adminPage>pages) S.adminPage=1;
+  const slice=all.slice((S.adminPage-1)*S.perPage,S.adminPage*S.perPage);
+  document.getElementById('adminAdvisorList').innerHTML=sidebarHTML(slice,S.adminSel,'adminSelect');
+  document.getElementById('adminPag').innerHTML=pagHTML(S.adminPage,pages,'adminPrev','adminNext','adminGoPage');
+}
+function adminSelect(id){S.adminSel=id;S.histFilter='todos';renderAdminSidebar();renderAdminMain();}
+function adminPrev(){S.adminPage--;renderAdminSidebar();}
+function adminNext(){S.adminPage++;renderAdminSidebar();}
+function adminGoPage(p){S.adminPage=p;renderAdminSidebar();}
+document.getElementById('adminSearch').addEventListener('input',e=>{S.adminSearch=e.target.value.trim();S.adminPage=1;renderAdminSidebar();});
+document.querySelectorAll('#screen-admin [data-sf]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#screen-admin [data-sf]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');S.adminFilter=b.dataset.sf;S.adminPage=1;renderAdminSidebar();
+}));
+
+// ─── ASESOR SIDEBAR ────────────────────────────────────────────────
+function renderAsesorSidebar(){
+  const all=filteredList(S.asesorSearch,S.asesorFilter);
+  const pages=Math.max(1,Math.ceil(all.length/S.perPage));
+  if(S.asesorPage>pages) S.asesorPage=1;
+  const slice=all.slice((S.asesorPage-1)*S.perPage,S.asesorPage*S.perPage);
+  document.getElementById('asesorAdvisorList').innerHTML=sidebarHTML(slice,S.asesorSel,'asesorSelect');
+  document.getElementById('asesorPag').innerHTML=pagHTML(S.asesorPage,pages,'asesorPrev','asesorNext','asesorGoPage');
+}
+function asesorSelect(id){S.asesorSel=id;S.histFilter='todos';renderAsesorSidebar();renderAsesorMain();}
+function asesorPrev(){S.asesorPage--;renderAsesorSidebar();}
+function asesorNext(){S.asesorPage++;renderAsesorSidebar();}
+function asesorGoPage(p){S.asesorPage=p;renderAsesorSidebar();}
+document.getElementById('asesorSearch').addEventListener('input',e=>{S.asesorSearch=e.target.value.trim();S.asesorPage=1;renderAsesorSidebar();});
+document.querySelectorAll('#screen-asesor [data-sf2]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#screen-asesor [data-sf2]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');S.asesorFilter=b.dataset.sf2;S.asesorPage=1;renderAsesorSidebar();
+}));
+
+// ─── PROFILE BUILDERS ──────────────────────────────────────────────
+const TIPO_ICON={ganancia:'fa-arrow-trend-up',descomision:'fa-triangle-exclamation',prestamo:'fa-building-columns',abono:'fa-circle-minus',ajuste:'fa-sliders'};
+const TIPO_LBL={ganancia:'Ganancia',descomision:'Descomisión',prestamo:'Préstamo',abono:'Abono',ajuste:'Ajuste'};
+
+function movAmountHTML(m){
+  if(m.tipo==='ganancia')    return `<span class="mov-amount ma-pos">+${fmt(m.monto)}</span>`;
+  if(m.tipo==='descomision') return `<span class="mov-amount ma-neg">−${fmt(m.monto)}</span>`;
+  if(m.tipo==='prestamo')    return `<span class="mov-amount ma-blue">+${fmt(m.monto)}</span>`;
+  if(m.tipo==='abono')       return `<span class="mov-amount ma-yellow">−${fmt(m.monto)}</span>`;
+  if(m.tipo==='ajuste')      return `<span class="mov-amount ma-purple">${fmt(Math.abs(m.delta||0))}</span>`;
+  return '';
+}
+
+function buildSaldos(a){
+  const {verde,rojo,neto}=calcSaldos(a);
+  const nc=neto>=0?'green':'red',ns=neto>=0?'+':'';
+  return `<div class="saldo-section">
+    <div class="sc"><div class="sc-lbl" style="color:var(--green)"><i class="fas fa-circle-arrow-up"></i>Saldo Verde</div><div class="sc-val green">${fmt(verde)}</div><div class="sc-sub">Ganancias + préstamos</div></div>
+    <div class="sc"><div class="sc-lbl" style="color:var(--red)"><i class="fas fa-circle-arrow-down"></i>Saldo Rojo</div><div class="sc-val red">${fmt(rojo)}</div><div class="sc-sub">Descomisiones + préstamos</div></div>
+    <div class="sc"><div class="sc-lbl"><i class="fas fa-scale-balanced"></i>Saldo Neto</div><div class="sc-val ${nc}">${ns}${fmt(neto)}</div><div class="sc-sub">Verde − Rojo</div></div>
+    <div class="sc"><div class="sc-lbl" style="color:var(--yellow)"><i class="fas fa-wallet"></i>Para abonar</div><div class="sc-val yellow">${fmt(saldoAbonable(a))}</div><div class="sc-sub">Ganancias disponibles</div></div>
+  </div>`;
+}
+
+function buildDeudas(a,isAdmin){
+  const deudas=deudasPendientes(a);
+  const disp=saldoAbonable(a);
+  if(!deudas.length) return '';
+  return `<div class="deudas-section">
+    <div class="section-title red"><i class="fas fa-circle-exclamation"></i>Deudas pendientes (${deudas.length})</div>
+    ${deudas.map(d=>`
+    <div class="deuda-row">
+      <div class="dr-icon ${d.tipo==='descomision'?'desc':'prest'}"><i class="fas ${d.tipo==='descomision'?'fa-triangle-exclamation':'fa-building-columns'}"></i></div>
+      <div class="dr-info">
+        <div class="dr-desc">${d.desc}</div>
+        <div class="dr-meta">${d.empresa||''} · ${d.fecha||''} · Pendiente: <strong style="color:var(--red)">${fmt(d.pendiente)}</strong></div>
+      </div>
+      <div class="dr-amount">${fmt(d.pendiente)}</div>
+      ${isAdmin
+        ?`<button class="dr-btn edit" onclick="openModal('ajuste','${a.id}','${d.id}',${d.pendiente})"><i class="fas fa-pen"></i> Ajustar</button>`
+        :`<button class="dr-btn abonar" ${disp<=0?'disabled':''} onclick="openModal('abono','${a.id}','${d.id}',${d.pendiente})"><i class="fas fa-circle-minus"></i> Abonar</button>`
+      }
+    </div>`).join('')}
+  </div>`;
+}
+
+function buildHistorial(a){
+  let movs=[...a.movimientos].reverse();
+  if(S.histFilter!=='todos') movs=movs.filter(m=>m.tipo===S.histFilter);
+  const rows=movs.length?movs.map(m=>`
+    <div class="mov-row">
+      <div class="mov-ico ico-${m.tipo}"><i class="fas ${TIPO_ICON[m.tipo]||'fa-circle'}"></i></div>
+      <div class="mov-info">
+        <div class="mov-desc">${m.desc}</div>
+        <div class="mov-meta">${m.empresa||''} ${m.fecha?'· '+m.fecha:''}</div>
+      </div>
+      <span class="mov-badge bg-${m.tipo}">${TIPO_LBL[m.tipo]||m.tipo}</span>
+      ${movAmountHTML(m)}
+    </div>`).join('')
+    :'<div class="empty-mov">Sin movimientos en esta categoría</div>';
+
+  const fltrs=['todos','ganancia','descomision','prestamo','abono','ajuste'].map(f=>
+    `<button class="hf-btn${S.histFilter===f?' active':''}" onclick="setHF('${f}')">${f==='todos'?'Todos':TIPO_LBL[f]}</button>`).join('');
+
+  return `<div class="historial-section">
+    <div class="hs-head">
+      <div class="section-title" style="margin:0;color:var(--muted)"><i class="fas fa-clock-rotate-left"></i>Historial de movimientos</div>
+      <div class="hf-btns">${fltrs}</div>
+    </div>
+    <div class="mov-list">${rows}</div>
+  </div>`;
+}
+
+function setHF(f){S.histFilter=f;S.role==='admin'?renderAdminMain():renderAsesorMain();}
+
+function renderAdminMain(){
+  const el=document.getElementById('adminMain');
+  const a=ASESORES.find(x=>x.id===S.adminSel);
+  if(!a){el.innerHTML='<div class="empty-main"><i class="fas fa-user-tie"></i><p>Selecciona un asesor</p></div>';return;}
+  el.innerHTML=`
+    <div class="profile-header">
+      <div class="ph-left">
+        <div class="ph-avatar">${initials(a.nombre)}</div>
+        <div><div class="ph-name">${a.nombre}</div><div class="ph-role"><i class="fas fa-shield-halved" style="color:var(--green)"></i>Vista Administrador</div></div>
+      </div>
+      <button class="act-btn btn-prestamo" onclick="openModal('prestamo','${a.id}')"><i class="fas fa-building-columns"></i>Registrar préstamo</button>
+    </div>
+    ${buildSaldos(a)}${buildDeudas(a,true)}${buildHistorial(a)}`;
+}
+
+function renderAsesorMain(){
+  const el=document.getElementById('asesorMain');
+  const a=ASESORES.find(x=>x.id===S.asesorSel);
+  if(!a){el.innerHTML='<div class="empty-main"><i class="fas fa-user-tie"></i><p>Selecciona tu perfil</p></div>';return;}
+  el.innerHTML=`
+    <div class="profile-header">
+      <div class="ph-left">
+        <div class="ph-avatar blue">${initials(a.nombre)}</div>
+        <div><div class="ph-name">${a.nombre}</div><div class="ph-role"><i class="fas fa-user-tie" style="color:var(--blue)"></i>Vista Asesor</div></div>
+      </div>
+    </div>
+    ${buildSaldos(a)}${buildDeudas(a,false)}${buildHistorial(a)}`;
+}
+
+// ─── MODALS ────────────────────────────────────────────────────────
+function openModal(tipo,asesorId,deudaId='',deudaMonto=0){
+  const a=ASESORES.find(x=>x.id===asesorId);
+  const disp=saldoAbonable(a);
+  const ov=document.getElementById('modalOv'),box=document.getElementById('modalBox');
+  const maxAbono=Math.min(disp,deudaMonto);
+
+  const tpls={
+    prestamo:`
+      <div class="modal-head">
+        <div class="modal-title"><i class="fas fa-building-columns" style="color:var(--blue)"></i>Registrar Préstamo</div>
+        <button class="modal-x" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="form-g"><label class="form-lbl">Asesor</label><div style="font-size:.9rem;font-weight:900;color:var(--green-bright);padding:6px 0">${a.nombre}</div></div>
+      <div class="form-g">
+        <label class="form-lbl">Empresa que otorga el préstamo</label>
+        <select class="form-in" id="mEmp"><option value="">Seleccionar…</option>${EMPRESAS.map(e=>`<option>${e}</option>`).join('')}</select>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Monto ($)</label>
+        <input class="form-in" id="mMonto" type="number" min="1" placeholder="0.00">
+        <div class="form-note b"><i class="fas fa-circle-info" style="margin-right:4px"></i>Genera <strong>+saldo verde</strong> y <strong>+saldo rojo</strong> por el mismo monto.</div>
+      </div>
+      <div class="modal-acts">
+        <button class="m-btn m-btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="m-btn m-btn-ok blue" onclick="confirmModal('prestamo','${asesorId}')"><i class="fas fa-check"></i> Registrar</button>
+      </div>`,
+
+    abono:`
+      <div class="modal-head">
+        <div class="modal-title"><i class="fas fa-circle-minus" style="color:var(--yellow)"></i>Abonar a Deuda</div>
+        <button class="modal-x" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Disponible para abonar</label>
+        <div style="font-size:1.3rem;font-weight:900;color:var(--green-bright);font-family:'Space Mono',monospace;padding:4px 0">${fmt(disp)}</div>
+        <div class="form-note">Solo puedes usar tus ganancias disponibles.</div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Deuda pendiente</label>
+        <div style="font-size:.95rem;font-weight:900;color:var(--red);font-family:'Space Mono',monospace;padding:4px 0">${fmt(deudaMonto)}</div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">¿Cuánto deseas abonar?</label>
+        <input type="range" class="abono-slider" id="mSlider" min="0" max="${maxAbono}" step="500" value="${maxAbono}">
+        <div class="slider-preview"><span>Monto elegido:</span><strong id="sliderVal">${fmt(maxAbono)}</strong></div>
+        ${disp<=0?'<div class="form-note r"><i class="fas fa-triangle-exclamation" style="margin-right:4px"></i>Sin saldo verde disponible.</div>':''}
+      </div>
+      <div class="modal-acts">
+        <button class="m-btn m-btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="m-btn m-btn-ok yellow" ${disp<=0?'disabled':''} onclick="confirmModal('abono','${asesorId}','${deudaId}',${deudaMonto})"><i class="fas fa-circle-minus"></i> Confirmar abono</button>
+      </div>`,
+
+    ajuste:`
+      <div class="modal-head">
+        <div class="modal-title"><i class="fas fa-pen" style="color:var(--purple)"></i>Ajustar Descomisión</div>
+        <button class="modal-x" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="form-g"><label class="form-lbl">Asesor</label><div style="font-size:.9rem;font-weight:900;color:var(--green-bright);padding:6px 0">${a.nombre}</div></div>
+      <div class="form-g"><label class="form-lbl">Deuda pendiente</label><div style="font-size:.95rem;font-weight:900;color:var(--red);font-family:'Space Mono',monospace;padding:4px 0">${fmt(deudaMonto)}</div></div>
+      <div class="form-g">
+        <label class="form-lbl">Motivo del ajuste</label>
+        <input class="form-in" id="mMotivo" placeholder="Ej: error de registro, venta reactivada…">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Acción</label>
+        <select class="form-in" id="mAjusteAccion" onchange="toggleReducir()">
+          <option value="cancelar">Cancelar deuda completamente</option>
+          <option value="reducir">Reducir a nuevo monto</option>
+        </select>
+      </div>
+      <div class="form-g" id="reducirGroup" style="display:none">
+        <label class="form-lbl">Nuevo monto de deuda ($)</label>
+        <input class="form-in" id="mNuevoMonto" type="number" min="0" placeholder="0.00">
+      </div>
+      <div class="modal-acts">
+        <button class="m-btn m-btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="m-btn m-btn-ok purple" onclick="confirmModal('ajuste','${asesorId}','${deudaId}',${deudaMonto})"><i class="fas fa-check"></i> Aplicar ajuste</button>
+      </div>`
+  };
+
+  box.innerHTML=tpls[tipo]||'';
+  ov.classList.add('show');
+
+  const sl=document.getElementById('mSlider');
+  if(sl) sl.addEventListener('input',()=>{document.getElementById('sliderVal').textContent=fmt(+sl.value);});
+}
+
+function toggleReducir(){
+  const acc=document.getElementById('mAjusteAccion');
+  if(acc) document.getElementById('reducirGroup').style.display=acc.value==='reducir'?'block':'none';
+}
+
+function closeModal(){document.getElementById('modalOv').classList.remove('show');}
+document.getElementById('modalOv').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+function confirmModal(tipo,asesorId,deudaId='',deudaMonto=0){
+  const a=ASESORES.find(x=>x.id===asesorId);
+  if(tipo==='prestamo'){
+    const emp=document.getElementById('mEmp')?.value;
+    const monto=+document.getElementById('mMonto')?.value;
+    if(!emp){alert('Selecciona una empresa');return;}
+    if(!monto||monto<=0){alert('Ingresa un monto válido');return;}
+    a.movimientos.push({id:uid(),tipo:'prestamo',desc:`Préstamo de ${emp}`,empresa:emp,monto,fecha:today()});
+  }
+  if(tipo==='abono'){
+    const monto=+(document.getElementById('mSlider')?.value||0);
+    if(monto<=0){alert('Mueve el slider para elegir un monto');return;}
+    a.movimientos.push({id:uid(),tipo:'abono',desc:'Abono a deuda',empresa:'',monto,fecha:today(),ligadoA:deudaId});
+  }
+  if(tipo==='ajuste'){
+    const motivo=document.getElementById('mMotivo')?.value.trim()||'Sin motivo';
+    const accion=document.getElementById('mAjusteAccion')?.value;
+    let delta=0;
+    if(accion==='cancelar'){ delta=-deudaMonto; }
+    else{
+      const nuevo=+document.getElementById('mNuevoMonto')?.value;
+      if(isNaN(nuevo)||nuevo<0){alert('Ingresa el nuevo monto');return;}
+      delta=-(deudaMonto-nuevo);
+    }
+    a.movimientos.push({id:uid(),tipo:'ajuste',desc:`Ajuste: ${motivo}`,empresa:'',delta,fecha:today(),ligadoA:deudaId});
+  }
+  closeModal();
+  S.histFilter='todos';
+  S.role==='admin'?(renderAdminSidebar(),renderAdminMain()):(renderAsesorSidebar(),renderAsesorMain());
+}
+
+// ─── STARS ─────────────────────────────────────────────────────────
+const starsEl=document.getElementById('stars');
+for(let i=0;i<100;i++){
+  const s=document.createElement('div');s.className='star';
+  const sz=Math.random()*2.5+.8;
+  const colors=['#ffffff','#7bc42a','#c8e88a','rgba(96,166,30,.5)'];
+  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;opacity:${Math.random()*.5+.15};`;
+  starsEl.appendChild(s);
+}
+</script>
+</body>
+</html>

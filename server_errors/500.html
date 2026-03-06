@@ -277,7 +277,10 @@
     </p>
 
     <div class="actions">
-      <a href="/" class="btn btn-primary">Reintentar</a>
+      <a href="/" onclick="if (document.referrer) { history.back(); return false; }" 
+   class="btn btn-primary">
+  Volver
+      </a>
       <a href="#" class="btn btn-secondary">Ver estado</a>
     </div>
   </div>

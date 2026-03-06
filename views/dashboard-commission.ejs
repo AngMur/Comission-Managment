@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NOVU — Comisiones</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="/novu-header.js" defer></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1e1e;--bg2:#162828;--bg3:#1c3030;--bg4:#223838;
+  --green:#60a61e;--green-glow:rgba(96,166,30,0.3);--green-bright:#7bc42a;
+  --white:#ffffff;--muted:#8fada0;
+  --amber:#f0a500;--blue:#38c5f5;--red:#e74c3c;--teal:#10b981;
+}
+body{background:var(--bg);color:var(--white);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── NOTIFICATIONS ── */
+.notif-overlay{position:fixed;inset:0;z-index:1000;pointer-events:none;display:flex;flex-direction:column;align-items:flex-end;gap:10px;padding:1.5rem 1.5rem 2rem;}
+.notif{pointer-events:all;background:var(--bg3);border:1px solid rgba(96,166,30,0.3);border-left:4px solid var(--green-bright);border-radius:12px;padding:1rem 1.2rem;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:slideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;position:relative;overflow:hidden;}
+.notif.notif-blue{border-left-color:var(--blue);}
+.notif.notif-amber{border-left-color:var(--amber);}
+.notif.notif-red{border-left-color:var(--red);}
+.notif.notif-teal{border-left-color:var(--teal);}
+.notif.exit{animation:slideOut 0.3s ease forwards;}
+@keyframes slideIn{from{opacity:0;transform:translateX(60px);}to{opacity:1;transform:translateX(0);}}
+@keyframes slideOut{to{opacity:0;transform:translateX(80px);}}
+.notif-title{font-size:0.8rem;font-weight:900;margin-bottom:3px;}
+.notif-body{font-size:0.72rem;color:var(--muted);}
+.notif-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;transition:color 0.2s;}
+.notif-close:hover{color:var(--white);}
+.notif-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--green-bright);animation:shrink 5s linear forwards;}
+.notif.notif-blue .notif-progress{background:var(--blue);}
+.notif.notif-amber .notif-progress{background:var(--amber);}
+@keyframes shrink{from{width:100%;}to{width:0%;}}
+
+/* ── INBOX BUTTON ── */
+.inbox-btn{position:relative;display:inline-flex;align-items:center;gap:8px;padding:0.55rem 1.1rem;border-radius:100px;border:1px solid rgba(96,166,30,0.25);background:rgba(96,166,30,0.07);color:var(--muted);font-family:'Nunito',sans-serif;font-weight:800;font-size:0.78rem;cursor:pointer;transition:all 0.2s;letter-spacing:0.03em;}
+.inbox-btn:hover{border-color:var(--green);color:var(--white);background:rgba(96,166,30,0.13);}
+.inbox-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:100px;background:var(--red);color:#fff;font-size:0.6rem;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg);animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
+
+/* ── INBOX PANEL ── */
+.inbox-panel{position:absolute;top:0;right:0;width:360px;min-height:100%;background:var(--bg2);border-left:1px solid rgba(96,166,30,0.18);z-index:500;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,0.4);}
+.inbox-panel.open{transform:translateX(0);}
+.inbox-panel-header{padding:1.4rem 1.2rem 1rem;border-bottom:1px solid rgba(96,166,30,0.12);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.inbox-panel-title{font-size:1rem;font-weight:900;color:var(--white);}
+.inbox-panel-actions{display:flex;gap:8px;align-items:center;}
+.inbox-read-all{font-size:0.7rem;font-weight:800;color:var(--green);background:none;border:none;cursor:pointer;letter-spacing:0.04em;transition:color 0.2s;}
+.inbox-read-all:hover{color:var(--green-bright);}
+.inbox-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;transition:color 0.2s;}
+.inbox-close:hover{color:var(--white);}
+.inbox-list{flex:1;overflow-y:auto;padding:0.6rem;}
+.inbox-list::-webkit-scrollbar{width:4px;}
+.inbox-list::-webkit-scrollbar-thumb{background:rgba(96,166,30,0.3);border-radius:4px;}
+.inbox-empty{padding:3rem 1rem;text-align:center;color:var(--muted);font-size:0.85rem;opacity:0.6;}
+.inbox-item{padding:0.9rem 1rem;border-radius:12px;margin-bottom:6px;cursor:pointer;transition:background 0.2s;border:1px solid transparent;position:relative;}
+.inbox-item:hover{background:rgba(96,166,30,0.07);border-color:rgba(96,166,30,0.15);}
+.inbox-item.unread{background:rgba(96,166,30,0.05);border-color:rgba(96,166,30,0.12);}
+.inbox-item.unread::before{content:'';position:absolute;left:8px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--green-bright);}
+.inbox-item-title{font-size:0.8rem;font-weight:900;color:var(--white);margin-bottom:3px;padding-left:12px;}
+.inbox-item.unread .inbox-item-title{color:var(--green-bright);}
+.inbox-item-body{font-size:0.72rem;color:var(--muted);line-height:1.4;padding-left:12px;}
+.inbox-item-time{font-size:0.65rem;color:rgba(143,173,160,0.5);margin-top:5px;padding-left:12px;}
+.inbox-overlay-bg{position:fixed;inset:0;z-index:499;background:rgba(0,0,0,0.3);opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.inbox-overlay-bg.open{opacity:1;pointer-events:all;}
+
+/* ── CONTENT ── */
+.page-wrap{position:relative;z-index:1;padding:0 5rem;padding-top:0;}
+.content{max-width:900px;width:100%;margin:0 auto;padding:2.5rem 0 6rem;position:relative;}
+.section-head{margin-bottom:1.6rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;animation:fadeUp 0.5s 0.15s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.section-title{font-size:1.05rem;font-weight:900;color:var(--white);}
+.section-count{font-size:0.82rem;color:var(--muted);margin-top:0.2rem;}
+.btn-register{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#60a61e,#4a8518);border:none;border-radius:100px;color:#0f1e1e;font-family:'Nunito',sans-serif;font-weight:900;font-size:0.85rem;padding:0.6rem 1.3rem;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(96,166,30,0.35);transition:transform 0.2s,box-shadow 0.2s;white-space:nowrap;}
+.btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(96,166,30,0.5);}
+
+/* ── Controls ── */
+.controls-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:1.4rem;animation:fadeUp 0.5s 0.25s ease both;}
+.search-wrap{position:relative;}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--green);font-size:0.82rem;pointer-events:none;}
+.search-input{width:100%;background:var(--bg2);border:1px solid rgba(96,166,30,0.18);border-radius:100px;padding:0.6rem 1rem 0.6rem 2.4rem;color:var(--white);font-family:'Nunito',sans-serif;font-size:0.85rem;font-weight:600;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.search-input::placeholder{color:rgba(143,173,160,0.4);font-weight:400;}
+.search-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(96,166,30,0.1);}
+.filter-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-btn{padding:0.5rem 1rem;border-radius:100px;border:1px solid rgba(96,166,30,0.2);background:var(--bg2);color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.75rem;font-weight:800;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;}
+.filter-btn:hover{border-color:var(--green);color:var(--white);}
+.filter-btn.active{background:rgba(96,166,30,0.15);border-color:var(--green);color:var(--green-bright);}
+.filter-btn.f-pendiente.active{background:rgba(240,165,0,0.15);border-color:var(--amber);color:var(--amber);}
+.filter-btn.f-verificada.active{background:rgba(56,197,245,0.15);border-color:var(--blue);color:var(--blue);}
+.filter-btn.f-aprobada.active{background:rgba(123,196,42,0.15);border-color:var(--green-bright);color:var(--green-bright);}
+.filter-btn.f-pagada.active{background:rgba(16,185,129,0.15);border-color:var(--teal);color:var(--teal);}
+.filter-btn.f-cancelada.active{background:rgba(231,76,60,0.15);border-color:var(--red);color:var(--red);}
+.filter-btn.f-correccion.active{background:rgba(245,158,11,0.15);border-color:#f59e0b;color:#f59e0b;}
+
+/* ── Skeleton loader ── */
+.skeleton{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:12px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.skeleton-card{height:80px;margin-bottom:12px;}
+
+/* ── Live indicator ── */
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-bright);padding:0.3rem 0.8rem;border-radius:100px;background:rgba(123,196,42,0.08);border:1px solid rgba(123,196,42,0.2);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green-bright);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+
+/* ── Sale cards ── */
+.sale-list{display:flex;flex-direction:column;gap:12px;}
+.sale-card{background:var(--bg2);border:1px solid rgba(96,166,30,0.14);border-radius:16px;overflow:hidden;transition:border-color 0.25s;animation:fadeUp 0.5s ease both;}
+.sale-card.open{border-color:rgba(96,166,30,0.45);}
+.sale-header{display:flex;align-items:center;gap:14px;padding:1.1rem 1.4rem;cursor:pointer;user-select:none;transition:background 0.2s;}
+.sale-header:hover{background:rgba(96,166,30,0.04);}
+.sale-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.status-pendiente{background:var(--amber);box-shadow:0 0 8px rgba(240,165,0,0.6);}
+.status-verificada{background:var(--blue);box-shadow:0 0 8px rgba(56,197,245,0.6);}
+.status-aprobada{background:var(--green-bright);box-shadow:0 0 8px rgba(123,196,42,0.6);}
+.status-pagada{background:var(--teal);box-shadow:0 0 8px rgba(16,185,129,0.6);}
+.status-cancelada{background:var(--red);box-shadow:0 0 8px rgba(231,76,60,0.6);}
+.status-correccion{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,0.6);}
+.sale-info{flex:1;min-width:0;}
+.sale-empresa{font-size:0.7rem;color:var(--muted);font-weight:600;letter-spacing:0.04em;margin-bottom:2px;}
+.sale-dev{font-weight:900;font-size:0.95rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sale-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.tag{font-size:0.67rem;font-weight:700;letter-spacing:0.05em;padding:2px 9px;border-radius:100px;border:1px solid rgba(96,166,30,0.25);color:var(--green-bright);background:rgba(96,166,30,0.08);}
+.tag.ref{color:var(--muted);border-color:rgba(143,173,160,0.2);background:transparent;font-family:'Space Mono',monospace;font-size:0.6rem;}
+.tag.blue{color:var(--blue);border-color:rgba(56,197,245,0.3);background:rgba(56,197,245,0.07);}
+.tag.amber{color:#f0c040;border-color:rgba(240,192,64,0.3);background:rgba(240,192,64,0.07);}
+.status-tag-pendiente{color:var(--amber);border-color:rgba(240,165,0,0.3);background:rgba(240,165,0,0.07);}
+.status-tag-verificada{color:var(--blue);border-color:rgba(56,197,245,0.3);background:rgba(56,197,245,0.07);}
+.status-tag-aprobada{color:var(--green-bright);border-color:rgba(123,196,42,0.3);background:rgba(123,196,42,0.07);}
+.status-tag-pagada{color:var(--teal);border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.07);}
+.status-tag-cancelada{color:var(--red);border-color:rgba(231,76,60,0.3);background:rgba(231,76,60,0.07);}
+.status-tag-correccion{color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.07);}
+.sale-amount{text-align:right;flex-shrink:0;}
+.sale-price{font-family:'Space Mono',monospace;font-size:1rem;color:var(--white);font-weight:700;}
+.sale-commission{font-size:0.72rem;color:var(--green-bright);font-weight:700;margin-top:2px;}
+.chevron{flex-shrink:0;margin-left:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(96,166,30,0.3);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:11px;transition:transform 0.3s,background 0.2s,border-color 0.2s;}
+.sale-card.open .chevron{transform:rotate(180deg);background:rgba(96,166,30,0.12);border-color:rgba(96,166,30,0.6);}
+
+/* ── Sale body ── */
+.sale-body{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);}
+.sale-card.open .sale-body{max-height:1200px;}
+.sale-body-inner{border-top:1px solid rgba(96,166,30,0.1);padding:1.2rem 1.4rem 1.4rem;}
+
+/* ── Workflow bar ── */
+.workflow-bar{display:flex;align-items:center;gap:0;margin-bottom:1.4rem;}
+.wf-step{flex:1;text-align:center;position:relative;}
+.wf-step-inner{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.wf-dot{width:28px;height:28px;border-radius:50%;border:2px solid rgba(96,166,30,0.2);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--muted);transition:all 0.3s;position:relative;z-index:1;}
+.wf-dot.done{background:rgba(96,166,30,0.2);border-color:var(--green-bright);color:var(--green-bright);}
+.wf-dot.current{background:rgba(240,165,0,0.15);border-color:var(--amber);color:var(--amber);box-shadow:0 0 12px rgba(240,165,0,0.3);}
+.wf-dot.correccion{background:rgba(245,158,11,0.15);border-color:#f59e0b;color:#f59e0b;}
+.wf-label{font-size:0.6rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.wf-label.done{color:var(--green-bright);}
+.wf-label.current{color:var(--amber);}
+.wf-line{flex:0 0 auto;width:32px;height:2px;background:rgba(96,166,30,0.1);margin-top:-18px;transition:background 0.3s;}
+.wf-line.done{background:rgba(96,166,30,0.4);}
+
+/* ── Team ── */
+.team-header-line{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-size:0.68rem;font-weight:700;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;}
+.team-group{margin-bottom:1.2rem;}
+.team-group:last-child{margin-bottom:0;}
+.team-group-label{font-size:0.66rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.6rem;display:flex;align-items:center;gap:8px;}
+.team-group-label span{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:900;}
+.gl-blue{color:var(--blue);}
+.gl-blue span{background:rgba(56,197,245,0.15);color:var(--blue);}
+.gl-green{color:var(--green-bright);}
+.gl-green span{background:rgba(123,196,42,0.15);color:var(--green-bright);}
+.team-group-label::after{content:'';flex:1;height:1px;background:rgba(96,166,30,0.1);}
+.participants-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.participant{background:var(--bg3);border:1px solid rgba(96,166,30,0.1);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:12px;transition:border-color 0.2s,transform 0.2s;}
+.participant:hover{border-color:rgba(96,166,30,0.3);transform:translateY(-1px);}
+.participant.verified-p{border-color:rgba(123,196,42,0.35);background:rgba(96,166,30,0.05);}
+.p-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.82rem;color:var(--bg);flex-shrink:0;font-family:'Space Mono',monospace;}
+.av-green{background:linear-gradient(135deg,#7bc42a,#4a8518);}
+.av-teal{background:linear-gradient(135deg,#38c5f5,#1a8bb5);}
+.av-amber{background:linear-gradient(135deg,#f0c040,#c88a10);}
+.av-pink{background:linear-gradient(135deg,#f08080,#c04040);}
+.av-purple{background:linear-gradient(135deg,#b080f0,#7040c0);}
+.p-info{flex:1;min-width:0;}
+.p-name{font-weight:900;font-size:0.85rem;color:var(--white);}
+.p-role-label{font-size:0.62rem;color:var(--muted);font-weight:600;}
+.p-earnings{text-align:right;flex-shrink:0;}
+.p-pct{font-size:0.7rem;color:var(--muted);}
+.p-amt{font-family:'Space Mono',monospace;font-size:0.85rem;color:var(--green-bright);font-weight:700;margin-top:2px;}
+
+/* ── Verify checkbox ── */
+.p-verify-row{margin-top:6px;}
+.verify-check{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.67rem;font-weight:800;letter-spacing:0.04em;color:var(--muted);transition:color 0.2s;user-select:none;}
+.verify-check:hover{color:var(--white);}
+.verify-check.checked{color:var(--green-bright);}
+.verify-check input[type=checkbox]{display:none;}
+.check-box{width:14px;height:14px;border-radius:4px;border:1.5px solid rgba(96,166,30,0.3);background:transparent;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+.verify-check.checked .check-box{background:var(--green);border-color:var(--green);}
+.check-box i{font-size:8px;color:white;opacity:0;}
+.verify-check.checked .check-box i{opacity:1;}
+.verified-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.62rem;font-weight:800;letter-spacing:0.06em;color:var(--green-bright);padding:2px 8px;border-radius:100px;background:rgba(123,196,42,0.1);border:1px solid rgba(123,196,42,0.25);}
+
+/* ── Creator badge ── */
+.creator-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.62rem;font-weight:800;letter-spacing:0.06em;color:var(--amber);padding:2px 8px;border-radius:100px;background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.2);margin-top:4px;}
+
+/* ── Action panel ── */
+.action-panel{margin-top:1.2rem;padding:1rem;background:var(--bg3);border-radius:12px;border:1px solid rgba(96,166,30,0.12);}
+.action-panel-title{font-size:0.7rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.8rem;display:flex;align-items:center;gap:8px;}
+.action-panel-title i{color:var(--green);}
+.action-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.action-btn{display:inline-flex;align-items:center;gap:6px;padding:0.55rem 1.1rem;border-radius:100px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:900;font-size:0.78rem;letter-spacing:0.02em;transition:transform 0.2s,box-shadow 0.2s,opacity 0.2s;}
+.action-btn:hover{transform:translateY(-1px);}
+.action-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-approve{background:linear-gradient(135deg,#60a61e,#4a8518);color:#0f1e1e;box-shadow:0 3px 12px rgba(96,166,30,0.3);}
+.btn-approve:hover{box-shadow:0 6px 20px rgba(96,166,30,0.45);}
+.btn-paid{background:linear-gradient(135deg,#10b981,#059669);color:#0a1a24;box-shadow:0 3px 12px rgba(16,185,129,0.25);}
+.btn-correct{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;}
+.btn-correct:hover{background:rgba(245,158,11,0.2);}
+.correction-note{display:none;margin-top:0.8rem;}
+.correction-note.visible{display:block;}
+.correction-textarea{width:100%;background:var(--bg2);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:0.7rem;color:var(--white);font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:600;outline:none;resize:vertical;min-height:70px;transition:border-color 0.2s;}
+.correction-textarea::placeholder{color:rgba(143,173,160,0.4);font-weight:400;}
+.correction-textarea:focus{border-color:var(--amber);}
+.correction-send-btn{margin-top:6px;padding:0.45rem 1rem;border-radius:100px;background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;font-family:'Nunito',sans-serif;font-weight:900;font-size:0.75rem;cursor:pointer;transition:background 0.2s;}
+.correction-send-btn:hover{background:rgba(245,158,11,0.3);}
+
+/* ── Director section ── */
+.director-verify-row{display:flex;align-items:center;gap:10px;padding:0.8rem 1rem;background:rgba(56,197,245,0.05);border:1px solid rgba(56,197,245,0.15);border-radius:12px;margin-top:0.8rem;}
+.director-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#38c5f5,#1a8bb5);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.8rem;color:#0a1a24;font-family:'Space Mono',monospace;flex-shrink:0;}
+.director-info{flex:1;}
+.director-name{font-size:0.82rem;font-weight:900;color:var(--white);}
+.director-role{font-size:0.62rem;color:var(--blue);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+.director-status.pending-dir{color:var(--muted);font-size:0.7rem;font-weight:700;}
+.director-status.approved-dir{color:var(--green-bright);font-size:0.7rem;font-weight:700;}
+
+/* ── Correction note display ── */
+.correction-note-display{display:flex;align-items:flex-start;gap:10px;margin-top:0.8rem;padding:0.9rem 1rem;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:12px;}
+.correction-icon{color:#f59e0b;font-size:0.9rem;margin-top:1px;}
+.correction-label{font-size:0.62rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#f59e0b;margin-bottom:3px;}
+.correction-msg{font-size:0.78rem;color:var(--white);font-weight:600;line-height:1.4;}
+
+/* ── Verif progress ── */
+.verif-progress-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding:0.7rem 1rem;background:rgba(240,165,0,0.05);border:1px solid rgba(240,165,0,0.12);border-radius:10px;}
+.verif-progress-label{font-size:0.68rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber);flex-shrink:0;}
+.verif-bar-wrap{flex:1;height:6px;background:rgba(240,165,0,0.12);border-radius:3px;overflow:hidden;}
+.verif-bar-fill{height:100%;background:linear-gradient(90deg,var(--amber),#f59e0b);border-radius:3px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
+.verif-count{font-size:0.68rem;font-weight:800;color:var(--amber);flex-shrink:0;}
+
+/* ── Totals ── */
+.totals-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(96,166,30,0.1);}
+.total-pill{background:rgba(96,166,30,0.07);border:1px solid rgba(96,166,30,0.18);border-radius:10px;padding:0.5rem 1rem;font-size:0.78rem;}
+.total-pill span{display:block;color:var(--muted);font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px;}
+.total-pill strong{font-family:'Space Mono',monospace;color:var(--white);font-size:0.88rem;}
+
+/* ── No results ── */
+.no-results-msg{text-align:center;padding:3rem;color:var(--muted);opacity:0.7;}
+.no-results-msg .nr-icon{font-size:2rem;margin-bottom:0.6rem;}
+.no-results-msg .nr-text{font-size:0.9rem;font-weight:700;}
+
+@media(max-width:768px){
+  .page-wrap{padding:0 1.2rem;}
+  .participants-grid{grid-template-columns:1fr;}
+  .action-btns{flex-direction:column;}
+  .inbox-panel{width:100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="notif-overlay" id="notifOverlay"></div>
+<div class="inbox-overlay-bg" id="inboxBg" onclick="closeInbox()"></div>
+
+
+<div class="page-wrap">
+  <div class="content">
+    <!-- Inbox panel -->
+    <div class="inbox-panel" id="inboxPanel">
+      <div class="inbox-panel-header">
+        <div class="inbox-panel-title"><i class="fas fa-bell" style="color:var(--green);margin-right:8px;"></i>Notificaciones</div>
+        <div class="inbox-panel-actions">
+          <button class="inbox-read-all" onclick="markAllRead()">Marcar todas como leídas</button>
+          <button class="inbox-close" onclick="closeInbox()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <div class="inbox-list" id="inboxList">
+        <div class="inbox-empty">Cargando...</div>
+      </div>
+    </div>
+    <div class="section-head">
+      <div>
+        <div class="section-title">Ventas Registradas</div>
+        <div class="section-count" id="sectionCount">— transacciones</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="live-badge"><div class="live-dot"></div> En vivo</div>
+        <button class="inbox-btn" id="inboxBtn" onclick="openInbox()">
+          <i class="fas fa-bell"></i> Buzón
+          <span class="inbox-badge" id="inboxBadge" style="display:none">0</span>
+        </button>
+        <a href="/register-commission" class="btn-register"><i class="fas fa-plus"></i> Nueva comisión</a>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input class="search-input" id="searchInput" type="text" placeholder="Buscar por empresa, desarrollo, ID…">
+      </div>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+        <button class="filter-btn f-pendiente"   data-filter="pendiente">Pendiente</button>
+        <button class="filter-btn f-verificada"  data-filter="verificada">Verificada</button>
+        <button class="filter-btn f-aprobada"    data-filter="aprobada">Aprobada</button>
+        <button class="filter-btn f-pagada"      data-filter="pagada">Pagada</button>
+        <button class="filter-btn f-correccion"  data-filter="correccion">Corrección</button>
+      </div>
+    </div>
+
+    <div class="sale-list" id="saleList">
+      <!-- skeletons mientras carga -->
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let currentUser = null;   // { id, name, username, roleName, permissions[] }
+let commissionsDB = [];   // datos crudos de la API
+let verificationsCache = {};  // { commissionId: [verifications] }
+let activeFilter = 'all';
+let searchTerm   = '';
+
+const statusLabels = {
+  pendiente:'Pendiente', verificada:'Verificada', aprobada:'Aprobada',
+  pagada:'Pagada', cancelada:'Cancelada', correccion:'En Corrección'
+};
+
+const fmt = n => '$' + Number(n).toLocaleString('es-MX');
+const avatarColors = ['av-teal','av-green','av-pink','av-amber','av-purple'];
+const getAvatar  = idx => avatarColors[idx % avatarColors.length];
+const getInitials = name => name ? name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() : '?';
+
+// ══════════════════════════════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════════════════════════════
+async function api(method, path, body = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Error en la solicitud');
+  return data;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT — carga usuario y comisiones
+// ══════════════════════════════════════════════════════════════════
+async function init() {
+  try {
+    // 1. Obtener usuario de la sesión
+    const sessionRes = await api('GET', '/api/auth/me');
+    currentUser = sessionRes.data?.user;
+    if (!currentUser) { window.location.href = '/'; return; }
+
+    // 2. Cargar comisiones
+    await loadCommissions();
+
+    // 3. Cargar notificaciones (badge)
+    await loadInboxBadge();
+
+    // Polling cada 30s
+    setInterval(async () => {
+      await loadCommissions(true);
+      await loadInboxBadge();
+    }, 30000);
+
+  } catch (err) {
+    console.error(err);
+    window.location.href = '/';
+  }
+}
+
+async function loadCommissions(silent = false) {
+  try {
+    if (!silent) showSkeletons();
+    const res = await api('GET', '/api/commission');
+    commissionsDB = res.data || [];
+
+    // Pre-cargar verificaciones de comisiones pendientes/corrección
+    const needVerif = commissionsDB.filter(c => ['pendiente','correccion'].includes(c.status));
+    await Promise.all(needVerif.map(async c => {
+      const v = await api('GET', `/api/commission/${c._id}/verifications`);
+      verificationsCache[c._id] = v.data || [];
+    }));
+
+    fullRender();
+  } catch (err) {
+    showNotif('Error', 'No se pudieron cargar las comisiones', 'red');
+  }
+}
+
+function showSkeletons() {
+  document.getElementById('saleList').innerHTML = `
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INBOX
+// ══════════════════════════════════════════════════════════════════
+async function loadInboxBadge() {
+  try {
+    const res = await api('GET', '/api/notifications?unread=true&limit=1');
+    const count = res.unread_count || 0;
+    const badge = document.getElementById('inboxBadge');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch {}
+}
+
+async function openInbox() {
+  document.getElementById('inboxPanel').classList.add('open');
+  document.getElementById('inboxBg').classList.add('open');
+  await loadInboxItems();
+}
+
+function closeInbox() {
+  document.getElementById('inboxPanel').classList.remove('open');
+  document.getElementById('inboxBg').classList.remove('open');
+}
+
+async function loadInboxItems() {
+  const list = document.getElementById('inboxList');
+  list.innerHTML = '<div class="inbox-empty">Cargando...</div>';
+  try {
+    const res = await api('GET', '/api/notifications?limit=40');
+    const notifs = res.data || [];
+    if (!notifs.length) {
+      list.innerHTML = '<div class="inbox-empty"><i class="fas fa-bell-slash" style="font-size:1.5rem;display:block;margin-bottom:8px;"></i>Sin notificaciones</div>';
+      return;
+    }
+    list.innerHTML = notifs.map(n => `
+      <div class="inbox-item ${n.read ? '' : 'unread'}" onclick="readNotif('${n._id}', this, '${n.commission_id?._id || n.commission_id || ''}')">
+        <div class="inbox-item-title">${n.title}</div>
+        <div class="inbox-item-body">${n.body}</div>
+        <div class="inbox-item-time">${timeAgo(n.created_at)}</div>
+      </div>`).join('');
+  } catch {
+    list.innerHTML = '<div class="inbox-empty">Error al cargar notificaciones</div>';
+  }
+}
+
+async function readNotif(id, el, commissionId) {
+  el.classList.remove('unread');
+  try {
+    await api('PATCH', `/api/notifications/${id}/read`);
+    await loadInboxBadge();
+    if (commissionId) {
+      closeInbox();
+      // Scroll a la comisión correspondiente
+      setTimeout(() => {
+        const card = document.getElementById(`card-${commissionId}`);
+        if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.classList.add('open'); }
+      }, 300);
+    }
+  } catch {}
+}
+
+async function markAllRead() {
+  try {
+    await api('PATCH', '/api/notifications/read-all');
+    document.querySelectorAll('.inbox-item.unread').forEach(el => el.classList.remove('unread'));
+    document.getElementById('inboxBadge').style.display = 'none';
+  } catch {}
+}
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'Ahora mismo';
+  if (mins < 60) return `hace ${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `hace ${hrs}h`;
+  return `hace ${Math.floor(hrs/24)}d`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PERMISSIONS HELPERS
+// ══════════════════════════════════════════════════════════════════
+const hasPerm = p => currentUser?.permissions?.includes(p);
+
+function isParticipant(commission) {
+  const id = currentUser?.id;
+  return commission.participants.managers.some(m => (m.user?._id || m.user)?.toString() === id)
+      || commission.participants.advisors.some(a => (a.user?._id || a.user)?.toString() === id);
+}
+
+function isCreator(commission) {
+  const createdBy = commission.created_by?._id || commission.created_by;
+  return createdBy?.toString() === currentUser?.id;
+}
+
+function getMyRole(commission) {
+  const id = currentUser?.id;
+  if (commission.participants.managers.some(m => (m.user?._id || m.user)?.toString() === id)) return 'gerente';
+  if (commission.participants.advisors.some(a => (a.user?._id || a.user)?.toString() === id))  return 'asesor';
+  return null;
+}
+
+function isDirector()       { return currentUser?.roleName === 'Director'; }
+function isAdministrador()  { return currentUser?.roleName === 'Administrador'; }
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════
+function buildWorkflowBar(sale) {
+  const steps = [
+    {key:'pendiente', label:'Registrada',  icon:'fas fa-file-alt'},
+    {key:'verificada', label:'Verificada',  icon:'fas fa-users'},
+    {key:'aprobada',   label:'Aprobada',    icon:'fas fa-check-circle'},
+    {key:'pagada',     label:'Pagada',      icon:'fas fa-money-bill-wave'},
+  ];
+  const order = ['pendiente','verificada','aprobada','pagada'];
+  const currentIdx = order.indexOf(sale.status === 'correccion' ? 'pendiente' : sale.status);
+
+  let html = '<div class="workflow-bar">';
+  steps.forEach((s, i) => {
+    const idx = order.indexOf(s.key);
+    let cls = '';
+    if (sale.status === 'correccion' && s.key === 'pendiente') cls = 'correccion';
+    else if (idx < currentIdx) cls = 'done';
+    else if (idx === currentIdx) cls = 'current';
+    html += `<div class="wf-step"><div class="wf-step-inner">
+      <div class="wf-dot ${cls}"><i class="${s.icon}"></i></div>
+      <div class="wf-label ${cls === 'done' ? 'done' : cls === 'current' ? 'current' : ''}">${s.label}</div>
+    </div></div>`;
+    if (i < steps.length - 1)
+      html += `<div class="wf-line ${idx < currentIdx ? 'done' : ''}"></div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function buildVerifProgress(sale) {
+  if (!['pendiente','correccion'].includes(sale.status)) return '';
+  const verifs = verificationsCache[sale._id] || [];
+  const total  = verifs.length;
+  const done   = verifs.filter(v => v.verified).length;
+  const pct    = total ? Math.round((done/total)*100) : 0;
+  return `<div class="verif-progress-row">
+    <span class="verif-progress-label">Verificaciones</span>
+    <div class="verif-bar-wrap"><div class="verif-bar-fill" style="width:${pct}%"></div></div>
+    <span class="verif-count">${done}/${total}</span>
+  </div>`;
+}
+
+function buildCorrectionNote(sale) {
+  if (!sale.correction_note) return '';
+  return `<div class="correction-note-display">
+    <i class="fas fa-exclamation-triangle correction-icon"></i>
+    <div>
+      <div class="correction-label">Nota de corrección</div>
+      <div class="correction-msg">${sale.correction_note}</div>
+    </div>
+  </div>`;
+}
+
+function buildParticipantCard(p, sale, idx) {
+  const userId = (p.user?._id || p.user)?.toString();
+  const name   = p.user?.name || p.user?.username || '—';
+  const initials = getInitials(name);
+  const avatar   = getAvatar(idx);
+  const role     = sale.participants.managers.some(m => (m.user?._id||m.user)?.toString() === userId) ? 'gerente' : 'asesor';
+
+  // Verificación de este participante
+  const verifs = verificationsCache[sale._id] || [];
+  const verif  = verifs.find(v => (v.user_id?._id || v.user_id)?.toString() === userId);
+  const isVerified = verif?.verified || false;
+
+  const isMe     = userId === currentUser?.id;
+  const canCheck = isMe && ['pendiente','correccion'].includes(sale.status) && !isVerified;
+
+  let verifyUI = '';
+  if (isVerified) {
+    verifyUI = `<div class="p-verify-row"><div class="verified-badge"><i class="fas fa-check"></i> Verificado</div></div>`;
+  } else if (canCheck) {
+    verifyUI = `<div class="p-verify-row">
+      <label class="verify-check" id="chk-${sale._id}-${userId}">
+        <input type="checkbox" onchange="verifyParticipant('${sale._id}')">
+        <div class="check-box"><i class="fas fa-check"></i></div>
+        Confirmo que es correcto
+      </label>
+    </div>`;
+  }
+
+  const creatorBadge = isCreator(sale) && isMe
+    ? `<div class="creator-badge"><i class="fas fa-pen-to-square"></i> Registrador</div>` : '';
+
+  return `<div class="participant ${isVerified ? 'verified-p' : ''}" id="pcard-${sale._id}-${userId}">
+    <div class="p-avatar ${avatar}">${initials}</div>
+    <div class="p-info">
+      <div class="p-name">${name}</div>
+      <div class="p-role-label">${role === 'gerente' ? 'Gerente' : 'Asesor'}</div>
+      ${creatorBadge}
+      ${verifyUI}
+    </div>
+    <div class="p-earnings">
+      <div class="p-pct">${(p.percentage * 100).toFixed(2)}%</div>
+      <div class="p-amt">${fmt(p.commission)}</div>
+    </div>
+  </div>`;
+}
+
+function buildDirectorSection(sale) {
+  if (sale.status !== 'verificada' && !(sale.status === 'aprobada' && sale.director_review?.reviewed_by)) return '';
+  const rev = sale.director_review;
+  const name = rev?.reviewed_by?.name || rev?.reviewed_by?.username || 'Director';
+  const statusText = rev?.action === 'aprobada'
+    ? `<span class="director-status approved-dir"><i class="fas fa-check-circle"></i> Aprobado por ${name}</span>`
+    : `<span class="director-status pending-dir">Pendiente revisión directora</span>`;
+  return `<div class="director-verify-row">
+    <div class="director-avatar">${getInitials(name)}</div>
+    <div class="director-info">
+      <div class="director-name">${name}</div>
+      <div class="director-role">Director</div>
+    </div>
+    ${statusText}
+  </div>`;
+}
+
+function buildActionPanel(sale) {
+  let actions = '';
+
+  if (isDirector() && sale.status === 'verificada') {
+    actions = `
+      <button class="action-btn btn-approve" onclick="directorAction('${sale._id}','aprobada')">
+        <i class="fas fa-check-double"></i> Aprobar
+      </button>
+      <button class="action-btn btn-correct" onclick="toggleCorrection('${sale._id}')">
+        <i class="fas fa-edit"></i> Mandar a corrección
+      </button>`;
+  } else if (isAdministrador() && sale.status === 'aprobada') {
+    actions = `
+      <button class="action-btn btn-paid" onclick="adminAction('${sale._id}','pagada')">
+        <i class="fas fa-money-bill-wave"></i> Marcar como Pagada
+      </button>
+      <button class="action-btn btn-correct" onclick="toggleCorrection('${sale._id}')">
+        <i class="fas fa-edit"></i> Mandar a corrección
+      </button>`;
+  } else if (isCreator(sale) && ['pendiente','correccion'].includes(sale.status)) {
+    actions = `
+      <a href="/edit-commission/${sale._id}" class="action-btn btn-approve">
+        <i class="fas fa-pen"></i> Editar comisión
+      </a>`;
+  }
+
+  if (!actions) return '';
+
+  return `<div class="action-panel" id="ap-${sale._id}">
+    <div class="action-panel-title"><i class="fas fa-bolt"></i> Acciones disponibles</div>
+    <div class="action-btns">${actions}</div>
+    <div class="correction-note" id="cn-${sale._id}">
+      <textarea class="correction-textarea" id="ct-${sale._id}" placeholder="Describe qué debe corregirse…"></textarea>
+      <button class="correction-send-btn" onclick="sendCorrection('${sale._id}')">
+        <i class="fas fa-paper-plane"></i> Enviar nota de corrección
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderCard(sale, delay = 0) {
+  const el = document.createElement('div');
+  el.className = 'sale-card';
+  el.id = `card-${sale._id}`;
+  el.dataset.status = sale.status;
+  el.dataset.search = `${sale.company?.text} ${sale.development?.text} ${sale._id} ${sale.concept?.text}`.toLowerCase();
+  el.style.animationDelay = `${delay}s`;
+
+  const managers = sale.participants?.managers || [];
+  const advisors = sale.participants?.advisors || [];
+  const allP = [...managers, ...advisors];
+  const totalComision = allP.reduce((a, p) => a + Number(p.commission || 0), 0);
+  const statusText = statusLabels[sale.status] || sale.status;
+
+  const buildGroup = (label, people, colorClass, offset = 0) => {
+    if (!people.length) return '';
+    return `<div class="team-group">
+      <div class="team-group-label ${colorClass}">${label} <span>${people.length}</span></div>
+      <div class="participants-grid">${people.map((p, i) => buildParticipantCard(p, sale, offset + i)).join('')}</div>
+    </div>`;
+  };
+
+  el.innerHTML = `
+    <div class="sale-header" onclick="toggleCard('${sale._id}')">
+      <div class="sale-status-dot status-${sale.status}"></div>
+      <div class="sale-info">
+        <div class="sale-empresa">${sale.company?.text || '—'}</div>
+        <div class="sale-dev">${sale.development?.text || '—'}</div>
+        <div class="sale-meta">
+          <span class="tag blue">${sale.location?.text || ''}</span>
+          <span class="tag">${sale.concept?.text || ''}</span>
+          <span class="tag amber">${sale.commission_type || ''}</span>
+          <span class="tag ref">ID: ${sale._id.slice(-6)}</span>
+          <span class="tag status-tag-${sale.status}">${statusText}</span>
+        </div>
+      </div>
+      <div class="sale-amount">
+        <div class="sale-price">${fmt(sale.sale_price)}</div>
+        <div class="sale-commission">Comisión ${fmt(totalComision)}</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="sale-body" id="body-${sale._id}">
+      <div class="sale-body-inner">
+        ${buildWorkflowBar(sale)}
+        ${buildCorrectionNote(sale)}
+        ${buildVerifProgress(sale)}
+        <div class="team-header-line">
+          <span>Equipo de venta</span>
+          <span style="font-size:0.68rem;color:rgba(143,173,160,0.5);font-weight:600;">${allP.length} participante${allP.length!==1?'s':''}</span>
+        </div>
+        ${buildGroup('Gerentes', managers, 'gl-blue', 0)}
+        ${buildGroup('Asesores', advisors, 'gl-green', managers.length)}
+        ${buildDirectorSection(sale)}
+        ${buildActionPanel(sale)}
+        <div class="totals-row">
+          <div class="total-pill"><span>Precio de venta</span><strong>${fmt(sale.sale_price)}</strong></div>
+          <div class="total-pill"><span>Comisión total</span><strong>${fmt(totalComision)}</strong></div>
+          <div class="total-pill"><span>Participantes</span><strong>${allP.length}</strong></div>
+          ${sale.created_by ? `<div class="total-pill"><span>Registró</span><strong>${sale.created_by.name || sale.created_by.username}</strong></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  return el;
+}
+
+function fullRender() {
+  const list = document.getElementById('saleList');
+  const openIds = [...document.querySelectorAll('.sale-card.open')].map(c => c.id.replace('card-',''));
+
+  const filtered = commissionsDB.filter(s => {
+    const matchF = activeFilter === 'all' || s.status === activeFilter;
+    const matchS = !searchTerm || `${s.company?.text} ${s.development?.text} ${s._id} ${s.concept?.text}`.toLowerCase().includes(searchTerm);
+    return matchF && matchS;
+  });
+
+  document.getElementById('sectionCount').textContent =
+    `${filtered.length} transacción${filtered.length!==1?'es':''} · haz clic para ver participantes`;
+
+  list.innerHTML = '';
+  if (!filtered.length) {
+    list.innerHTML = `<div class="no-results-msg"><div class="nr-icon">🔍</div><div class="nr-text">Sin resultados</div></div>`;
+    return;
+  }
+
+  filtered.forEach((s, i) => {
+    const el = renderCard(s, 0.05 * i);
+    if (openIds.includes(s._id)) el.classList.add('open');
+    list.appendChild(el);
+  });
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.sale-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ACCIONES
+// ══════════════════════════════════════════════════════════════════
+async function verifyParticipant(commissionId) {
+  try {
+    const res = await api('POST', `/api/commission/${commissionId}/verify`);
+    showNotif('✅ Verificación registrada', res.message, 'green');
+
+    // Recargar verificaciones de esta comisión
+    const v = await api('GET', `/api/commission/${commissionId}/verifications`);
+    verificationsCache[commissionId] = v.data || [];
+
+    if (res.allVerified) {
+      // Actualizar status en cache local
+      const idx = commissionsDB.findIndex(c => c._id === commissionId);
+      if (idx !== -1) commissionsDB[idx].status = 'verificada';
+      showNotif('🔔 Estado actualizado', 'La comisión pasó a Verificada', 'blue');
+    }
+
+    // Re-render preservando el card abierto
+    fullRender();
+    setTimeout(() => {
+      const card = document.getElementById(`card-${commissionId}`);
+      if (card) card.classList.add('open');
+    }, 50);
+  } catch (err) {
+    showNotif('Error', err.message, 'red');
+    // Desmarcar checkbox si falló
+    fullRender();
+  }
+}
+
+function toggleCorrection(id) {
+  const el = document.getElementById(`cn-${id}`);
+  if (el) el.classList.toggle('visible');
+}
+
+async function sendCorrection(id, actor = 'director') {
+  const ta   = document.getElementById(`ct-${id}`);
+  const note = ta?.value.trim() || 'Favor de revisar la información.';
+  const endpoint = isDirector() ? 'director' : 'admin';
+  try {
+    await api('POST', `/api/commission/${id}/${endpoint}`, { action: 'correccion', note });
+    showNotif('⚠️ Enviado a corrección', 'La comisión regresó a Pendiente', 'amber');
+    await loadCommissions(true);
+  } catch (err) {
+    showNotif('Error', err.message, 'red');
+  }
+}
+
+async function directorAction(id, action) {
+  try {
+    await api('POST', `/api/commission/${id}/director`, { action });
+    showNotif('✅ Comisión aprobada', 'La comisión fue aprobada por la Dirección', 'green');
+    await loadCommissions(true);
+  } catch (err) {
+    showNotif('Error', err.message, 'red');
+  }
+}
+
+async function adminAction(id, action) {
+  try {
+    await api('POST', `/api/commission/${id}/admin`, { action });
+    showNotif('💰 Comisión pagada', 'La comisión fue marcada como pagada', 'teal');
+    await loadCommissions(true);
+  } catch (err) {
+    showNotif('Error', err.message, 'red');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FILTERS & SEARCH
+// ══════════════════════════════════════════════════════════════════
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchTerm = this.value.toLowerCase().trim();
+  fullRender();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    activeFilter = this.dataset.filter;
+    fullRender();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════
+// NOTIFICATIONS UI
+// ══════════════════════════════════════════════════════════════════
+function showNotif(title, body, type = '') {
+  const overlay = document.getElementById('notifOverlay');
+  const div = document.createElement('div');
+  div.className = `notif ${type ? 'notif-'+type : ''}`;
+  div.innerHTML = `
+    <button class="notif-close" onclick="this.closest('.notif').classList.add('exit');setTimeout(()=>this.closest('.notif')?.remove(),300)">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="notif-title">${title}</div>
+    <div class="notif-body">${body}</div>
+    <div class="notif-progress"></div>`;
+  overlay.appendChild(div);
+  setTimeout(() => { div.classList.add('exit'); setTimeout(() => div.remove(), 300); }, 5000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

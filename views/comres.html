@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVU — Registro de Comisión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+
+    <!-- ═══════════════════════════════════
+         NOVU — solo header y fondo
+    ═══════════════════════════════════ -->
+    <style>
+        /* Fondo */
+        body {
+            background: #0f1e1e !important;
+        }
+            
+        body::before {
+            background:
+                radial-gradient(circle at 20% 50%, rgba(96,166,30,0.07) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96,166,30,0.05) 0%, transparent 50%),
+                linear-gradient(135deg, #0f1e1e 0%, #162828 50%, #0f1e1e 100%) !important;
+        }
+
+        /* Estrellas */
+        #novu-stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+
+        .novu-star  {
+            position: absolute; border-radius: 50%;
+            animation: novuTwinkle var(--dur) ease-in-out infinite alternate;
+        }
+        @keyframes novuTwinkle {
+            from { opacity: 0.1; transform: scale(1); }
+            to   { opacity: 0.8; transform: scale(1.5); }
+        }
+
+        /* Beam de luz */
+        #novu-beam {
+            position: fixed; top: 0; right: 10%;
+            width: 260px; height: 100vh;
+            background: linear-gradient(180deg, rgba(96,166,30,0.07) 0%, transparent 65%);
+            transform: skewX(-8deg);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* Header */
+        #novu-header {
+            position: relative; z-index: 2;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 2rem 4rem 1.4rem;
+            border-bottom: 1px solid rgba(96,166,30,0.15);
+            margin-bottom: 0;
+        }
+        #novu-logo {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(3.5rem, 8vw, 6rem);
+            font-weight: 700; line-height: 1; letter-spacing: -3px;
+            color: #ffffff;
+            text-shadow: 0 0 60px rgba(96,166,30,0.3);
+            display: inline-block; cursor: pointer;
+            transition: color 0.2s, text-shadow 0.2s;
+            position: relative; text-decoration: none;
+        }
+        #novu-logo::after {
+            content: '';
+            position: absolute; bottom: 3px; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #60a61e, #7bc42a);
+            border-radius: 2px;
+            transform: scaleX(0); transform-origin: left;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        #novu-logo:hover { color: #7bc42a; text-shadow: 0 0 40px rgba(96,166,30,0.4); }
+        #novu-logo:hover::after { transform: scaleX(1); }
+        #novu-logo .dot { color: #60a61e; }
+
+        /* Mascota */
+        #novu-mascot { animation: novuFloat 4s ease-in-out infinite; }
+        @keyframes novuFloat {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-14px); }
+        }
+        .novu-unicorn-wrap {
+            position: relative;
+            width: clamp(75px, 8vw, 110px);
+            height: clamp(75px, 8vw, 110px);
+        }
+        .novu-glow-bubble {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            width: 80%; height: 80%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(74,133,24,0.5) 0%, transparent 70%);
+            filter: blur(12px);
+        }
+        .novu-svg {
+            position: relative; z-index: 1; width: 100%; height: 100%;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+
+        /* El contenido original queda sobre el fondo */
+        .container { position: relative; z-index: 1; }
+
+        @media (max-width: 640px) {
+            #novu-header { padding: 1.2rem 1.4rem; }
+        }
+    </style>
+
+    <!-- ═══════════════════════════════════
+         ESTILOS ORIGINALES — sin cambios
+    ═══════════════════════════════════ -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding: 40px 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(96, 166, 30, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96, 166, 30, 0.06) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header-badge {
+            display: inline-block;
+            background: rgba(96, 166, 30, 0.15);
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            color: #60a61e;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+        }
+
+        .decorative-line {
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #60a61e, transparent);
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        .form-card {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 60px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+
+        .column-divider {
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(96, 166, 30, 0.3), transparent);
+            border-radius: 10px;
+            justify-self: center;
+        }
+
+        .column-left, .column-right {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label i {
+            color: #60a61e;
+            font-size: 0.85rem;
+        }
+
+        .custom-select {
+            position: relative;
+        }
+
+        .select-display {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 40px 14px 18px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select-display.placeholder { color: #666; }
+        .select-display.loading { color: #888; cursor: wait; }
+        .select-display.auto-selected {
+            border-color: rgba(96, 166, 30, 0.5);
+            background: rgba(96, 166, 30, 0.05);
+        }
+        .select-display:hover:not(.loading) { border-color: rgba(96, 166, 30, 0.4); }
+        .select-display.active {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #60a61e;
+            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
+        }
+
+        .select-arrow {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #60a61e;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .select-display.active .select-arrow { transform: translateY(-50%) rotate(180deg); }
+        .select-display.loading .select-arrow { animation: spin 1s linear infinite; }
+
+        @keyframes spin {
+            from { transform: translateY(-50%) rotate(0deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 20, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            border-radius: 12px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .select-dropdown.active { max-height: 350px; opacity: 1; overflow-y: auto; }
+
+        .select-search {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            background: rgba(20, 20, 20, 0.98);
+            z-index: 10;
+        }
+
+        .select-search input {
+            width: 100%;
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 35px 10px 12px;
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .select-search input:focus {
+            border-color: #60a61e;
+            box-shadow: 0 0 0 2px rgba(96, 166, 30, 0.1);
+        }
+
+        .select-search i {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #60a61e;
+            font-size: 0.85rem;
+        }
+
+        .select-options { padding: 5px; }
+
+        .select-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            color: #ffffff;
+            font-size: 0.95rem;
+        }
+
+        .select-option:hover { background: rgba(96, 166, 30, 0.15); }
+        .select-option.selected { background: rgba(96, 166, 30, 0.25); color: #60a61e; font-weight: 600; }
+        .select-option.hidden { display: none; }
+        .select-option.filtered-out { display: none; }
+
+        .no-results, .loading-message, .error-message { padding: 20px; text-align: center; font-size: 0.9rem; }
+        .no-results { color: #666; }
+        .loading-message { color: #60a61e; }
+        .loading-message i { animation: spin 1s linear infinite; display: inline-block; margin-right: 8px; }
+        .error-message { color: #ff6b6b; }
+
+        .auto-select-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(96, 166, 30, 0.2);
+            border: 1px solid rgba(96, 166, 30, 0.4);
+            color: #60a61e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        input[type="date"] {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="date"]:focus {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #60a61e;
+            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
+        }
+
+        input[type="date"]:hover { border-color: rgba(96, 166, 30, 0.4); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(0.8); cursor: pointer; }
+
+        .mp-checkbox-inline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 20px;
+            background: rgba(96, 166, 30, 0.1);
+            border: 1px solid rgba(96, 166, 30, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mp-checkbox-inline:hover { background: rgba(96, 166, 30, 0.15); border-color: rgba(96, 166, 30, 0.5); }
+        .mp-checkbox-inline input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: #60a61e; }
+        .mp-checkbox-inline .checkbox-label { font-size: 0.95rem; font-weight: 600; color: #ffffff; text-transform: none; letter-spacing: 0; margin: 0; }
+
+        .personnel-section { margin-top: 40px; padding-top: 40px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+        .section-title { font-size: 1.3rem; font-weight: 700; color: #60a61e; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .section-title i { font-size: 1.1rem; }
+
+        .personnel-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(30, 30, 30, 0.3);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .personnel-row.first-row { grid-template-columns: 1fr 1fr 1fr; }
+        .personnel-row:hover { background: rgba(30, 30, 30, 0.5); border-color: rgba(96, 166, 30, 0.2); }
+
+        .row-number { grid-column: 1 / -1; font-size: 0.85rem; font-weight: 600; color: #60a61e; margin-bottom: 10px; }
+
+        .row-buttons { display: flex; justify-content: space-between; }
+
+        .row-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .add-row-btn { color: #60a61e; background: rgba(96, 166, 30, 0.15); border: 1px solid rgba(96, 166, 30, 0.3); }
+        .delete-row-btn { color: #a62e1e; background: rgba(166, 30, 30, 0.15); border: 1px solid rgba(166, 30, 30, 0.3); }
+        .add-row-btn:hover { border-color: #60a61e; background: rgba(96, 166, 30, 0.25); }
+        .delete-row-btn:hover { border-color: #a61e1e; background: rgba(166, 30, 30, 0.25); }
+        .row-btn:hover { transform: translateY(-2px); }
+        .row-btn i { font-size: 0.9rem; }
+
+        .actions { display: flex; gap: 20px; justify-content: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+        .btn { padding: 16px 40px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px; letter-spacing: 0.5px; }
+        .btn-primary { background: linear-gradient(135deg, #60a61e, #4a8518); color: #ffffff; box-shadow: 0 4px 15px rgba(96, 166, 30, 0.3); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(96, 166, 30, 0.4); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-3px); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 40px; max-width: 600px; width: 90%; border: 1px solid rgba(96, 166, 30, 0.3); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: slideUp 0.4s ease; max-height: 80vh; overflow-y: auto; }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .modal-header h2 { font-size: 1.8rem; font-weight: 700; color: #60a61e; margin-bottom: 10px; }
+        .modal-header p { font-size: 0.95rem; color: #888; }
+        .modal-body { margin-bottom: 30px; }
+
+        .info-group { margin-bottom: 20px; padding: 15px; background: rgba(30, 30, 30, 0.5); border-radius: 12px; border-left: 3px solid #60a61e; }
+        .info-label { font-size: 0.8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .info-label i { color: #60a61e; font-size: 0.75rem; }
+        .info-value { font-size: 1.1rem; color: #ffffff; font-weight: 500; }
+
+        .info-section-title { font-size: 1.1rem; font-weight: 700; color: #60a61e; margin: 25px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        .info-section-title i { font-size: 1rem; }
+
+        .personnel-info { background: rgba(30, 30, 30, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .personnel-info-header { font-size: 0.85rem; font-weight: 600; color: #60a61e; margin-bottom: 10px; }
+        .personnel-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .modal-actions { display: flex; gap: 15px; justify-content: center; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+        .modal-btn { padding: 14px 35px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px; }
+        .modal-btn-confirm { background: linear-gradient(135deg, #60a61e, #4a8518); color: #ffffff; box-shadow: 0 4px 15px rgba(96, 166, 30, 0.3); }
+        .modal-btn-confirm:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(96, 166, 30, 0.4); }
+        .modal-btn-cancel { background: rgba(255, 255, 255, 0.05); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .modal-btn-cancel:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-3px); }
+
+        .mp-badge { display: inline-block; background: rgba(96, 166, 30, 0.2); border: 1px solid rgba(96, 166, 30, 0.4); color: #60a61e; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-top: 5px; }
+
+        .commission-details { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+        .commission-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(96, 166, 30, 0.15); border: 1px solid rgba(96, 166, 30, 0.3); color: #60a61e; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .commission-badge i { font-size: 0.75rem; }
+        .commission-amount { background: rgba(96, 166, 30, 0.2); border-color: rgba(96, 166, 30, 0.4); color: #60a61e; font-weight: 700; }
+
+        .sale-price-input {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            outline: none;
+            width: 100%;
+        }
+        .sale-price-input:hover { border-color: rgba(96, 166, 30, 0.4); }
+        .sale-price-input:focus {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #60a61e;
+            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
+        }
+        .sale-price-input::placeholder { color: #666; }
+
+        .select-dropdown::-webkit-scrollbar { width: 8px; }
+        .select-dropdown::-webkit-scrollbar-track { background: rgba(30, 30, 30, 0.5); border-radius: 10px; }
+        .select-dropdown::-webkit-scrollbar-thumb { background: rgba(96, 166, 30, 0.5); border-radius: 10px; }
+        .select-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(96, 166, 30, 0.7); }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .form-card { padding: 30px 20px; }
+            .form-grid { grid-template-columns: 1fr; gap: 20px; }
+            .column-divider { display: none; }
+            .personnel-row, .personnel-row.first-row { grid-template-columns: 1fr; gap: 15px; }
+            .actions { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .modal-content { padding: 25px; width: 95%; }
+            .modal-header h2 { font-size: 1.5rem; }
+            .personnel-info-row { grid-template-columns: 1fr; gap: 10px; }
+            .modal-actions { flex-direction: column; }
+            .modal-btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════ NOVU HEADER ═══════════════ -->
+    <div id="novu-stars"></div>
+    <div id="novu-beam"></div>
+
+    <header id="novu-header">
+        <a id="novu-logo" href="#"><span class="dot">NO</span>VU</a>
+        <div id="novu-mascot">
+            <div class="novu-unicorn-wrap">
+                <div class="novu-glow-bubble"></div>
+                <svg class="novu-svg" viewBox="0 0 300 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="152" cy="145" rx="88" ry="90" fill="#2a6040" opacity="0.9"/>
+                    <ellipse cx="152" cy="145" rx="80" ry="82" fill="#d6f0e0"/>
+                    <ellipse cx="130" cy="110" rx="20" ry="12" fill="white" opacity="0.35" transform="rotate(-20 130 110)"/>
+                    <polygon points="152,28 144,72 160,72" fill="#38c5f5"/>
+                    <polygon points="152,28 144,72 148,72" fill="#2aa8d8" opacity="0.6"/>
+                    <ellipse cx="152" cy="30" rx="7" ry="4" fill="#e74c3c" transform="rotate(-10 152 30)"/>
+                    <ellipse cx="152" cy="152" rx="52" ry="50" fill="#f8f0dc"/>
+                    <ellipse cx="135" cy="148" rx="7" ry="7.5" fill="#2c3e50"/>
+                    <ellipse cx="169" cy="148" rx="7" ry="7.5" fill="#2c3e50"/>
+                    <circle cx="138" cy="145" r="2.5" fill="white"/>
+                    <circle cx="172" cy="145" r="2.5" fill="white"/>
+                    <path d="M127 136 Q135 130 143 136" stroke="#8b7355" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <path d="M161 136 Q169 132 177 137" stroke="#8b7355" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <path d="M143 168 Q152 175 161 168" stroke="#8b7355" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    <ellipse cx="126" cy="162" rx="9" ry="5" fill="#f0a8a8" opacity="0.5"/>
+                    <ellipse cx="178" cy="162" rx="9" ry="5" fill="#f0a8a8" opacity="0.5"/>
+                    <ellipse cx="102" cy="130" rx="14" ry="18" fill="#4a8518" transform="rotate(-15 102 130)"/>
+                    <ellipse cx="202" cy="130" rx="14" ry="18" fill="#4a8518" transform="rotate(15 202 130)"/>
+                    <rect x="100" y="218" width="104" height="95" rx="30" fill="#dce8dc"/>
+                    <ellipse cx="152" cy="222" rx="42" ry="14" fill="#b8d8b8"/>
+                    <circle cx="152" cy="265" r="14" fill="#4a8518" opacity="0.8"/>
+                    <path d="M146 265 A6 6 0 1 1 146 265.01" stroke="white" stroke-width="3" fill="none" stroke-dasharray="20 5"/>
+                    <rect x="62" y="228" width="40" height="24" rx="12" fill="#dce8dc" transform="rotate(20 62 228)"/>
+                    <ellipse cx="60" cy="258" rx="14" ry="14" fill="#7bc42a"/>
+                    <rect x="200" y="228" width="40" height="24" rx="12" fill="#dce8dc" transform="rotate(-20 240 228)"/>
+                    <ellipse cx="242" cy="258" rx="14" ry="14" fill="#7bc42a"/>
+                    <rect x="112" y="305" width="35" height="45" rx="15" fill="#dce8dc"/>
+                    <rect x="155" y="305" width="35" height="45" rx="15" fill="#dce8dc"/>
+                    <ellipse cx="129" cy="348" rx="20" ry="11" fill="#7bc42a"/>
+                    <ellipse cx="172" cy="348" rx="20" ry="11" fill="#7bc42a"/>
+                </svg>
+            </div>
+        </div>
+    </header>
+    <!-- ═══════════════ FIN NOVU HEADER ═══════════════ -->
+
+
+    <!-- ═══════════════════════════════════════════════
+         CÓDIGO ORIGINAL — sin ningún cambio
+    ═══════════════════════════════════════════════ -->
+    <div class="container">
+        <header>
+            <div class="header-badge">NOVU</div>
+            <h1>Registro de Comisión</h1>
+            <div class="decorative-line"></div>
+        </header>
+
+        <div class="form-card">
+            <form id="commissionForm">
+                <div class="form-grid">
+                    <div class="column-left">
+                        <div class="form-group">
+                            <label><i class="fas fa-building"></i> Compañía</label>
+                            <div class="custom-select" data-field="compania" data-api="/v10/companias">
+                                <div class="select-display placeholder">Seleccionar compañía<i class="fas fa-chevron-down select-arrow"></i></div>
+                                <div class="select-dropdown">
+                                    <div class="select-search"><input type="text" placeholder="Buscar compañía..."><i class="fas fa-search"></i></div>
+                                    <div class="select-options"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-rocket"></i> Desarrollo</label>
+                            <div class="custom-select" data-field="desarrollo" data-api="/v10/desarrollos">
+                                <div class="select-display placeholder">Seleccionar desarrollo<i class="fas fa-chevron-down select-arrow"></i></div>
+                                <div class="select-dropdown">
+                                    <div class="select-search"><input type="text" placeholder="Buscar desarrollo..."><i class="fas fa-search"></i></div>
+                                    <div class="select-options"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Ubicación</label>
+                            <div class="custom-select" data-field="ubicacion" data-api="/v10/ubicaciones">
+                                <div class="select-display placeholder">Seleccionar ubicación<i class="fas fa-chevron-down select-arrow"></i></div>
+                                <div class="select-dropdown">
+                                    <div class="select-search"><input type="text" placeholder="Buscar ubicación..."><i class="fas fa-search"></i></div>
+                                    <div class="select-options"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column-divider"></div>
+
+                    <div class="column-right">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-day"></i> Fecha registro</label>
+                            <input type="date" id="fechaRegistro" value="" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-receipt"></i> Concepto</label>
+                            <div class="custom-select" data-field="concepto" data-api="/v10/conceptos">
+                                <div class="select-display placeholder">Seleccionar concepto<i class="fas fa-chevron-down select-arrow"></i></div>
+                                <div class="select-dropdown">
+                                    <div class="select-search"><input type="text" placeholder="Buscar concepto..."><i class="fas fa-search"></i></div>
+                                    <div class="select-options"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Fecha contrato</label>
+                            <input type="date" id="fechaContrato" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign"></i> Precio de Venta</label>
+                            <input type="text" id="salePrice" class="sale-price-input" placeholder="$0" inputmode="numeric" oninput="formatSalePrice(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="personnel-section">
+                    <div class="section-title"><i class="fas fa-users"></i> Gerentes y Asesores</div>
+                    <div id="personnelRows">
+                        <div class="personnel-row first-row">
+                            <div class="row-number"><i class="fas fa-hashtag"></i> Fila 1</div>
+                            <div class="form-group">
+                                <label><i class="fas fa-user-tie"></i> Gerente</label>
+                                <div class="custom-select" data-field="gerente" data-row="1" data-api="/api/users/by-role/Gerente">
+                                    <div class="select-display placeholder">Seleccionar gerente<i class="fas fa-chevron-down select-arrow"></i></div>
+                                    <div class="select-dropdown">
+                                        <div class="select-search"><input type="text" placeholder="Buscar gerente..."><i class="fas fa-search"></i></div>
+                                        <div class="select-options"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Asesor</label>
+                                <div class="custom-select" data-field="asesor" data-row="1" data-api="/api/users/by-role/Asesor">
+                                    <div class="select-display placeholder">Seleccionar asesor<i class="fas fa-chevron-down select-arrow"></i></div>
+                                    <div class="select-dropdown">
+                                        <div class="select-search"><input type="text" placeholder="Buscar asesor..."><i class="fas fa-search"></i></div>
+                                        <div class="select-options"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-shield-alt"></i> Multipunto</label>
+                                <div class="mp-checkbox-inline">
+                                    <input type="checkbox" id="mpCheckbox">
+                                    <label for="mpCheckbox" class="checkbox-label">MP</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row-buttons">
+                        <button type="button" class="row-btn add-row-btn" onclick="addPersonnelRow()"><i class="fas fa-plus"></i> Agregar otra fila</button>
+                        <button type="button" class="row-btn delete-row-btn" onclick="deletePersonnelRow()"><i class="fas fa-minus"></i> Quitar última fila</button>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" onclick="cancelForm()"><i class="fas fa-times"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Comisión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Confirmar Comisión</h2>
+                <p>Revisa la información antes de guardar</p>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmSave()"><i class="fas fa-save"></i> Confirmar y Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ORIGINAL — sin cambios -->
+    <script>
+        const API_CONFIG = {
+            baseURL: 'http://localhost:3000',
+            endpoints: {
+                companias: '/v10/companias',
+                desarrollos: '/v10/desarrollos',
+                ubicaciones: '/v10/ubicaciones',
+                conceptos: '/v10/conceptos',
+                gerentes: '/api/users/by-role/Gerente',
+                asesores: '/api/users/by-role/Asesor',
+                comisiones: '/v10/comisiones'
+            }
+        };
+
+        const apiCache = {};
+        const allData = { desarrollos: [], ubicaciones: [] };
+
+        async function fetchFromAPI(endpoint) {
+            if(endpoint == "/v10/conceptos"){
+                return [{id:1,nombre:"Contrato"},{id:2,nombre:"Escritura"}];
+            }
+            if (apiCache[endpoint]) return apiCache[endpoint];
+            try {
+                const response = await fetch(`${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    let data = [];
+                    if (result.data.desarrollos) { data = result.data.desarrollos; allData.desarrollos = [...data]; }
+                    else if (result.data.companias) { data = result.data.companias; }
+                    else if (result.data.ubicaciones) { data = result.data.ubicaciones; allData.ubicaciones = [...data]; }
+                    else if (result.data.conceptos) { data = result.data.conceptos; }
+                    else if (result.data && endpoint == "/api/users/by-role/Gerente") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
+                    else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
+                    apiCache[endpoint] = data;
+                    return data;
+                } else { throw new Error('Formato de respuesta inválido'); }
+            } catch (error) { console.error(`Error al obtener datos de ${endpoint}:`, error); throw error; }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fechaRegistro').valueAsDate = new Date();
+            initializeCustomSelects();
+            loadAllSelectors();
+            setupCascadingSelects();
+        });
+
+        async function loadAllSelectors() {
+            const selectors = document.querySelectorAll('.custom-select[data-api]');
+            for (const selector of selectors) { await loadSelectorData(selector); }
+        }
+
+        async function loadSelectorData(selectorElement) {
+            const apiEndpoint = selectorElement.dataset.api;
+            const display = selectorElement.querySelector('.select-display');
+            const optionsContainer = selectorElement.querySelector('.select-options');
+            const arrow = selectorElement.querySelector('.select-arrow');
+            display.classList.add('loading');
+            display.textContent = 'Cargando...';
+            arrow.className = 'fas fa-spinner select-arrow';
+            optionsContainer.innerHTML = '<div class="loading-message"><i class="fas fa-spinner"></i>Cargando datos...</div>';
+            try {
+                const data = await fetchFromAPI(apiEndpoint);
+                display.classList.remove('loading');
+                const placeholder = selectorElement.querySelector('.select-search input').placeholder;
+                display.textContent = placeholder.replace('Buscar', 'Seleccionar');
+                arrow.className = 'fas fa-chevron-down select-arrow';
+                populateSelect(selectorElement, data);
+            } catch (error) {
+                display.classList.remove('loading');
+                display.textContent = 'Error al cargar';
+                arrow.className = 'fas fa-exclamation-circle select-arrow';
+                optionsContainer.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error al cargar los datos.</div>';
+            }
+        }
+
+        function populateSelect(selectorElement, data, autoSelect = null) {
+            const optionsContainer = selectorElement.querySelector('.select-options');
+            optionsContainer.innerHTML = '';
+            if (!data || data.length === 0) { optionsContainer.innerHTML = '<div class="no-results">No hay datos disponibles</div>'; return; }
+            data.forEach(item => {
+                const option = document.createElement('div');
+                option.className = 'select-option';
+                option.textContent = item.nombre;
+                option.dataset.value = item.id;
+                if (item.compania) option.dataset.compania = item.compania;
+                if (item.desarrollo) option.dataset.desarrollo = item.desarrollo;
+                option.addEventListener('click', function() { selectOption(selectorElement, this); });
+                optionsContainer.appendChild(option);
+            });
+            if (autoSelect) {
+                const optionToSelect = optionsContainer.querySelector(`[data-value="${autoSelect}"]`);
+                if (optionToSelect) selectOption(selectorElement, optionToSelect, true);
+            }
+        }
+
+        function selectOption(selectorElement, optionElement, isAutoSelect = false) {
+            const optionsContainer = selectorElement.querySelector('.select-options');
+            const display = selectorElement.querySelector('.select-display');
+            optionsContainer.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+            optionElement.classList.add('selected');
+            display.textContent = optionElement.textContent;
+            display.classList.remove('placeholder');
+            display.dataset.value = optionElement.dataset.value;
+            if (optionElement.dataset.compania) display.dataset.compania = optionElement.dataset.compania;
+            if (optionElement.dataset.desarrollo) display.dataset.desarrollo = optionElement.dataset.desarrollo;
+            if (isAutoSelect) {
+                display.classList.add('auto-selected');
+                const badge = document.createElement('span');
+                badge.className = 'auto-select-badge';
+                badge.innerHTML = '<i class="fas fa-magic"></i> Auto';
+                display.appendChild(badge);
+                setTimeout(() => { const b = display.querySelector('.auto-select-badge'); if (b) b.remove(); display.classList.remove('auto-selected'); }, 3000);
+            }
+            const arrow = document.createElement('i');
+            arrow.className = 'fas fa-chevron-down select-arrow';
+            display.appendChild(arrow);
+            closeAllSelects();
+            const field = selectorElement.dataset.field;
+            if (field === 'compania') handleCompaniaChange(optionElement.dataset.value);
+            else if (field === 'desarrollo') handleDesarrolloChange(optionElement.dataset.value, isAutoSelect);
+            else if (field === 'ubicacion') handleUbicacionChange(optionElement.dataset.desarrollo, isAutoSelect);
+        }
+
+        function selectOptionSilent(selectorElement, optionElement, isAutoSelect = false) {
+            const optionsContainer = selectorElement.querySelector('.select-options');
+            const display = selectorElement.querySelector('.select-display');
+            optionsContainer.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+            optionElement.classList.add('selected');
+            display.textContent = optionElement.textContent;
+            display.classList.remove('placeholder');
+            display.dataset.value = optionElement.dataset.value;
+            if (optionElement.dataset.compania) display.dataset.compania = optionElement.dataset.compania;
+            if (optionElement.dataset.desarrollo) display.dataset.desarrollo = optionElement.dataset.desarrollo;
+            if (isAutoSelect) {
+                display.classList.add('auto-selected');
+                const badge = document.createElement('span');
+                badge.className = 'auto-select-badge';
+                badge.innerHTML = '<i class="fas fa-magic"></i> Auto';
+                display.appendChild(badge);
+                setTimeout(() => { const b = display.querySelector('.auto-select-badge'); if (b) b.remove(); display.classList.remove('auto-selected'); }, 3000);
+            }
+            const arrow = document.createElement('i');
+            arrow.className = 'fas fa-chevron-down select-arrow';
+            display.appendChild(arrow);
+            closeAllSelects();
+        }
+
+        function setupCascadingSelects() {}
+
+        function handleCompaniaChange(companiaId) {
+            const desarrollosSelector = document.querySelector('.custom-select[data-field="desarrollo"]');
+            const desarrollosFiltrados = allData.desarrollos.filter(d => d.compania == companiaId);
+            clearSelection('desarrollo');
+            clearSelection('ubicacion');
+            populateSelect(desarrollosSelector, desarrollosFiltrados);
+            const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
+            populateSelect(ubicacionesSelector, []);
+        }
+
+        function handleDesarrolloChange(desarrolloId, isAutoSelect = false, preserveUbicacion = false) {
+            if (!isAutoSelect) {
+                const desarrollo = allData.desarrollos.find(d => d.id == desarrolloId);
+                if (desarrollo && desarrollo.compania) {
+                    const companiaSelector = document.querySelector('.custom-select[data-field="compania"]');
+                    const companiaOption = companiaSelector.querySelector(`[data-value="${desarrollo.compania}"]`);
+                    if (companiaOption && !companiaSelector.querySelector('.select-display').dataset.value) selectOption(companiaSelector, companiaOption, true);
+                }
+            }
+            const ubicacionesFiltradas = allData.ubicaciones.filter(u => u.desarrollo == desarrolloId);
+            const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
+            const ubicacionDisplay = ubicacionesSelector.querySelector('.select-display');
+            const ubicacionActual = ubicacionDisplay.dataset.value;
+            if (!preserveUbicacion) clearSelection('ubicacion');
+            populateSelect(ubicacionesSelector, ubicacionesFiltradas);
+            if (preserveUbicacion && ubicacionActual) {
+                const ubicacionOption = ubicacionesSelector.querySelector(`[data-value="${ubicacionActual}"]`);
+                if (ubicacionOption) selectOptionSilent(ubicacionesSelector, ubicacionOption);
+            }
+        }
+
+        function handleUbicacionChange(desarrolloId, isAutoSelect = false) {
+            if (!isAutoSelect && desarrolloId) {
+                const desarrollo = allData.desarrollos.find(d => d.id == desarrolloId);
+                if (desarrollo) {
+                    const desarrolloSelector = document.querySelector('.custom-select[data-field="desarrollo"]');
+                    const desarrolloDisplay = desarrolloSelector.querySelector('.select-display');
+                    if (!desarrolloDisplay.dataset.value || desarrolloDisplay.dataset.value != desarrollo.id) {
+                        if (desarrollo.compania) {
+                            const companiaSelector = document.querySelector('.custom-select[data-field="compania"]');
+                            const companiaOption = companiaSelector.querySelector(`[data-value="${desarrollo.compania}"]`);
+                            if (companiaOption) {
+                                selectOptionSilent(companiaSelector, companiaOption, true);
+                                const desarrollosFiltrados = allData.desarrollos.filter(d => d.compania == desarrollo.compania);
+                                populateSelect(document.querySelector('.custom-select[data-field="desarrollo"]'), desarrollosFiltrados);
+                            }
+                        }
+                        const desarrolloOption = desarrolloSelector.querySelector(`[data-value="${desarrollo.id}"]`);
+                        if (desarrolloOption) {
+                            selectOptionSilent(desarrolloSelector, desarrolloOption, true);
+                            const ubicacionesFiltradas = allData.ubicaciones.filter(u => u.desarrollo == desarrollo.id);
+                            const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
+                            const ubicacionActual = ubicacionesSelector.querySelector('.select-display').dataset.value;
+                            populateSelect(ubicacionesSelector, ubicacionesFiltradas);
+                            if (ubicacionActual) {
+                                const ubicacionOption = ubicacionesSelector.querySelector(`[data-value="${ubicacionActual}"]`);
+                                if (ubicacionOption) selectOptionSilent(ubicacionesSelector, ubicacionOption);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function clearSelection(field) {
+            const selector = document.querySelector(`.custom-select[data-field="${field}"]`);
+            if (selector) {
+                const display = selector.querySelector('.select-display');
+                const placeholder = selector.querySelector('.select-search input').placeholder;
+                display.textContent = placeholder.replace('Buscar', 'Seleccionar');
+                display.classList.add('placeholder');
+                display.classList.remove('auto-selected');
+                delete display.dataset.value;
+                delete display.dataset.compania;
+                delete display.dataset.desarrollo;
+                const badge = display.querySelector('.auto-select-badge');
+                if (badge) badge.remove();
+                const arrow = document.createElement('i');
+                arrow.className = 'fas fa-chevron-down select-arrow';
+                display.appendChild(arrow);
+                selector.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+            }
+        }
+
+        function initializeCustomSelects() {
+            document.querySelectorAll('.custom-select').forEach(select => {
+                const display = select.querySelector('.select-display');
+                const dropdown = select.querySelector('.select-dropdown');
+                const searchInput = select.querySelector('.select-search input');
+                display.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (display.classList.contains('loading')) return;
+                    closeAllSelects();
+                    dropdown.classList.toggle('active');
+                    display.classList.toggle('active');
+                    if (dropdown.classList.contains('active')) searchInput.focus();
+                });
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const options = select.querySelectorAll('.select-option');
+                    let hasResults = false;
+                    options.forEach(option => {
+                        if (option.classList.contains('filtered-out')) return;
+                        const text = option.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) { option.classList.remove('hidden'); hasResults = true; }
+                        else option.classList.add('hidden');
+                    });
+                    let noResults = select.querySelector('.no-results');
+                    if (!hasResults && searchTerm) {
+                        if (!noResults) { noResults = document.createElement('div'); noResults.className = 'no-results'; noResults.innerHTML = '<i class="fas fa-search"></i> No se encontraron resultados'; dropdown.appendChild(noResults); }
+                    } else if (noResults) noResults.remove();
+                });
+                dropdown.addEventListener('click', (e) => e.stopPropagation());
+            });
+            document.addEventListener('click', closeAllSelects);
+        }
+
+        function closeAllSelects() {
+            document.querySelectorAll('.select-dropdown.active').forEach(dropdown => {
+                dropdown.classList.remove('active');
+                dropdown.previousElementSibling.classList.remove('active');
+                const searchInput = dropdown.querySelector('.select-search input');
+                if (searchInput) { searchInput.value = ''; dropdown.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('hidden')); }
+                const noResults = dropdown.querySelector('.no-results');
+                if (noResults) noResults.remove();
+            });
+        }
+
+        function getSelectValue(fieldName, rowNumber = null) {
+            const selector = rowNumber ? `.custom-select[data-field="${fieldName}"][data-row="${rowNumber}"]` : `.custom-select[data-field="${fieldName}"]`;
+            const selectElement = document.querySelector(selector);
+            if (!selectElement) return null;
+            const display = selectElement.querySelector('.select-display');
+            return { value: display.dataset.value || '', text: display.classList.contains('placeholder') ? '' : display.textContent.replace('Auto', '').trim() };
+        }
+
+        let rowCounter = 1;
+        let formDataGlobal = null;
+        let commissionsDataGlobal = null;
+
+        const mpCheckbox = document.getElementById('mpCheckbox');
+        mpCheckbox.addEventListener('change', function() { if (mpCheckbox.checked && rowCounter == 1) addPersonnelRow(); });
+
+        async function addPersonnelRow() {
+            rowCounter++;
+            const container = document.getElementById('personnelRows');
+            const newRow = document.createElement('div');
+            newRow.className = 'personnel-row';
+            newRow.innerHTML = `
+                <div class="row-number"><i class="fas fa-hashtag"></i> Fila ${rowCounter}</div>
+                <div class="form-group">
+                    <label><i class="fas fa-user-tie"></i> Gerente</label>
+                    <div class="custom-select" data-field="gerente" data-row="${rowCounter}" data-api="/api/users/by-role/Gerente">
+                        <div class="select-display placeholder">Seleccionar gerente<i class="fas fa-chevron-down select-arrow"></i></div>
+                        <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar gerente..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Asesor</label>
+                    <div class="custom-select" data-field="asesor" data-row="${rowCounter}" data-api="/api/users/by-role/Asesor">
+                        <div class="select-display placeholder">Seleccionar asesor<i class="fas fa-chevron-down select-arrow"></i></div>
+                        <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar asesor..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
+                    </div>
+                </div>`;
+            container.appendChild(newRow);
+            initializeCustomSelects();
+            const newSelectors = newRow.querySelectorAll('.custom-select[data-api]');
+            for (const selector of newSelectors) await loadSelectorData(selector);
+            newRow.style.opacity = '0';
+            newRow.style.transform = 'translateY(-20px)';
+            setTimeout(() => { newRow.style.transition = 'all 0.4s ease'; newRow.style.opacity = '1'; newRow.style.transform = 'translateY(0)'; }, 10);
+        }
+
+        function deletePersonnelRow(){
+            const container = document.getElementById('personnelRows');
+            const rows = container.querySelectorAll('.personnel-row');
+            if (rows.length > 1) { rows[rows.length - 1].remove(); rowCounter--; }
+        }
+
+        function cancelForm() {
+            if (confirm('¿Estás seguro de que deseas cancelar? Se perderán todos los cambios.')) {
+                document.getElementById('commissionForm').reset();
+                document.getElementById('fechaRegistro').valueAsDate = new Date();
+                document.querySelectorAll('.select-display').forEach(display => {
+                    const placeholder = display.closest('.custom-select').querySelector('.select-search input').placeholder;
+                    display.textContent = placeholder.replace('Buscar', 'Seleccionar');
+                    display.classList.add('placeholder');
+                    display.classList.remove('auto-selected');
+                    delete display.dataset.value;
+                    const arrow = document.createElement('i');
+                    arrow.className = 'fas fa-chevron-down select-arrow';
+                    display.appendChild(arrow);
+                });
+                populateSelect(document.querySelector('.custom-select[data-field="desarrollo"]'), allData.desarrollos);
+                populateSelect(document.querySelector('.custom-select[data-field="ubicacion"]'), allData.ubicaciones);
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function collectFormData() {
+            const personnelRows = [];
+            document.querySelectorAll('.personnel-row').forEach((row, index) => {
+                const rowNum = index + 1;
+                const gerente = getSelectValue('gerente', rowNum);
+                const asesor  = getSelectValue('asesor',  rowNum);
+                // Solo se requiere gerente; el asesor es opcional
+                if (gerente && gerente.value) {
+                    personnelRows.push({
+                        numero:       rowNum,
+                        gerente:      gerente.text,
+                        gerenteValue: gerente.value,
+                        asesor:       (asesor && asesor.value) ? asesor.text  : null,
+                        asesorValue:  (asesor && asesor.value) ? asesor.value : null
+                    });
+                }
+            });
+            const compania  = getSelectValue('compania');
+            const desarrollo = getSelectValue('desarrollo');
+            const ubicacion  = getSelectValue('ubicacion');
+            const concepto   = getSelectValue('concepto');
+            return {
+                compania:       compania.value,   companiaText:  compania.text,
+                fechaRegistro:  document.getElementById('fechaRegistro').value,
+                desarrollo:     desarrollo.value, desarrolloText: desarrollo.text,
+                concepto:       concepto.value,   conceptoText:  concepto.text,
+                ubicacion:      ubicacion.value,  ubicacionText: ubicacion.text,
+                fechaContrato:  document.getElementById('fechaContrato').value,
+                salePrice:      parseFloat(document.getElementById('salePrice').dataset.raw) || 0,
+                mp:             document.getElementById('mpCheckbox').checked,
+                personal:       personnelRows
+            };
+        }
+
+        // Construye el payload en el formato requerido por la API
+        function buildPayload(formData, commissionsData) {
+            const managers = [];
+            const advisors  = [];
+
+            formData.personal.forEach((person, index) => {
+                const commission = commissionsData.commissions[index];
+                const isMP = formData.mp;
+
+                managers.push({
+                    user: {
+                        _id:      person.gerenteValue,
+                        name:     person.gerente,
+                        email:    '',
+                        picture:  '',
+                        username: ''
+                    },
+                    role:       'Gerente',
+                    percentage: parseFloat(commission.gerentePercentage),
+                    gain:       parseFloat(commission.gerenteAmount),
+                    multipoint: isMP
+                });
+
+                if (person.asesorValue) {
+                    advisors.push({
+                        user: {
+                            _id:      person.asesorValue,
+                            name:     person.asesor,
+                            email:    '',
+                            picture:  '',
+                            username: ''
+                        },
+                        role:       'Asesor',
+                        percentage: parseFloat(commission.asesorPercentage),
+                        gain:       parseFloat(commission.asesorAmount),
+                        multipoint: isMP
+                    });
+                }
+            });
+
+            const totalPersonnel = formData.personal.length;
+            let commissionType = 'simple';
+            if (formData.mp)             commissionType = 'multipunto';
+            else if (totalPersonnel > 1) commissionType = 'compartida';
+
+            return {
+                company:         formData.companiaText,
+                development:     formData.desarrolloText,
+                location:        formData.ubicacionText,
+                company_id:      parseInt(formData.compania)    || formData.compania,
+                development_id:  parseInt(formData.desarrollo)  || formData.desarrollo,
+                location_id:     parseInt(formData.ubicacion)   || formData.ubicacion,
+                sale_price:      formData.salePrice,
+                commission_type: commissionType,
+                concept:         formData.conceptoText.toLowerCase(),
+                status:          'pendiente',
+                participants: {
+                    managers,
+                    advisors
+                },
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+        }
+
+        async function fetchPercentages(formData) {
+            try {
+                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.comisiones}/calcular`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+                if (!response.ok) throw new Error('Error al calcular comisiones');
+                const data = await response.json();
+                if (data.success && data.data) return data.data;
+                throw new Error('Formato de respuesta inválido');
+            } catch (error) {
+                console.warn('Usando datos simulados para comisiones');
+                const commissions = formData.personal.map((person, index) => ({
+                    rowNumber:          index + 1,
+                    gerentePercentage:  (Math.random() * 20 + 10).toFixed(2),
+                    asesorPercentage:   person.asesorValue ? (Math.random() * 15 + 5).toFixed(2) : '0',
+                    gerenteAmount:      (Math.random() * 50000 + 10000).toFixed(2),
+                    asesorAmount:       person.asesorValue ? (Math.random() * 30000 + 5000).toFixed(2) : '0'
+                }));
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return { commissions };
+            }
+        }
+
+        function showConfirmationModal(formData, commissionsData) {
+            const modalBody = document.getElementById('modalBody');
+            const totalPersonnel = formData.personal.length;
+            let tipoComision = formData.mp ? 'Multipunto' : (totalPersonnel === 1 ? 'Tradicional' : 'Compartida');
+            let personnelHTML = '';
+            formData.personal.forEach((person, index) => {
+                const commission = commissionsData.commissions[index];
+                const asesorBlock = person.asesorValue ? `
+                    <div class="info-group" style="margin-bottom:0;">
+                        <div class="info-label"><i class="fas fa-user"></i> Asesor</div>
+                        <div class="info-value">${person.asesor}</div>
+                        <div class="commission-details">
+                            <span class="commission-badge"><i class="fas fa-percentage"></i>${commission.asesorPercentage}%</span>
+                            <span class="commission-badge commission-amount"><i class="fas fa-dollar-sign"></i>${parseFloat(commission.asesorAmount).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+                        </div>
+                    </div>` : `
+                    <div class="info-group" style="margin-bottom:0;opacity:0.45;">
+                        <div class="info-label"><i class="fas fa-user"></i> Asesor</div>
+                        <div class="info-value" style="color:#666;font-size:0.9rem;">Sin asesor asignado</div>
+                    </div>`;
+
+                personnelHTML += `
+                    <div class="personnel-info">
+                        <div class="personnel-info-header"><i class="fas fa-hashtag"></i> Fila ${person.numero}</div>
+                        <div class="personnel-info-row">
+                            <div class="info-group" style="margin-bottom:0;">
+                                <div class="info-label"><i class="fas fa-user-tie"></i> Gerente</div>
+                                <div class="info-value">${person.gerente}</div>
+                                <div class="commission-details">
+                                    <span class="commission-badge"><i class="fas fa-percentage"></i>${commission.gerentePercentage}%</span>
+                                    <span class="commission-badge commission-amount"><i class="fas fa-dollar-sign"></i>${parseFloat(commission.gerenteAmount).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+                                </div>
+                            </div>
+                            ${asesorBlock}
+                        </div>
+                    </div>`;
+            });
+            modalBody.innerHTML = `
+                <div class="info-group"><div class="info-label"><i class="fas fa-building"></i> Compañía</div><div class="info-value">${formData.companiaText}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-rocket"></i> Desarrollo</div><div class="info-value">${formData.desarrolloText}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-map-marker-alt"></i> Ubicación</div><div class="info-value">${formData.ubicacionText}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-calendar-day"></i> Fecha de Registro</div><div class="info-value">${formatDate(formData.fechaRegistro)}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-receipt"></i> Concepto</div><div class="info-value">${formData.conceptoText}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-calendar-check"></i> Fecha de Contrato</div><div class="info-value">${formatDate(formData.fechaContrato)}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-dollar-sign"></i> Precio de Venta</div><div class="info-value">${formData.salePrice ? formData.salePrice.toLocaleString('es-MX', {style:'currency',currency:'MXN'}) : '—'}</div></div>
+                <div class="info-group"><div class="info-label"><i class="fas fa-layer-group"></i> Tipo de Comisión</div><div class="info-value"><span class="mp-badge"><i class="fas ${formData.mp ? 'fa-network-wired' : (totalPersonnel===1?'fa-user':'fa-users')}"></i> ${tipoComision}</span></div></div>
+                ${formData.personal.length > 0 ? `<div class="info-section-title"><i class="fas fa-users"></i> Personal Asignado y Comisiones</div>${personnelHTML}` : ''}`;
+            document.getElementById('confirmationModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('confirmationModal').classList.remove('active'); }
+
+        async function confirmSave() {
+            try {
+                const payload = buildPayload(formDataGlobal, commissionsDataGlobal);
+                console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+
+                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.comisiones}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error('Error al guardar la comisión');
+                const result = await response.json();
+                if (result.success) { closeModal(); alert('¡Comisión guardada exitosamente!'); }
+                else throw new Error(result.message || 'Error al guardar');
+            } catch (error) { console.error('Error al guardar:', error); alert('Error al guardar la comisión. Por favor, intenta de nuevo.'); }
+        }
+
+        document.getElementById('confirmationModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+        document.getElementById('commissionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            try {
+                formDataGlobal = collectFormData();
+                if (!formDataGlobal.compania || !formDataGlobal.desarrollo || !formDataGlobal.ubicacion || !formDataGlobal.concepto || !formDataGlobal.fechaContrato) { alert('Por favor completa todos los campos obligatorios'); return; }
+                if (formDataGlobal.personal.length === 0) { alert('Por favor selecciona al menos un gerente'); return; }
+                commissionsDataGlobal = await fetchPercentages(formDataGlobal);
+                showConfirmationModal(formDataGlobal, commissionsDataGlobal);
+            } catch (error) { alert('Error al calcular las comisiones. Por favor, intenta de nuevo.'); console.error(error); }
+        });
+    </script>
+
+    <script>
+        function formatSalePrice(input) {
+            // Strip everything except digits
+            const raw = input.value.replace(/[^0-9]/g, '');
+            // Store raw numeric value for collection
+            input.dataset.raw = raw;
+            // Format with thousand separators
+            input.value = raw ? '$' + parseInt(raw).toLocaleString('es-MX') : '';
+        }
+    </script>
+
+    <!-- Starfield NOVU -->
+    <script>
+        const _ns = document.getElementById('novu-stars');
+        for (let i = 0; i < 120; i++) {
+            const s = document.createElement('div');
+            s.className = 'novu-star';
+            const sz = Math.random() * 2.4 + 0.5;
+            const c  = ['#ffffff','#7bc42a','#c8e88a','#60a61e'];
+            s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${c[Math.floor(Math.random()*c.length)]};--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;opacity:${Math.random()*0.45+0.1};`;
+            _ns.appendChild(s);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<style>
+    :root {
+      --bg:           #0f1e1e;
+      --bg2:          #162828;
+      --bg3:          #1c3030;
+      --green:        #60a61e;
+      --green-glow:   rgba(96,166,30,0.3);
+      --green-bright: #7bc42a;
+      --white:        #ffffff;
+      --muted:        #8fada0;
+      --border:       rgba(96,166,30,0.15);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      max-width: 1100px; width: 90%;
+      margin: 0 auto;
+      padding: 4rem 0 6rem;
+      text-align: center;
+    }
+
+    .page-title {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 900; letter-spacing: -1.5px;
+      color: var(--white);
+      animation: fadeUp 0.5s 0.1s ease both;
+      margin-bottom: 0.5rem;
+    }
+    .page-title .accent { color: var(--green); }
+    .page-sub {
+      font-size: 0.95rem; color: var(--muted);
+      animation: fadeUp 0.5s 0.18s ease both;
+      margin-bottom: 3rem;
+    }
+    .decorative-line {
+      width: 40px; height: 3px; border-radius: 10px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent);
+      margin: 1rem auto 0.6rem;
+      animation: fadeUp 0.5s 0.14s ease both;
+    }
+
+    .cards-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      max-width: 1000px;
+      margin: 0 auto;
+      text-align: left;
+      animation: fadeUp 0.5s 0.22s ease both;
+    }
+
+    .service-card {
+      position: relative;
+      height: 260px;
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid rgba(96,166,30,0.18);
+      transition: transform 0.35s cubic-bezier(0.175,0.885,0.32,1.275),
+                  border-color 0.35s, box-shadow 0.35s;
+    }
+    .service-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(96,166,30,0.55);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(96,166,30,0.15) inset;
+    }
+    .service-card:active { transform: scale(0.97); }
+
+    .card-bg {
+      position: absolute; inset: 0;
+      background: var(--bg2);
+      transition: transform 0.5s ease;
+    }
+    .service-card:hover .card-bg { transform: scale(1.04); }
+
+    .card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, rgba(15,30,30,0.55) 0%, rgba(10,20,15,0.7) 60%, rgba(96,166,30,0.25) 100%);
+      transition: opacity 0.35s;
+    }
+    .service-card:hover .card-overlay {
+      background: linear-gradient(160deg, rgba(15,30,30,0.3) 0%, rgba(10,20,15,0.55) 40%, rgba(96,166,30,0.45) 100%);
+    }
+
+    .card-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(96,166,30,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,166,30,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .card-icon {
+      position: absolute;
+      top: 1.6rem; left: 1.4rem;
+      width: 52px; height: 52px;
+      background: rgba(96,166,30,0.15);
+      border: 1px solid rgba(96,166,30,0.35);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--green-bright);
+      transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.3s, top 0.4s;
+      z-index: 2;
+    }
+    .service-card:hover .card-icon { top: 1rem; transform: scale(0.85); opacity: 0.7; }
+
+    .card-title {
+      position: absolute;
+      bottom: 1.4rem; left: 1.4rem; right: 1.4rem;
+      font-size: 1.1rem; font-weight: 900;
+      color: var(--white); letter-spacing: -0.3px; line-height: 1.2;
+      z-index: 2;
+      transition: bottom 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .service-card:hover .card-title { bottom: 6rem; }
+
+    .card-desc {
+      position: absolute;
+      bottom: 1.4rem; left: 1.4rem; right: 1.4rem;
+      font-size: 0.78rem; color: rgba(200,232,170,0.85); line-height: 1.55;
+      z-index: 2;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.35s 0.05s, transform 0.35s 0.05s;
+    }
+    .service-card:hover .card-desc { opacity: 1; transform: translateY(0); }
+
+    .card-arrow {
+      position: absolute;
+      bottom: 1.4rem; right: 1.4rem;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(96,166,30,0.25);
+      border: 1px solid rgba(96,166,30,0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--green-bright); font-size: 0.75rem;
+      z-index: 2;
+      opacity: 0; transform: scale(0.7);
+      transition: opacity 0.3s 0.08s, transform 0.3s 0.08s;
+    }
+    .service-card:hover .card-arrow { opacity: 1; transform: scale(1); }
+
+    /* Skeleton */
+    .skeleton {
+      background: var(--bg2); border: 1px solid rgba(96,166,30,0.08);
+      border-radius: 20px; height: 260px;
+      position: relative; overflow: hidden;
+    }
+    .skel-icon {
+      position: absolute; top: 1.6rem; left: 1.4rem;
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    .skel-line {
+      height: 14px; border-radius: 8px; margin: 0 auto 10px;
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(96,166,30,0.12);
+      border: 1px solid rgba(96,166,30,0.3);
+      border-radius: 99px;
+      padding: 4px 14px;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--green-bright);
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .role-badge i { font-size: 0.7rem; }
+
+    .state-msg {
+      padding: 3rem; color: var(--muted); opacity: 0.7;
+      grid-column: 1 / -1;
+    }
+    .state-msg .state-icon { font-size: 2.2rem; margin-bottom: 0.8rem; }
+    .state-msg .state-text { font-size: 0.9rem; font-weight: 700; }
+
+    @media (max-width: 640px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<main class="page">
+  <h1 class="page-title">Panel de <span class="accent">Selección</span></h1>
+  <div class="decorative-line"></div>
+  <div id="roleBadge"></div>
+  <p class="page-sub">Da click en la opción que deseas visualizar</p>
+
+  <div class="cards-grid" id="cardsGrid">
+    <div class="skeleton"><div class="skel-icon"></div><div class="skel-line" style="width:55%;position:absolute;bottom:3.6rem;left:1.4rem;right:1.4rem"></div><div class="skel-line" style="width:80%;position:absolute;bottom:2.2rem;left:1.4rem;right:1.4rem"></div></div>
+    <div class="skeleton"><div class="skel-icon"></div><div class="skel-line" style="width:60%;position:absolute;bottom:3.6rem;left:1.4rem;right:1.4rem"></div><div class="skel-line" style="width:75%;position:absolute;bottom:2.2rem;left:1.4rem;right:1.4rem"></div></div>
+    <div class="skeleton"><div class="skel-icon"></div><div class="skel-line" style="width:50%;position:absolute;bottom:3.6rem;left:1.4rem;right:1.4rem"></div><div class="skel-line" style="width:70%;position:absolute;bottom:2.2rem;left:1.4rem;right:1.4rem"></div></div>
+  </div>
+</main>
+
+<script>
+  // ── Catálogo de servicios ────────────────────────────────────────────────
+  // permission: nombre EXACTO del permiso en tu colección permissions de BD
+  // Si el usuario tiene ese permiso en sus efectivos → ve la card
+  const ALL_SERVICES = [
+    {
+      permission: 'ver_comisiones',
+      icon:       'fas fa-chart-line',
+      title:      'Comisiones',
+      desc:       'Visualiza y gestiona las comisiones registradas',
+      href:       '/dashboard-commission'
+    },
+    {
+      permission: 'crear_comision',
+      icon:       'fas fa-file-invoice-dollar',
+      title:      'Registrar Comisión',
+      desc:       'Captura una nueva comisión de venta',
+      href:       '/register-commission'
+    },
+    {
+      permission: 'ver_reportes',
+      icon:       'fas fa-chart-bar',
+      title:      'Reportes',
+      desc:       'Consulta el historial y estadísticas de comisiones',
+      href:       '/reportes'
+    },
+    {
+      permission: 'exportar_reportes',
+      icon:       'fas fa-file-export',
+      title:      'Exportar Reportes',
+      desc:       'Descarga reportes en diferentes formatos',
+      href:       '/exportar-reportes'
+    },
+    {
+      permission: 'crear_usuario',
+      icon:       'fas fa-user-plus',
+      title:      'Registrar Usuario',
+      desc:       'Añade nuevos usuarios al sistema',
+      href:       '/registrar-usuario'
+    },
+    {
+      permission: 'editar_usuario',
+      icon:       'fas fa-users-gear',
+      title:      'Gestionar Usuarios',
+      desc:       'Edita la información de los usuarios existentes',
+      href:       '/usuarios'
+    },
+    {
+      permission: 'asignar_roles',
+      icon:       'fas fa-shield-halved',
+      title:      'Roles y Permisos',
+      desc:       'Administra los roles y accesos del sistema',
+      href:       '/roles'
+    },
+    {
+      permission: 'ver_permisos',
+      icon:       'fas fa-key',
+      title:      'Permisos',
+      desc:       'Consulta el catálogo de permisos disponibles',
+      href:       '/permisos'
+    }
+  ];
+
+  // Iconos de rol para el badge
+  const ROLE_ICONS = {
+    'SuperUsuario':   'fas fa-crown',
+    'Administrador':  'fas fa-shield-halved',
+    'Director':       'fas fa-building',
+    'Gerente':        'fas fa-briefcase',
+    'Asesor':         'fas fa-user'
+  };
+
+  // ── Fetch sesión activa ──────────────────────────────────────────────────
+  // /api/auth/me lee la cookie httpOnly y devuelve el payload del JWT:
+  // { id, username, name, roleName, permissions: ['ver_comisiones', ...] }
+  async function fetchSession() {
+    const res = await fetch('/api/auth/me', {
+      credentials: 'include'   // envía la cookie auth_token automáticamente
+    });
+    if (res.status === 401 || res.status === 403) {
+      // Sesión expirada o inexistente → redirige al login
+      window.location.href = '/';
+      return null;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return json.data?.user || null;
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function renderBadge(user) {
+    const badgeEl  = document.getElementById('roleBadge');
+    const iconClass = ROLE_ICONS[user.roleName] || 'fas fa-user';
+    badgeEl.innerHTML = `
+      <span class="role-badge">
+        <i class="${iconClass}"></i>
+        ${user.roleName}  ·  ${user.name || user.username}
+      </span>`;
+  }
+
+  function buildCard(service, index) {
+    const card = document.createElement('div');
+    card.className = 'service-card';
+    card.style.animationDelay = `${index * 0.07}s`;
+    card.innerHTML = `
+      <div class="card-bg"></div>
+      <div class="card-overlay"></div>
+      <div class="card-icon"><i class="${service.icon}"></i></div>
+      <div class="card-title">${service.title}</div>
+      <div class="card-desc">${service.desc}</div>
+      <div class="card-arrow"><i class="fas fa-arrow-right"></i></div>`;
+
+    card.addEventListener('click', () => {
+      card.style.transform = 'scale(0.95)';
+      setTimeout(() => { window.location.href = service.href; }, 220);
+    });
+
+    return card;
+  }
+
+  async function init() {
+    const grid = document.getElementById('cardsGrid');
+
+    try {
+      const user = await fetchSession();
+      if (!user) return;  // redirigido al login
+
+      // Muestra el rol del usuario
+      renderBadge(user);
+
+      // Filtra las cards según los permisos efectivos que vienen en el JWT
+      const userPermissions = user.permissions || [];
+      const allowed = ALL_SERVICES.filter(s => userPermissions.includes(s.permission));
+
+      grid.innerHTML = '';
+
+      if (!allowed.length) {
+        grid.innerHTML = `
+          <div class="state-msg">
+            <div class="state-icon">🔒</div>
+            <div class="state-text">Sin acceso a ningún módulo. Contacta al administrador.</div>
+          </div>`;
+        return;
+      }
+
+      allowed.forEach((service, i) => grid.appendChild(buildCard(service, i)));
+
+    } catch (err) {
+      console.error('Error al cargar sesión:', err);
+      grid.innerHTML = `
+        <div class="state-msg">
+          <div class="state-icon">⚠️</div>
+          <div class="state-text">Error al cargar los módulos. Intenta recargar la página.</div>
+        </div>`;
+    }
+  }
+
+  init();
+</script>
