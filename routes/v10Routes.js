@@ -93,7 +93,7 @@ router.get('/desarrollos', async (req, res) => {
 
 router.get('/ubicaciones', async (req, res) => {
   try {
-    const result = await pool.request().query('SELECT Id as id, Nombre as nombre, IdDesarrollo as desarrollo FROM scv_ubicaciones');
+    const result = await pool.request().query("SELECT ubi.Nombre, ubi.IdDesarrollo FROM scv_ubicaciones ubi INNER JOIN scv_Ventas_Ubicaciones vta_ubi ON ubi.Id = vta_ubi.IdUbicacion INNER JOIN uvw_SCV_Ventas vta ON vta_ubi.IdVenta = vta.ID INNER JOIN uvw_SCV_Expedientes_Seguimientos_Etapas seg ON vta.IdExpediente = seg.IdExpediente WHERE seg.[Etapa.Nombre] = 'RECEPCION DE EXPEDIENTE' AND seg.FechaCierre IS NULL AND seg.FechaInicio IS NOT NULL;");
     
     res.status(200).json({
       success: true,
