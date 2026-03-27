@@ -5,27 +5,27 @@ const router = express.Router();
 
 // Config conexión
 const config = {
-    user: 'EKAppUser',
-    password: 'Enkontrol$app.user002',
-    server: '10.0.0.3',
-    database: 'EKCloud',
-    options: {
-        encrypt: false,
-        trustServerCertificate: true
-    },
-    port: 3470
+  user: 'EKAppUser',
+  password: 'Enkontrol$app.user002',
+  server: '10.0.0.3',
+  database: 'EKCloud',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  },
+  port: 3470
 };
 
 let pool;
 
 // Crear pool UNA sola vez
 async function connectDB() {
-    try {
-        pool = await sql.connect(config);
-        console.log('V10 SQL conectado');
-    } catch (err) {
-        console.error('V10 Error DB:', err.message);
-    }
+  try {
+    pool = await sql.connect(config);
+    console.log('V10 SQL conectado');
+  } catch (err) {
+    console.error('V10 Error DB:', err.message);
+  }
 }
 
 connectDB();
@@ -35,19 +35,19 @@ connectDB();
 
 // Probar conexión
 router.get('/version', async (req, res) => {
-    try {
-        const result = await pool.request().query('SELECT @@VERSION AS version');
-        res.json(result.recordset[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const result = await pool.request().query('SELECT @@VERSION AS version');
+    res.json(result.recordset[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 
 router.get('/companias', async (req, res) => {
   try {
     const result = await pool.request().query('SELECT Id as id, Nombre as nombre FROM Companias');
-    
+
     res.status(200).json({
       success: true,
       message: "Compañías obtenidas correctamente",
@@ -70,7 +70,7 @@ router.get('/companias', async (req, res) => {
 router.get('/desarrollos', async (req, res) => {
   try {
     const result = await pool.request().query('SELECT Id as id, Descripcion as nombre, IdCompania as compania FROM scv_Desarrollos');
-    
+
     res.status(200).json({
       success: true,
       message: "Desarrollos obtenidos correctamente",
@@ -92,9 +92,10 @@ router.get('/desarrollos', async (req, res) => {
 
 
 router.get('/ubicaciones', async (req, res) => {
+
   try {
-    const result = await pool.request().query("SELECT ubi.Nombre, ubi.IdDesarrollo FROM scv_ubicaciones ubi INNER JOIN scv_Ventas_Ubicaciones vta_ubi ON ubi.Id = vta_ubi.IdUbicacion INNER JOIN uvw_SCV_Ventas vta ON vta_ubi.IdVenta = vta.ID INNER JOIN uvw_SCV_Expedientes_Seguimientos_Etapas seg ON vta.IdExpediente = seg.IdExpediente WHERE seg.[Etapa.Nombre] = 'RECEPCION DE EXPEDIENTE' AND seg.FechaCierre IS NULL AND seg.FechaInicio IS NOT NULL;");
-    
+    const result = await pool.request().query("SELECT ubi.Nombre as nombre, ubi.IdDesarrollo as desarrollo FROM scv_ubicaciones ubi INNER JOIN scv_Ventas_Ubicaciones vta_ubi ON ubi.Id = vta_ubi.IdUbicacion INNER JOIN uvw_SCV_Ventas vta ON vta_ubi.IdVenta = vta.ID INNER JOIN uvw_SCV_Expedientes_Seguimientos_Etapas seg ON vta.IdExpediente = seg.IdExpediente WHERE seg.[Etapa.Nombre] = 'RECEPCION DE EXPEDIENTE' AND seg.FechaCierre IS NULL AND seg.FechaInicio IS NOT NULL;");
+
     res.status(200).json({
       success: true,
       message: "Ubicaciones obtenidas correctamente",
