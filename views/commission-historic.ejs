@@ -51,7 +51,7 @@ body{background:var(--bg);color:var(--white);font-family:'Nunito',sans-serif;min
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 
 /* LOCATION BLOCK */
-.location-block{background:var(--bg2);border:1px solid rgba(96,166,30,0.14);border-radius:18px;overflow:hidden;margin-bottom:14px;animation:fadeUp 0.5s ease both;}
+.location-block{background:var(--bg2);border:1px solid rgba(96,166,30,0.14);border-radius:18px;margin-bottom:14px;animation:fadeUp 0.5s ease both;position:relative;z-index:1;}
 .loc-header{display:flex;align-items:center;gap:14px;padding:1.1rem 1.4rem;cursor:pointer;user-select:none;transition:background 0.2s;border-bottom:1px solid rgba(96,166,30,0.08);}
 .loc-header:hover{background:rgba(96,166,30,0.04);}
 .loc-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,rgba(96,166,30,0.2),rgba(96,166,30,0.08));border:1px solid rgba(96,166,30,0.25);display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--green-bright);flex-shrink:0;}
@@ -138,7 +138,7 @@ body{background:var(--bg);color:var(--white);font-family:'Nunito',sans-serif;min
 /* ════════════════════════════════
    FILTROS — NOVU SELECTORS
    ════════════════════════════════ */
-.filters-section{background:var(--bg2);border:1px solid rgba(96,166,30,0.14);border-radius:16px;padding:1.2rem 1.4rem;margin-bottom:1.4rem;animation:fadeUp 0.4s 0.15s ease both;}
+.filters-section{background:var(--bg2);border:1px solid rgba(96,166,30,0.14);border-radius:16px;padding:1.2rem 1.4rem;margin-bottom:1.4rem;animation:fadeUp 0.4s 0.15s ease both;position:relative;z-index:10;}
 .filters-title{font-size:0.68rem;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
 .filters-title i{color:var(--green);}
 .filters-groups{display:flex;gap:1.4rem;flex-wrap:wrap;}
@@ -188,7 +188,7 @@ body{background:var(--bg);color:var(--white);font-family:'Nunito',sans-serif;min
   background:rgba(18,32,32,0.99);backdrop-filter:blur(12px);
   border:1px solid rgba(96,166,30,0.3);border-radius:12px;
   max-height:0;overflow:hidden;opacity:0;
-  transition:all 0.3s ease;z-index:1000;
+  transition:all 0.3s ease;z-index:9999;
   box-shadow:0 12px 32px rgba(0,0,0,0.55);
 }
 .novu-select-dropdown.active{max-height:320px;opacity:1;overflow-y:auto;}
