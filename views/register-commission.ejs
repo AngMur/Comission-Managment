@@ -637,9 +637,25 @@
             selectorElement.classList.remove('has-error');
             selectorElement.classList.add('valid');
 
-            if (field === 'compania') handleCompaniaChange(optionElement.dataset.value);
-            else if (field === 'desarrollo') handleDesarrolloChange(optionElement.dataset.value, isAutoSelect);
-            else if (field === 'ubicacion') handleUbicacionChange(optionElement.dataset.desarrollo, isAutoSelect);
+           if (field === 'compania') handleCompaniaChange(optionElement.dataset.value);
+else if (field === 'desarrollo') handleDesarrolloChange(optionElement.dataset.value, isAutoSelect);
+else if (field === 'ubicacion') {
+    handleUbicacionChange(optionElement.dataset.desarrollo, isAutoSelect);
+    // Auto-rellenar precio de venta solo si está vacío
+    const salePriceEl = document.getElementById('salePrice');
+    const yaEscrito = salePriceEl.dataset.raw && parseInt(salePriceEl.dataset.raw) > 0;
+    if (!yaEscrito) {
+        const ubicacionId = optionElement.dataset.value;
+        const ubicacion = allData.ubicaciones.find(u => u.id == ubicacionId);
+        if (ubicacion && ubicacion.importe_venta) {
+            salePriceEl.dataset.raw = ubicacion.importe_venta;
+            salePriceEl.value = '$' + parseInt(ubicacion.importe_venta).toLocaleString('es-MX');
+            clearFieldError('salePrice');
+            salePriceEl.classList.remove('has-error');
+            salePriceEl.classList.add('valid');
+        }
+    }
+}
         }
 
         function selectOptionSilent(selectorElement, optionElement, isAutoSelect = false) {
