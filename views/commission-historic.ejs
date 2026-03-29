@@ -333,34 +333,162 @@ const filters = { compania: null, desarrollo: null, ubicacion: null, search: '' 
 const _apiCache = {};
 const _allData  = { desarrollos: [], ubicaciones: [] };
 
-// ── Fetch con caché ─────────────────────────────────────────────────────────
+// ── Fetch con cache ─────────────────────────────────────────────────────────
+// TODO: cuando los endpoints esten listos, elimina el bloque MOCK_APIS y
+// descomenta el fetch real de abajo.
+const MOCK_APIS = {
+  '/v10/companias': [
+    { id:'1', nombre:'Grupo Punta Diamante' },
+    { id:'2', nombre:'Desarrollos del Pacifico' },
+    { id:'3', nombre:'Inmobiliaria Cenit' },
+  ],
+  '/v10/desarrollos': [
+    { id:'1', nombre:'Torre Esmeralda',       compania:'1' },
+    { id:'2', nombre:'Residencial Vista Mar', compania:'2' },
+    { id:'3', nombre:'Park Avenue Lofts',     compania:'3' },
+    { id:'4', nombre:'Jardines del Bosque',   compania:'2' },
+    { id:'5', nombre:'Plaza Zentrum',         compania:'1' },
+  ],
+  '/v10/ubicaciones': [
+    { id:'1', nombre:'Depto. 14B',    desarrollo:'1' },
+    { id:'2', nombre:'Casa 23',       desarrollo:'2' },
+    { id:'3', nombre:'Loft 7A',       desarrollo:'3' },
+    { id:'4', nombre:'Casa Modelo B', desarrollo:'4' },
+    { id:'5', nombre:'Local 3',       desarrollo:'5' },
+  ],
+};
+
 async function fetchAPI(endpoint) {
   if (_apiCache[endpoint]) return _apiCache[endpoint];
-  const res    = await fetch(endpoint, { credentials: 'include' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const result = await res.json();
-  if (!result.success || !result.data) throw new Error('Formato inválido');
-  let data = [];
-  if (result.data.companias)   data = result.data.companias;
-  if (result.data.desarrollos) { data = result.data.desarrollos; _allData.desarrollos = [...data]; }
-  if (result.data.ubicaciones) { data = result.data.ubicaciones; _allData.ubicaciones  = [...data]; }
-  _apiCache[endpoint] = data;
-  return data;
+
+  // Mock temporal — reemplazar con fetch real:
+  if (MOCK_APIS[endpoint]) {
+    const data = MOCK_APIS[endpoint];
+    if (endpoint === '/v10/desarrollos') _allData.desarrollos = [...data];
+    if (endpoint === '/v10/ubicaciones') _allData.ubicaciones  = [...data];
+    _apiCache[endpoint] = data;
+    return data;
+  }
+
+  // Fetch real (descomentar cuando el backend este listo):
+  // const res = await fetch(endpoint, { credentials: 'include' });
+  // if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  // const result = await res.json();
+  // if (!result.success || !result.data) throw new Error('Formato invalido');
+  // let data = [];
+  // if (result.data.companias)   data = result.data.companias;
+  // if (result.data.desarrollos) { data = result.data.desarrollos; _allData.desarrollos = [...data]; }
+  // if (result.data.ubicaciones) { data = result.data.ubicaciones; _allData.ubicaciones  = [...data]; }
+  // _apiCache[endpoint] = data;
+  // return data;
+
+  throw new Error('Endpoint no configurado: ' + endpoint);
 }
 
-// ── Fetch comisiones desde la API ────────────────────────────────────────────
+// ── Fetch comisiones ────────────────────────────────────────────────────────
+// TODO: cuando el endpoint esté listo, reemplaza el cuerpo de esta función por:
+//
+//   const params = new URLSearchParams();
+//   if (filters.compania)   params.set('compania',   filters.compania);
+//   if (filters.desarrollo) params.set('desarrollo', filters.desarrollo);
+//   if (filters.ubicacion)  params.set('ubicacion',  filters.ubicacion);
+//   const url = '/api/commissions' + (params.toString() ? '?' + params.toString() : '');
+//   const res = await fetch(url, { credentials: 'include' });
+//   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+//   const result = await res.json();
+//   return result.data || result || [];
+//
 async function fetchComisiones() {
-  const params = new URLSearchParams();
-  if (filters.compania)   params.set('compania',   filters.compania);
-  if (filters.desarrollo) params.set('desarrollo', filters.desarrollo);
-  if (filters.ubicacion)  params.set('ubicacion',  filters.ubicacion);
+  const MOCK = [
+    {
+      id: 'CDMX-01', desarrollo: 'Torre Esmeralda', empresa: 'Grupo Punta Diamante', concepto: 'Depto. 14B',
+      compania_id: '1', desarrollo_id: '1', ubicacion_id: '1',
+      contrato: {
+        fecha: '12 Ene 2024', precio: 4800000,
+        participantes: [
+          { name:'Carlos Mendoza', role:'Asesor',  initials:'CM', avatar:'av-teal',  pct:3.5, earn:168000 },
+          { name:'Sofia Ramirez',  role:'Asesor',  initials:'SR', avatar:'av-pink',  pct:1.5, earn:72000  },
+          { name:'Ana Torres',     role:'Gerente', initials:'AT', avatar:'av-green', pct:2,   earn:96000  },
+        ]
+      },
+      escritura: {
+        fecha: '18 Mar 2024', precio: 4800000,
+        participantes: [
+          { name:'Carlos Mendoza', role:'Asesor',  initials:'CM', avatar:'av-teal',  pct:2,   earn:96000 },
+          { name:'Sofia Ramirez',  role:'Asesor',  initials:'SR', avatar:'av-pink',  pct:1,   earn:48000 },
+          { name:'Ana Torres',     role:'Gerente', initials:'AT', avatar:'av-green', pct:1.5, earn:72000 },
+        ]
+      }
+    },
+    {
+      id: 'GDL-07', desarrollo: 'Residencial Vista Mar', empresa: 'Desarrollos del Pacifico', concepto: 'Casa 23',
+      compania_id: '2', desarrollo_id: '2', ubicacion_id: '2',
+      contrato: {
+        fecha: '5 Feb 2024', precio: 2950000,
+        participantes: [
+          { name:'Luis Hernandez', role:'Asesor',  initials:'LH', avatar:'av-amber', pct:4, earn:118000 },
+          { name:'Ana Torres',     role:'Gerente', initials:'AT', avatar:'av-green', pct:2, earn:59000  },
+        ]
+      },
+      escritura: null
+    },
+    {
+      id: 'MTY-12', desarrollo: 'Park Avenue Lofts', empresa: 'Inmobiliaria Cenit', concepto: 'Loft 7A',
+      compania_id: '3', desarrollo_id: '3', ubicacion_id: '3',
+      contrato: {
+        fecha: '20 Nov 2023', precio: 3600000,
+        participantes: [
+          { name:'Roberto Diaz', role:'Asesor',  initials:'RD', avatar:'av-purple', pct:3,   earn:108000 },
+          { name:'Ana Torres',   role:'Gerente', initials:'AT', avatar:'av-green',  pct:2.5, earn:90000  },
+        ]
+      },
+      escritura: {
+        fecha: '8 Ene 2024', precio: 3600000,
+        participantes: [
+          { name:'Roberto Diaz', role:'Asesor',  initials:'RD', avatar:'av-purple', pct:2,   earn:72000 },
+          { name:'Ana Torres',   role:'Gerente', initials:'AT', avatar:'av-green',  pct:1.5, earn:54000 },
+        ]
+      }
+    },
+    {
+      id: 'QRO-03', desarrollo: 'Jardines del Bosque', empresa: 'Desarrollos del Pacifico', concepto: 'Casa Modelo B',
+      compania_id: '2', desarrollo_id: '4', ubicacion_id: '4',
+      contrato: {
+        fecha: '3 Oct 2023', precio: 5200000,
+        participantes: [
+          { name:'Sofia Ramirez', role:'Asesor',  initials:'SR', avatar:'av-pink',  pct:4, earn:208000 },
+          { name:'Ana Torres',    role:'Gerente', initials:'AT', avatar:'av-green', pct:2, earn:104000 },
+        ]
+      },
+      escritura: {
+        fecha: '15 Dic 2023', precio: 5200000,
+        participantes: [
+          { name:'Sofia Ramirez', role:'Asesor',  initials:'SR', avatar:'av-pink',  pct:2.5, earn:130000 },
+          { name:'Ana Torres',    role:'Gerente', initials:'AT', avatar:'av-green', pct:1.5, earn:78000  },
+        ]
+      }
+    },
+    {
+      id: 'CDMX-09', desarrollo: 'Plaza Zentrum', empresa: 'Grupo Punta Diamante', concepto: 'Local 3',
+      compania_id: '1', desarrollo_id: '5', ubicacion_id: '5',
+      contrato: {
+        fecha: '14 Abr 2024', precio: 1200000,
+        participantes: [
+          { name:'Carlos Mendoza', role:'Asesor',  initials:'CM', avatar:'av-teal',  pct:2,   earn:24000 },
+          { name:'Ana Torres',     role:'Gerente', initials:'AT', avatar:'av-green', pct:1.5, earn:18000 },
+        ]
+      },
+      escritura: null
+    },
+  ];
 
-  const url = '/api/commissions' + (params.toString() ? '?' + params.toString() : '');
-  const res  = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const result = await res.json();
-  // Espera { success: true, data: [...] }
-  return result.data || result || [];
+  // Filtrado client-side (simula lo que hara el backend con los query params)
+  return MOCK.filter(l => {
+    if (filters.compania   && l.compania_id   !== filters.compania)   return false;
+    if (filters.desarrollo && l.desarrollo_id !== filters.desarrollo) return false;
+    if (filters.ubicacion  && l.ubicacion_id  !== filters.ubicacion)  return false;
+    return true;
+  });
 }
 
 // ══════════════════════════════════
