@@ -1,2017 +1,990 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Comisión</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            padding: 40px 20px;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(96, 166, 30, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(96, 166, 30, 0.06) 0%, transparent 50%),
-                linear-gradient(135deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .header-badge {
-            display: inline-block;
-            background: rgba(96, 166, 30, 0.15);
-            border: 1px solid rgba(96, 166, 30, 0.3);
-            color: #60a61e;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -2px;
-        }
-
-        .decorative-line {
-            width: 40px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #60a61e, transparent);
-            margin: 20px auto;
-            border-radius: 10px;
-        }
-
-        .form-card {
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 45px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 60px 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-            align-items: start;
-        }
-
-        .column-divider {
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(180deg, transparent, rgba(96, 166, 30, 0.3), transparent);
-            border-radius: 10px;
-            justify-self: center;
-        }
-
-        .column-left, .column-right {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #888;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        label i {
-            color: #60a61e;
-            font-size: 0.85rem;
-        }
-
-        /* Estilos para el selector personalizado con búsqueda */
-        .custom-select {
-            position: relative;
-        }
-
-        .select-display {
-            background: rgba(30, 30, 30, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 14px 40px 14px 18px;
-            color: #ffffff;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            user-select: none;
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-        }
-
-        .select-display.placeholder {
-            color: #666;
-        }
-
-        .select-display.loading {
-            color: #888;
-            cursor: wait;
-        }
-
-        .select-display.auto-selected {
-            border-color: rgba(96, 166, 30, 0.5);
-            background: rgba(96, 166, 30, 0.05);
-        }
-
-        .select-display:hover:not(.loading) {
-            border-color: rgba(96, 166, 30, 0.4);
-        }
-
-        .select-display.active {
-            background: rgba(30, 30, 30, 0.8);
-            border-color: #60a61e;
-            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
-        }
-
-        .select-arrow {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #60a61e;
-            transition: transform 0.3s ease;
-            pointer-events: none;
-        }
-
-        .select-display.active .select-arrow {
-            transform: translateY(-50%) rotate(180deg);
-        }
-
-        .select-display.loading .select-arrow {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: translateY(-50%) rotate(0deg); }
-            to { transform: translateY(-50%) rotate(360deg); }
-        }
-
-        .select-dropdown {
-            position: absolute;
-            top: calc(100% + 5px);
-            left: 0;
-            right: 0;
-            background: rgba(20, 20, 20, 0.98);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(96, 166, 30, 0.3);
-            border-radius: 12px;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .select-dropdown.active {
-            max-height: 350px;
-            opacity: 1;
-            overflow-y: auto;
-        }
-
-        .select-search {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: sticky;
-            top: 0;
-            background: rgba(20, 20, 20, 0.98);
-            z-index: 10;
-        }
-
-        .select-search input {
-            width: 100%;
-            background: rgba(30, 30, 30, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 10px 35px 10px 12px;
-            color: #ffffff;
-            font-size: 0.9rem;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .select-search input:focus {
-            border-color: #60a61e;
-            box-shadow: 0 0 0 2px rgba(96, 166, 30, 0.1);
-        }
-
-        .select-search i {
-            position: absolute;
-            right: 24px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #60a61e;
-            font-size: 0.85rem;
-        }
-
-        .select-options {
-            padding: 5px;
-        }
-
-        .select-option {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            color: #ffffff;
-            font-size: 0.95rem;
-        }
-
-        .select-option:hover {
-            background: rgba(96, 166, 30, 0.15);
-        }
-
-        .select-option.selected {
-            background: rgba(96, 166, 30, 0.25);
-            color: #60a61e;
-            font-weight: 600;
-        }
-
-        .select-option.hidden {
-            display: none;
-        }
-
-        .select-option.filtered-out {
-            display: none;
-        }
-
-        .no-results, .loading-message, .error-message {
-            padding: 20px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .no-results {
-            color: #666;
-        }
-
-        .loading-message {
-            color: #60a61e;
-        }
-
-        .loading-message i {
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        .error-message {
-            color: #ff6b6b;
-        }
-
-        /* Badge de auto-selección */
-        .auto-select-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(96, 166, 30, 0.2);
-            border: 1px solid rgba(96, 166, 30, 0.4);
-            color: #60a61e;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 8px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* Estilos para inputs de fecha normales */
-        input[type="date"] {
-            background: rgba(30, 30, 30, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 14px 18px;
-            color: #ffffff;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        input[type="date"]:focus {
-            background: rgba(30, 30, 30, 0.8);
-            border-color: #60a61e;
-            box-shadow: 0 0 0 3px rgba(96, 166, 30, 0.1);
-        }
-
-        input[type="date"]:hover {
-            border-color: rgba(96, 166, 30, 0.4);
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1) brightness(0.8);
-            cursor: pointer;
-        }
-
-        /* Checkbox MP dentro de personnel row */
-        .mp-checkbox-inline {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 18px 20px;
-            background: rgba(96, 166, 30, 0.1);
-            border: 1px solid rgba(96, 166, 30, 0.3);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .mp-checkbox-inline:hover {
-            background: rgba(96, 166, 30, 0.15);
-            border-color: rgba(96, 166, 30, 0.5);
-        }
-
-        .mp-checkbox-inline input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-            accent-color: #60a61e;
-        }
-
-        .mp-checkbox-inline .checkbox-label {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #ffffff;
-            text-transform: none;
-            letter-spacing: 0;
-            margin: 0;
-        }
-
-        /* Sección de Gerentes y Asesores */
-        .personnel-section {
-            margin-top: 40px;
-            padding-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #60a61e;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title i {
-            font-size: 1.1rem;
-        }
-
-        .personnel-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: rgba(30, 30, 30, 0.3);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .personnel-row.first-row {
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-
-        .personnel-row:hover {
-            background: rgba(30, 30, 30, 0.5);
-            border-color: rgba(96, 166, 30, 0.2);
-        }
-
-        .row-number {
-            grid-column: 1 / -1;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #60a61e;
-            margin-bottom: 10px;
-        }
-
-        .row-buttons{
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .row-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-        }
-        
-        .add-row-btn{
-            color: #60a61e;
-            background: rgba(96, 166, 30, 0.15);
-            border: 1px solid rgba(96, 166, 30, 0.3);
-        }
-        
-        .delete-row-btn{
-            color: #a62e1e;
-            background: rgba(166, 30, 30, 0.15);
-            border: 1px solid rgba(166, 30, 30, 0.3);
-        }
-        
-        .add-row-btn:hover {
-            border-color: #60a61e;
-            background: rgba(96, 166, 30, 0.25);
-        }
-        .delete-row-btn:hover {
-            border-color: #a61e1e;
-            background: rgba(166, 30, 30, 0.25);
-        }
-
-        .row-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .row-btn i {
-            font-size: 0.9rem;
-        }
-
-        /* Botones de acción */
-        .actions {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .btn {
-            padding: 16px 40px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #60a61e, #4a8518);
-            color: #ffffff;
-            box-shadow: 0 4px 15px rgba(96, 166, 30, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(96, 166, 30, 0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-3px);
-        }
-
-        /* Modal de Confirmación */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 40px;
-            max-width: 600px;
-            width: 90%;
-            border: 1px solid rgba(96, 166, 30, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            animation: slideUp 0.4s ease;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .modal-header h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #60a61e;
-            margin-bottom: 10px;
-        }
-
-        .modal-header p {
-            font-size: 0.95rem;
-            color: #888;
-        }
-
-        .modal-body {
-            margin-bottom: 30px;
-        }
-
-        .info-group {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(30, 30, 30, 0.5);
-            border-radius: 12px;
-            border-left: 3px solid #60a61e;
-        }
-
-        .info-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .info-label i {
-            color: #60a61e;
-            font-size: 0.75rem;
-        }
-
-        .info-value {
-            font-size: 1.1rem;
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        .info-section-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #60a61e;
-            margin: 25px 0 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .info-section-title i {
-            font-size: 1rem;
-        }
-
-        .personnel-info {
-            background: rgba(30, 30, 30, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .personnel-info-header {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #60a61e;
-            margin-bottom: 10px;
-        }
-
-        .personnel-info-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .modal-btn {
-            padding: 14px 35px;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-btn-confirm {
-            background: linear-gradient(135deg, #60a61e, #4a8518);
-            color: #ffffff;
-            box-shadow: 0 4px 15px rgba(96, 166, 30, 0.3);
-        }
-
-        .modal-btn-confirm:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(96, 166, 30, 0.4);
-        }
-
-        .modal-btn-cancel {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .modal-btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-3px);
-        }
-
-        .mp-badge {
-            display: inline-block;
-            background: rgba(96, 166, 30, 0.2);
-            border: 1px solid rgba(96, 166, 30, 0.4);
-            color: #60a61e;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 5px;
-        }
-
-        /* Estilos para comisiones en el modal */
-        .commission-details {
-            display: flex;
-            gap: 10px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .commission-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(96, 166, 30, 0.15);
-            border: 1px solid rgba(96, 166, 30, 0.3);
-            color: #60a61e;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .commission-badge i {
-            font-size: 0.75rem;
-        }
-
-        .commission-amount {
-            background: rgba(96, 166, 30, 0.2);
-            border-color: rgba(96, 166, 30, 0.4);
-            color: #60a61e;
-            font-weight: 700;
-        }
-
-        /* Scrollbar personalizado */
-        .select-dropdown::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .select-dropdown::-webkit-scrollbar-track {
-            background: rgba(30, 30, 30, 0.5);
-            border-radius: 10px;
-        }
-
-        .select-dropdown::-webkit-scrollbar-thumb {
-            background: rgba(96, 166, 30, 0.5);
-            border-radius: 10px;
-        }
-
-        .select-dropdown::-webkit-scrollbar-thumb:hover {
-            background: rgba(96, 166, 30, 0.7);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-
-            .form-card {
-                padding: 30px 20px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .column-divider {
-                display: none;
-            }
-
-            .personnel-row,
-            .personnel-row.first-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .actions {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .modal-content {
-                padding: 25px;
-                width: 95%;
-            }
-
-            .modal-header h2 {
-                font-size: 1.5rem;
-            }
-
-            .personnel-info-row {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .modal-actions {
-                flex-direction: column;
-            }
-
-            .modal-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NOVU — Comisiones</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1e1e;--bg2:#162828;--bg3:#1c3030;--bg4:#223838;
+  --green:#60a61e;--green-glow:rgba(96,166,30,0.3);--green-bright:#7bc42a;
+  --white:#ffffff;--muted:#8fada0;
+  --amber:#f0a500;--blue:#38c5f5;--red:#e74c3c;--teal:#10b981;
+}
+body{background:var(--bg);color:var(--white);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* Stars */
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;animation:twinkle var(--dur) ease-in-out infinite alternate;}
+@keyframes twinkle{from{opacity:0.15;transform:scale(1);}to{opacity:0.9;transform:scale(1.5);}}
+.beam{position:fixed;top:0;right:10%;width:280px;height:100vh;background:linear-gradient(180deg,rgba(96,166,30,0.06) 0%,transparent 65%);transform:skewX(-8deg);pointer-events:none;z-index:0;}
+
+/* ── ROLE SWITCHER ── */
+.role-bar{
+  position:relative;z-index:10;
+  background:rgba(15,30,30,0.95);
+  border-bottom:1px solid rgba(96,166,30,0.12);
+  padding:0.5rem 5rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  backdrop-filter:blur(10px);
+}
+.role-label{font-size:0.68rem;font-weight:800;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;}
+.role-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.role-btn{
+  padding:0.35rem 0.9rem;border-radius:100px;
+  border:1px solid rgba(96,166,30,0.2);background:transparent;
+  color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.72rem;font-weight:800;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;text-transform:uppercase;
+}
+.role-btn:hover{border-color:var(--green);color:var(--white);}
+.role-btn.active{background:rgba(96,166,30,0.15);border-color:var(--green);color:var(--green-bright);}
+.role-btn[data-role="directora"].active{background:rgba(56,197,245,0.12);border-color:var(--blue);color:var(--blue);}
+.role-btn[data-role="administradora"].active{background:rgba(16,185,129,0.12);border-color:var(--teal);color:var(--teal);}
+.current-user-pill{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  padding:0.3rem 0.8rem;border-radius:100px;
+  border:1px solid rgba(96,166,30,0.2);background:rgba(96,166,30,0.06);
+  font-size:0.72rem;font-weight:700;color:var(--muted);
+}
+.current-user-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green-bright);}
+
+/* ── NOTIFICATIONS ── */
+.notif-overlay{
+  position:fixed;inset:0;z-index:1000;pointer-events:none;
+  display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  padding:5rem 1.5rem 2rem;
+}
+.notif{
+  pointer-events:all;
+  background:var(--bg3);
+  border:1px solid rgba(96,166,30,0.3);
+  border-left:4px solid var(--green-bright);
+  border-radius:12px;padding:1rem 1.2rem;
+  max-width:320px;width:100%;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  animation:slideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+  position:relative;overflow:hidden;
+}
+.notif.notif-blue{border-left-color:var(--blue);}
+.notif.notif-amber{border-left-color:var(--amber);}
+.notif.notif-red{border-left-color:var(--red);}
+.notif.notif-teal{border-left-color:var(--teal);}
+.notif.exit{animation:slideOut 0.3s ease forwards;}
+@keyframes slideIn{from{opacity:0;transform:translateX(60px);}to{opacity:1;transform:translateX(0);}}
+@keyframes slideOut{to{opacity:0;transform:translateX(80px);}}
+.notif-title{font-size:0.8rem;font-weight:900;margin-bottom:3px;}
+.notif-body{font-size:0.72rem;color:var(--muted);}
+.notif-close{
+  position:absolute;top:8px;right:10px;
+  background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;
+  transition:color 0.2s;
+}
+.notif-close:hover{color:var(--white);}
+.notif-progress{
+  position:absolute;bottom:0;left:0;height:3px;
+  background:var(--green-bright);
+  animation:shrink 5s linear forwards;
+}
+.notif.notif-blue .notif-progress{background:var(--blue);}
+.notif.notif-amber .notif-progress{background:var(--amber);}
+@keyframes shrink{from{width:100%;}to{width:0%;}}
+
+/* ── HEADER ── */
+.header{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:2.2rem 5rem 1.4rem;border-bottom:1px solid rgba(96,166,30,0.15);}
+.brand-name{font-family:'Space Mono',monospace;font-size:clamp(3.5rem,8vw,6rem);font-weight:700;line-height:1;letter-spacing:-3px;color:var(--white);text-shadow:0 0 80px var(--green-glow),0 0 30px rgba(96,166,30,0.2);cursor:pointer;position:relative;display:inline-block;transition:color 0.2s;}
+.brand-name .dot{color:var(--green);}
+.mascot{flex:0 0 auto;animation:float 4s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+.unicorn-wrap{position:relative;width:clamp(80px,9vw,120px);height:clamp(80px,9vw,120px);}
+.glow-bubble{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;height:80%;border-radius:50%;background:radial-gradient(circle,rgba(74,133,24,0.5) 0%,rgba(74,133,24,0.08) 70%,transparent 100%);filter:blur(14px);}
+svg.unicorn{position:relative;z-index:1;width:100%;height:100%;filter:drop-shadow(0 16px 32px rgba(0,0,0,0.55));}
+
+/* ── CONTENT ── */
+.content{position:relative;z-index:1;max-width:900px;width:90%;margin:0 auto;padding:3rem 0 6rem;}
+.section-head{margin-bottom:1.6rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;animation:fadeUp 0.5s 0.15s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.section-title{font-size:1.05rem;font-weight:900;color:var(--white);}
+.section-count{font-size:0.82rem;color:var(--muted);margin-top:0.2rem;}
+.btn-register{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#60a61e,#4a8518);border:none;border-radius:100px;color:#0f1e1e;font-family:'Nunito',sans-serif;font-weight:900;font-size:0.85rem;padding:0.6rem 1.3rem;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(96,166,30,0.35);transition:transform 0.2s,box-shadow 0.2s;white-space:nowrap;}
+.btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(96,166,30,0.5);}
+
+/* ── Controls ── */
+.controls-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:1.4rem;animation:fadeUp 0.5s 0.25s ease both;}
+.search-wrap{position:relative;}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--green);font-size:0.82rem;pointer-events:none;}
+.search-input{width:100%;background:var(--bg2);border:1px solid rgba(96,166,30,0.18);border-radius:100px;padding:0.6rem 1rem 0.6rem 2.4rem;color:var(--white);font-family:'Nunito',sans-serif;font-size:0.85rem;font-weight:600;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.search-input::placeholder{color:rgba(143,173,160,0.4);font-weight:400;}
+.search-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(96,166,30,0.1);}
+.filter-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-btn{padding:0.5rem 1rem;border-radius:100px;border:1px solid rgba(96,166,30,0.2);background:var(--bg2);color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.75rem;font-weight:800;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;}
+.filter-btn:hover{border-color:var(--green);color:var(--white);}
+.filter-btn.active{background:rgba(96,166,30,0.15);border-color:var(--green);color:var(--green-bright);}
+.filter-btn.f-pendiente.active{background:rgba(240,165,0,0.15);border-color:var(--amber);color:var(--amber);}
+.filter-btn.f-verificada.active{background:rgba(56,197,245,0.15);border-color:var(--blue);color:var(--blue);}
+.filter-btn.f-aprobada.active{background:rgba(123,196,42,0.15);border-color:var(--green-bright);color:var(--green-bright);}
+.filter-btn.f-pagada.active{background:rgba(16,185,129,0.15);border-color:var(--teal);color:var(--teal);}
+.filter-btn.f-cancelada.active{background:rgba(231,76,60,0.15);border-color:var(--red);color:var(--red);}
+
+/* ── Live indicator ── */
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-bright);padding:0.3rem 0.8rem;border-radius:100px;background:rgba(123,196,42,0.08);border:1px solid rgba(123,196,42,0.2);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green-bright);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+
+/* ── Sale cards ── */
+.sale-list{display:flex;flex-direction:column;gap:12px;}
+.sale-card{background:var(--bg2);border:1px solid rgba(96,166,30,0.14);border-radius:16px;overflow:hidden;transition:border-color 0.25s;animation:fadeUp 0.5s ease both;}
+.sale-card.open{border-color:rgba(96,166,30,0.45);}
+.sale-header{display:flex;align-items:center;gap:14px;padding:1.1rem 1.4rem;cursor:pointer;user-select:none;transition:background 0.2s;}
+.sale-header:hover{background:rgba(96,166,30,0.04);}
+.sale-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.status-pendiente{background:var(--amber);box-shadow:0 0 8px rgba(240,165,0,0.6);}
+.status-verificada{background:var(--blue);box-shadow:0 0 8px rgba(56,197,245,0.6);}
+.status-aprobada{background:var(--green-bright);box-shadow:0 0 8px rgba(123,196,42,0.6);}
+.status-pagada{background:var(--teal);box-shadow:0 0 8px rgba(16,185,129,0.6);}
+.status-cancelada{background:var(--red);box-shadow:0 0 8px rgba(231,76,60,0.6);}
+.status-correccion{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,0.6);}
+.sale-info{flex:1;min-width:0;}
+.sale-empresa{font-size:0.7rem;color:var(--muted);font-weight:600;letter-spacing:0.04em;margin-bottom:2px;}
+.sale-dev{font-weight:900;font-size:0.95rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sale-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.tag{font-size:0.67rem;font-weight:700;letter-spacing:0.05em;padding:2px 9px;border-radius:100px;border:1px solid rgba(96,166,30,0.25);color:var(--green-bright);background:rgba(96,166,30,0.08);}
+.tag.ref{color:var(--muted);border-color:rgba(143,173,160,0.2);background:transparent;font-family:'Space Mono',monospace;font-size:0.6rem;}
+.tag.blue{color:var(--blue);border-color:rgba(56,197,245,0.3);background:rgba(56,197,245,0.07);}
+.tag.amber{color:#f0c040;border-color:rgba(240,192,64,0.3);background:rgba(240,192,64,0.07);}
+.status-tag-pendiente{color:var(--amber);border-color:rgba(240,165,0,0.3);background:rgba(240,165,0,0.07);}
+.status-tag-verificada{color:var(--blue);border-color:rgba(56,197,245,0.3);background:rgba(56,197,245,0.07);}
+.status-tag-aprobada{color:var(--green-bright);border-color:rgba(123,196,42,0.3);background:rgba(123,196,42,0.07);}
+.status-tag-pagada{color:var(--teal);border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.07);}
+.status-tag-cancelada{color:var(--red);border-color:rgba(231,76,60,0.3);background:rgba(231,76,60,0.07);}
+.status-tag-correccion{color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.07);}
+.sale-amount{text-align:right;flex-shrink:0;}
+.sale-price{font-family:'Space Mono',monospace;font-size:1rem;color:var(--white);font-weight:700;}
+.sale-commission{font-size:0.72rem;color:var(--green-bright);font-weight:700;margin-top:2px;}
+.chevron{flex-shrink:0;margin-left:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(96,166,30,0.3);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:11px;transition:transform 0.3s,background 0.2s,border-color 0.2s;}
+.sale-card.open .chevron{transform:rotate(180deg);background:rgba(96,166,30,0.12);border-color:rgba(96,166,30,0.6);}
+
+/* ── Sale body ── */
+.sale-body{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);}
+.sale-card.open .sale-body{max-height:900px;}
+.sale-body-inner{border-top:1px solid rgba(96,166,30,0.1);padding:1.2rem 1.4rem 1.4rem;}
+
+/* ── Progress bar ── */
+.workflow-bar{display:flex;align-items:center;gap:0;margin-bottom:1.4rem;}
+.wf-step{flex:1;text-align:center;position:relative;}
+.wf-step-inner{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.wf-dot{width:28px;height:28px;border-radius:50%;border:2px solid rgba(96,166,30,0.2);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--muted);transition:all 0.3s;position:relative;z-index:1;}
+.wf-dot.done{background:rgba(96,166,30,0.2);border-color:var(--green-bright);color:var(--green-bright);}
+.wf-dot.current{background:rgba(240,165,0,0.15);border-color:var(--amber);color:var(--amber);box-shadow:0 0 12px rgba(240,165,0,0.3);}
+.wf-dot.correccion{background:rgba(245,158,11,0.15);border-color:#f59e0b;color:#f59e0b;}
+.wf-label{font-size:0.6rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.wf-label.done{color:var(--green-bright);}
+.wf-label.current{color:var(--amber);}
+.wf-line{flex:0 0 auto;width:32px;height:2px;background:rgba(96,166,30,0.1);margin-top:-18px;transition:background 0.3s;}
+.wf-line.done{background:rgba(96,166,30,0.4);}
+
+/* ── Team groups ── */
+.team-header-line{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-size:0.68rem;font-weight:700;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;}
+.team-group{margin-bottom:1.2rem;}
+.team-group:last-child{margin-bottom:0;}
+.team-group-label{font-size:0.66rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.6rem;display:flex;align-items:center;gap:8px;}
+.team-group-label span{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:900;}
+.gl-blue{color:var(--blue);}
+.gl-blue span{background:rgba(56,197,245,0.15);color:var(--blue);}
+.gl-green{color:var(--green-bright);}
+.gl-green span{background:rgba(123,196,42,0.15);color:var(--green-bright);}
+.team-group-label::after{content:'';flex:1;height:1px;background:rgba(96,166,30,0.1);}
+.participants-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.participant{background:var(--bg3);border:1px solid rgba(96,166,30,0.1);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:12px;transition:border-color 0.2s,transform 0.2s;}
+.participant:hover{border-color:rgba(96,166,30,0.3);transform:translateY(-1px);}
+.participant.verified-p{border-color:rgba(123,196,42,0.35);background:rgba(96,166,30,0.05);}
+.p-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.82rem;color:var(--bg);flex-shrink:0;font-family:'Space Mono',monospace;}
+.av-green{background:linear-gradient(135deg,#7bc42a,#4a8518);}
+.av-teal{background:linear-gradient(135deg,#38c5f5,#1a8bb5);}
+.av-amber{background:linear-gradient(135deg,#f0c040,#c88a10);}
+.av-pink{background:linear-gradient(135deg,#f08080,#c04040);}
+.av-purple{background:linear-gradient(135deg,#b080f0,#7040c0);}
+.p-info{flex:1;min-width:0;}
+.p-name{font-weight:900;font-size:0.85rem;color:var(--white);}
+.p-role-label{font-size:0.62rem;color:var(--muted);font-weight:600;}
+.p-earnings{text-align:right;flex-shrink:0;}
+.p-pct{font-size:0.7rem;color:var(--muted);}
+.p-amt{font-family:'Space Mono',monospace;font-size:0.85rem;color:var(--green-bright);font-weight:700;margin-top:2px;}
+
+/* ── Verification checkbox ── */
+.p-verify-row{margin-top:6px;}
+.verify-check{
+  display:flex;align-items:center;gap:6px;cursor:pointer;
+  font-size:0.67rem;font-weight:800;letter-spacing:0.04em;color:var(--muted);
+  transition:color 0.2s;user-select:none;
+}
+.verify-check:hover{color:var(--white);}
+.verify-check.checked{color:var(--green-bright);}
+.verify-check input[type=checkbox]{display:none;}
+.check-box{
+  width:14px;height:14px;border-radius:4px;
+  border:1.5px solid rgba(96,166,30,0.3);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;flex-shrink:0;
+}
+.verify-check.checked .check-box{background:var(--green);border-color:var(--green);}
+.check-box i{font-size:8px;color:white;opacity:0;}
+.verify-check.checked .check-box i{opacity:1;}
+.verified-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:0.62rem;font-weight:800;letter-spacing:0.06em;
+  color:var(--green-bright);padding:2px 8px;border-radius:100px;
+  background:rgba(123,196,42,0.1);border:1px solid rgba(123,196,42,0.25);
+}
+
+/* ── Action panel ── */
+.action-panel{
+  margin-top:1.2rem;padding:1rem;
+  background:var(--bg3);border-radius:12px;
+  border:1px solid rgba(96,166,30,0.12);
+}
+.action-panel-title{font-size:0.7rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.8rem;display:flex;align-items:center;gap:8px;}
+.action-panel-title i{color:var(--green);}
+.action-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.action-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:0.55rem 1.1rem;border-radius:100px;
+  border:none;cursor:pointer;font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:0.78rem;letter-spacing:0.02em;
+  transition:transform 0.2s,box-shadow 0.2s,opacity 0.2s;
+}
+.action-btn:hover{transform:translateY(-1px);}
+.action-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-approve{background:linear-gradient(135deg,#60a61e,#4a8518);color:#0f1e1e;box-shadow:0 3px 12px rgba(96,166,30,0.3);}
+.btn-approve:hover{box-shadow:0 6px 20px rgba(96,166,30,0.45);}
+.btn-verify-dir{background:linear-gradient(135deg,#38c5f5,#1a8bb5);color:#0a1a24;box-shadow:0 3px 12px rgba(56,197,245,0.25);}
+.btn-paid{background:linear-gradient(135deg,#10b981,#059669);color:#0a1a24;box-shadow:0 3px 12px rgba(16,185,129,0.25);}
+.btn-correct{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;}
+.btn-correct:hover{background:rgba(245,158,11,0.2);}
+.btn-cancel{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:var(--red);}
+.btn-cancel:hover{background:rgba(231,76,60,0.2);}
+.correction-note{
+  display:none;margin-top:0.8rem;
+}
+.correction-note.visible{display:block;}
+.correction-textarea{
+  width:100%;background:var(--bg2);border:1px solid rgba(245,158,11,0.3);
+  border-radius:10px;padding:0.7rem;color:var(--white);
+  font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:600;
+  outline:none;resize:vertical;min-height:70px;
+  transition:border-color 0.2s;
+}
+.correction-textarea::placeholder{color:rgba(143,173,160,0.4);font-weight:400;}
+.correction-textarea:focus{border-color:var(--amber);}
+.correction-send-btn{
+  margin-top:6px;padding:0.45rem 1rem;border-radius:100px;
+  background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);
+  color:#f59e0b;font-family:'Nunito',sans-serif;font-weight:900;font-size:0.75rem;
+  cursor:pointer;transition:background 0.2s;
+}
+.correction-send-btn:hover{background:rgba(245,158,11,0.3);}
+
+/* ── Director verification ── */
+.director-verify-row{
+  display:flex;align-items:center;gap:10px;
+  padding:0.8rem 1rem;background:rgba(56,197,245,0.05);
+  border:1px solid rgba(56,197,245,0.15);border-radius:12px;margin-top:0.8rem;
+}
+.director-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#38c5f5,#1a8bb5);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.8rem;color:#0a1a24;font-family:'Space Mono',monospace;flex-shrink:0;}
+.director-info{flex:1;}
+.director-name{font-size:0.82rem;font-weight:900;color:var(--white);}
+.director-role{font-size:0.62rem;color:var(--blue);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+.director-status{font-size:0.7rem;font-weight:700;}
+.director-status.pending-dir{color:var(--muted);}
+.director-status.approved-dir{color:var(--green-bright);}
+
+/* ── Correction note display ── */
+.correction-note-display{
+  display:flex;align-items:flex-start;gap:10px;margin-top:0.8rem;
+  padding:0.9rem 1rem;background:rgba(231,76,60,0.08);
+  border:1px solid rgba(231,76,60,0.35);border-radius:12px;
+  box-shadow:0 0 12px rgba(231,76,60,0.1);
+}
+.correction-icon{color:var(--red);font-size:0.9rem;margin-top:1px;}
+.correction-text-wrap{}
+.correction-label{font-size:0.62rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--red);margin-bottom:3px;}
+.correction-msg{font-size:0.78rem;color:#ffb3ac;font-weight:600;line-height:1.4;}
+
+/* ── Totals ── */
+.totals-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(96,166,30,0.1);}
+.total-pill{background:rgba(96,166,30,0.07);border:1px solid rgba(96,166,30,0.18);border-radius:10px;padding:0.5rem 1rem;font-size:0.78rem;}
+.total-pill span{display:block;color:var(--muted);font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px;}
+.total-pill strong{font-family:'Space Mono',monospace;color:var(--white);font-size:0.88rem;}
+
+/* ── Verification progress bar ── */
+.verif-progress-row{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:1rem;padding:0.7rem 1rem;
+  background:rgba(240,165,0,0.05);border:1px solid rgba(240,165,0,0.12);border-radius:10px;
+}
+.verif-progress-label{font-size:0.68rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber);flex-shrink:0;}
+.verif-bar-wrap{flex:1;height:6px;background:rgba(240,165,0,0.12);border-radius:3px;overflow:hidden;}
+.verif-bar-fill{height:100%;background:linear-gradient(90deg,var(--amber),#f59e0b);border-radius:3px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);}
+.verif-count{font-size:0.68rem;font-weight:800;color:var(--amber);flex-shrink:0;}
+
+/* ── No results ── */
+.no-results-msg{text-align:center;padding:3rem;color:var(--muted);opacity:0.7;}
+.no-results-msg .nr-icon{font-size:2rem;margin-bottom:0.6rem;}
+.no-results-msg .nr-text{font-size:0.9rem;font-weight:700;}
+
+/* ── Highlight new ── */
+@keyframes highlightNew{0%{box-shadow:0 0 0 0 rgba(123,196,42,0.5);}100%{box-shadow:0 0 20px 6px rgba(123,196,42,0);}}
+.sale-card.new-card{animation:fadeUp 0.5s ease both,highlightNew 1.5s 0.5s ease forwards;}
+
+@media(max-width:640px){
+  .header{padding:1.8rem 1.2rem 1.2rem;}
+  .content{padding:2rem 0 5rem;}
+  .role-bar{padding:0.5rem 1.2rem;}
+  .participants-grid{grid-template-columns:1fr;}
+  .action-btns{flex-direction:column;}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-badge">NOVU</div>
-            <h1>Registro de Comisión</h1>
-            <div class="decorative-line"></div>
-        </header>
+<div class="stars" id="stars"></div>
+<div class="beam"></div>
+<div class="notif-overlay" id="notifOverlay"></div>
 
-        <div class="form-card">
-            <form id="commissionForm">
-                <!-- Primera sección: Datos principales en dos columnas -->
-                <div class="form-grid">
-                    <!-- Columna Izquierda -->
-                    <div class="column-left">
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-building"></i>
-                                Compañía
-                            </label>
-                            <div class="custom-select" data-field="compania" data-api="/v10/companias">
-                                <div class="select-display placeholder">
-                                    Seleccionar compañía
-                                    <i class="fas fa-chevron-down select-arrow"></i>
-                                </div>
-                                <div class="select-dropdown">
-                                    <div class="select-search">
-                                        <input type="text" placeholder="Buscar compañía...">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                    <div class="select-options"></div>
-                                </div>
-                            </div>
-                        </div>
+<!-- ══ ROLE SWITCHER ══ -->
+<div class="role-bar">
+  <span class="role-label">Vista como:</span>
+  <div class="role-btns">
+    <button class="role-btn active" data-role="asesor" data-name="Carlos Mendoza">Asesor</button>
+    <button class="role-btn" data-role="gerente" data-name="Ana Torres">Gerente</button>
+    <button class="role-btn" data-role="directora" data-name="Dra. Laura Vega">Directora</button>
+    <button class="role-btn" data-role="administradora" data-name="María Jiménez">Administradora</button>
+  </div>
+  <div class="current-user-pill">
+    <div class="dot"></div>
+    <span id="currentUserLabel">Carlos Mendoza · Asesor</span>
+  </div>
+</div>
 
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-rocket"></i>
-                                Desarrollo
-                            </label>
-                            <div class="custom-select" data-field="desarrollo" data-api="/v10/desarrollos">
-                                <div class="select-display placeholder">
-                                    Seleccionar desarrollo
-                                    <i class="fas fa-chevron-down select-arrow"></i>
-                                </div>
-                                <div class="select-dropdown">
-                                    <div class="select-search">
-                                        <input type="text" placeholder="Buscar desarrollo...">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                    <div class="select-options"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-map-marker-alt"></i>
-                                Ubicación
-                            </label>
-                            <div class="custom-select" data-field="ubicacion" data-api="/v10/ubicaciones">
-                                <div class="select-display placeholder">
-                                    Seleccionar ubicación
-                                    <i class="fas fa-chevron-down select-arrow"></i>
-                                </div>
-                                <div class="select-dropdown">
-                                    <div class="select-search">
-                                        <input type="text" placeholder="Buscar ubicación...">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                    <div class="select-options"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Divisor -->
-                    <div class="column-divider"></div>
-
-                    <!-- Columna Derecha -->
-                    <div class="column-right">
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-calendar-day"></i>
-                                Fecha registro
-                            </label>
-                            <input type="date" id="fechaRegistro" value="" readonly>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-receipt"></i>
-                                Concepto
-                            </label>
-                            <div class="custom-select" data-field="concepto" data-api="/v10/conceptos">
-                                <div class="select-display placeholder">
-                                    Seleccionar concepto
-                                    <i class="fas fa-chevron-down select-arrow"></i>
-                                </div>
-                                <div class="select-dropdown">
-                                    <div class="select-search">
-                                        <input type="text" placeholder="Buscar concepto...">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                    <div class="select-options"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-calendar-check"></i>
-                                Fecha contrato
-                            </label>
-                            <input type="date" id="fechaContrato" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección de Gerentes y Asesores -->
-                <div class="personnel-section">
-                    <div class="section-title">
-                        <i class="fas fa-users"></i>
-                        Gerentes y Asesores
-                    </div>
-
-                    <div id="personnelRows">
-                        <!-- Fila 1 con MP Checkbox -->
-                        <div class="personnel-row first-row">
-                            <div class="row-number">
-                                <i class="fas fa-hashtag"></i> Fila 1
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    <i class="fas fa-user-tie"></i>
-                                    Gerente
-                                </label>
-                                <div class="custom-select" data-field="gerente" data-row="1" data-api="/api/users/by-role/Gerente">
-                                    <div class="select-display placeholder">
-                                        Seleccionar gerente
-                                        <i class="fas fa-chevron-down select-arrow"></i>
-                                    </div>
-                                    <div class="select-dropdown">
-                                        <div class="select-search">
-                                            <input type="text" placeholder="Buscar gerente...">
-                                            <i class="fas fa-search"></i>
-                                        </div>
-                                        <div class="select-options"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    <i class="fas fa-user"></i>
-                                    Asesor
-                                </label>
-                                <div class="custom-select" data-field="asesor" data-row="1" data-api="/api/users/by-role/Asesor">
-                                    <div class="select-display placeholder">
-                                        Seleccionar asesor
-                                        <i class="fas fa-chevron-down select-arrow"></i>
-                                    </div>
-                                    <div class="select-dropdown">
-                                        <div class="select-search">
-                                            <input type="text" placeholder="Buscar asesor...">
-                                            <i class="fas fa-search"></i>
-                                        </div>
-                                        <div class="select-options"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    <i class="fas fa-shield-alt"></i>
-                                    Multipunto
-                                </label>
-                                <div class="mp-checkbox-inline">
-                                    <input type="checkbox" id="mpCheckbox">
-                                    <label for="mpCheckbox" class="checkbox-label">
-                                        MP
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row-buttons">
-                        <button type="button" class="row-btn add-row-btn" onclick="addPersonnelRow()">
-                            <i class="fas fa-plus"></i>
-                            Agregar otra fila
-                        </button>
-                        <button type="button" class="row-btn delete-row-btn" onclick="deletePersonnelRow()">
-                            <i class="fas fa-minus"></i>
-                            Quitar última fila
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Botones de acción -->
-                <div class="actions">
-                    <button type="button" class="btn btn-secondary" onclick="cancelForm()">
-                        <i class="fas fa-times"></i>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Guardar Comisión
-                    </button>
-                </div>
-            </form>
-        </div>
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div>
+    <div class="brand-name"><span class="dot">NO</span>VU</div>
+  </div>
+  <div class="mascot">
+    <div class="unicorn-wrap">
+      <div class="glow-bubble"></div>
+      <svg class="unicorn" viewBox="0 0 300 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="152" cy="145" rx="88" ry="90" fill="#2a6040" opacity="0.9"/>
+        <ellipse cx="152" cy="145" rx="80" ry="82" fill="#d6f0e0"/>
+        <ellipse cx="130" cy="110" rx="20" ry="12" fill="white" opacity="0.35" transform="rotate(-20 130 110)"/>
+        <polygon points="152,28 144,72 160,72" fill="#38c5f5"/>
+        <polygon points="152,28 144,72 148,72" fill="#2aa8d8" opacity="0.6"/>
+        <ellipse cx="152" cy="30" rx="7" ry="4" fill="#e74c3c" transform="rotate(-10 152 30)"/>
+        <ellipse cx="152" cy="152" rx="52" ry="50" fill="#f8f0dc"/>
+        <ellipse cx="135" cy="148" rx="7" ry="7.5" fill="#2c3e50"/>
+        <ellipse cx="169" cy="148" rx="7" ry="7.5" fill="#2c3e50"/>
+        <circle cx="138" cy="145" r="2.5" fill="white"/>
+        <circle cx="172" cy="145" r="2.5" fill="white"/>
+        <path d="M127 136 Q135 130 143 136" stroke="#8b7355" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M161 136 Q169 132 177 137" stroke="#8b7355" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M143 168 Q152 175 161 168" stroke="#8b7355" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <ellipse cx="126" cy="162" rx="9" ry="5" fill="#f0a8a8" opacity="0.5"/>
+        <ellipse cx="178" cy="162" rx="9" ry="5" fill="#f0a8a8" opacity="0.5"/>
+        <ellipse cx="102" cy="130" rx="14" ry="18" fill="#4a8518" transform="rotate(-15 102 130)"/>
+        <ellipse cx="202" cy="130" rx="14" ry="18" fill="#4a8518" transform="rotate(15 202 130)"/>
+        <rect x="100" y="218" width="104" height="95" rx="30" fill="#dce8dc"/>
+        <ellipse cx="152" cy="222" rx="42" ry="14" fill="#b8d8b8"/>
+        <circle cx="152" cy="265" r="14" fill="#4a8518" opacity="0.8"/>
+        <path d="M146 265 A6 6 0 1 1 146 265.01" stroke="white" stroke-width="3" fill="none" stroke-dasharray="20 5"/>
+        <rect x="62" y="228" width="40" height="24" rx="12" fill="#dce8dc" transform="rotate(20 62 228)"/>
+        <ellipse cx="60" cy="258" rx="14" ry="14" fill="#7bc42a"/>
+        <rect x="200" y="228" width="40" height="24" rx="12" fill="#dce8dc" transform="rotate(-20 240 228)"/>
+        <ellipse cx="242" cy="258" rx="14" ry="14" fill="#7bc42a"/>
+        <rect x="112" y="305" width="35" height="45" rx="15" fill="#dce8dc"/>
+        <rect x="155" y="305" width="35" height="45" rx="15" fill="#dce8dc"/>
+        <ellipse cx="129" cy="348" rx="20" ry="11" fill="#7bc42a"/>
+        <ellipse cx="172" cy="348" rx="20" ry="11" fill="#7bc42a"/>
+      </svg>
     </div>
+  </div>
+</header>
 
-    <!-- Modal de Confirmación -->
-    <div class="modal-overlay" id="confirmationModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-check-circle"></i> Confirmar Comisión</h2>
-                <p>Revisa la información antes de guardar</p>
-            </div>
-
-            <div class="modal-body" id="modalBody">
-                <!-- El contenido se llenará dinámicamente -->
-            </div>
-
-            <div class="modal-actions">
-                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">
-                    <i class="fas fa-times"></i>
-                    Cancelar
-                </button>
-                <button class="modal-btn modal-btn-confirm" onclick="confirmSave()">
-                    <i class="fas fa-save"></i>
-                    Confirmar y Guardar
-                </button>
-            </div>
-        </div>
+<!-- ══ MAIN ══ -->
+<main class="content">
+  <div class="section-head">
+    <div>
+      <div class="section-title">Ventas Registradas</div>
+      <div class="section-count" id="sectionCount">— transacciones</div>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="live-badge"><div class="live-dot"></div> En vivo</div>
+      <button class="btn-register" id="btnAddDemo"><i class="fas fa-plus"></i> Simular nueva venta</button>
+    </div>
+  </div>
 
-    <script>
-        // ========== CONFIGURACIÓN DE API ==========
-        const API_CONFIG = {
-            baseURL: 'http://localhost:3000',
-            endpoints: {
-                companias: '/v10/companias',
-                desarrollos: '/v10/desarrollos',
-                ubicaciones: '/v10/ubicaciones',
-                conceptos: '/v10/conceptos',
-                gerentes: '/api/users/by-role/Gerente',
-                asesores: '/api/users/by-role/Asesor',
-                comisiones: '/v10/comisiones'
-            }
-        };
+  <div class="controls-bar">
+    <div class="search-wrap">
+      <i class="fas fa-search"></i>
+      <input class="search-input" id="searchInput" type="text" placeholder="Buscar por empresa, desarrollo, clave…">
+    </div>
+    <div class="filter-btns">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn f-pendiente" data-filter="pendiente">Pendiente</button>
+      <button class="filter-btn f-verificada" data-filter="verificada">Verificada</button>
+      <button class="filter-btn f-aprobada" data-filter="aprobada">Aprobada</button>
+      <button class="filter-btn f-pagada" data-filter="pagada">Pagada</button>
+      <button class="filter-btn f-cancelada" data-filter="cancelada">Cancelada</button>
+    </div>
+  </div>
 
-        // Cache para almacenar datos de las APIs
-        const apiCache = {};
-        
-        // Almacenar todos los datos sin filtrar
-        const allData = {
-            desarrollos: [],
-            ubicaciones: []
-        };
+  <div class="sale-list" id="saleList"></div>
+</main>
 
-        // ========== FUNCIONES DE API ==========
-        async function fetchFromAPI(endpoint) {
-            if(endpoint == "/v10/conceptos"){
-                return [{id:1,nombre:"Contrato"},{id:2,nombre:"Escritura"}];
-            }
+<script>
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let currentRole = 'asesor';
+let currentUser = 'Carlos Mendoza';
 
-            if (apiCache[endpoint]) {
-                return apiCache[endpoint];
-            }
+const statusLabels = {
+  pendiente:'Pendiente', verificada:'Verificada', aprobada:'Aprobada',
+  pagada:'Pagada', cancelada:'Cancelada', correccion:'En Corrección'
+};
 
-            try {
-                const response = await fetch(`${endpoint}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    let data = [];
-                    
-                    if (result.data.desarrollos) {
-                        data = result.data.desarrollos;
-                        allData.desarrollos = [...data];
-                    } else if (result.data.companias) {
-                        data = result.data.companias;
-                    } else if (result.data.ubicaciones) {
-                        data = result.data.ubicaciones;
-                        allData.ubicaciones = [...data];
-                    } else if (result.data.conceptos) {
-                        data = result.data.conceptos;
-                    } else if (result.data && endpoint == "/api/users/by-role/Gerente") {
+// Sales state (simulates DB)
+let salesDB = [
+  {
+    id:'com-001', empresa:'Grupo Punta Diamante', desarrollo:'Torre Esmeralda', clave:'CDMX-01', concepto:'Departamento 14B', tipo:'Compartida',
+    precio:4800000, status:'pendiente', correctionNote: null,
+    directorVerified: false,
+    participants: [
+      {id:'p1', name:'Carlos Mendoza', role:'asesor', initials:'CM', avatar:'av-teal', pct:3.5, earn:168000, verified:false},
+      {id:'p2', name:'Sofía Ramírez', role:'asesor', initials:'SR', avatar:'av-pink', pct:1.5, earn:72000, verified:false},
+      {id:'p3', name:'Ana Torres', role:'gerente', initials:'AT', avatar:'av-green', pct:2, earn:96000, verified:false},
+    ]
+  },
+  {
+    id:'com-002', empresa:'Desarrollos del Pacífico', desarrollo:'Residencial Vista Mar', clave:'GDL-07', concepto:'Casa 23', tipo:'Simple',
+    precio:2950000, status:'verificada', correctionNote: null,
+    directorVerified: false,
+    participants: [
+      {id:'p4', name:'Luis Hernández', role:'asesor', initials:'LH', avatar:'av-amber', pct:4, earn:118000, verified:true},
+      {id:'p5', name:'Ana Torres', role:'gerente', initials:'AT', avatar:'av-green', pct:2, earn:59000, verified:true},
+    ]
+  },
+  {
+    id:'com-003', empresa:'Inmobiliaria Cenit', desarrollo:'Park Avenue Lofts', clave:'MTY-12', concepto:'Loft 7A', tipo:'Multipunto',
+    precio:3600000, status:'aprobada', correctionNote: null,
+    directorVerified: true,
+    participants: [
+      {id:'p6', name:'Ana Torres', role:'gerente', initials:'AT', avatar:'av-green', pct:2.5, earn:90000, verified:true},
+      {id:'p7', name:'Roberto Díaz', role:'asesor', initials:'RD', avatar:'av-purple', pct:3, earn:108000, verified:true},
+    ]
+  },
+  {
+    id:'com-004', empresa:'Grupo Punta Diamante', desarrollo:'Plaza Zentrum', clave:'CDMX-09', concepto:'Local Comercial 3', tipo:'Tradicional',
+    precio:1200000, status:'correccion', correctionNote:'El porcentaje del asesor no coincide con el acuerdo inicial. Favor de revisar y corregir.',
+    directorVerified: false,
+    participants: [
+      {id:'p8', name:'Carlos Mendoza', role:'asesor', initials:'CM', avatar:'av-teal', pct:2, earn:24000, verified:true},
+      {id:'p9', name:'Ana Torres', role:'gerente', initials:'AT', avatar:'av-green', pct:1.5, earn:18000, verified:true},
+    ]
+  },
+  {
+    id:'com-005', empresa:'Desarrollos del Pacífico', desarrollo:'Jardines del Bosque', clave:'QRO-03', concepto:'Casa Modelo B', tipo:'Escalonada',
+    precio:5200000, status:'pagada', correctionNote: null,
+    directorVerified: true,
+    participants: [
+      {id:'pa', name:'Sofía Ramírez', role:'asesor', initials:'SR', avatar:'av-pink', pct:4, earn:208000, verified:true},
+      {id:'pb', name:'Ana Torres', role:'gerente', initials:'AT', avatar:'av-green', pct:2, earn:104000, verified:true},
+    ]
+  },
+];
 
+// Which participants match each role for demo
+const roleParticipantMap = {
+  asesor: ['Carlos Mendoza','Sofía Ramírez','Luis Hernández','Roberto Díaz'],
+  gerente: ['Ana Torres'],
+  directora: [],
+  administradora: []
+};
 
+// ══════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════
+const fmt = n => '$' + Number(n).toLocaleString('es-MX');
+const avatarColors = ['av-teal','av-green','av-pink','av-amber','av-purple'];
+const getAvatar = idx => avatarColors[idx % avatarColors.length];
+const getInitials = name => name ? name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() : '?';
 
-                        data = result.data.map(user => ({
-                            id: user._id,
-                            nombre: user.name
-                        }));
-          
-                    } else if (result.data && endpoint == "/api/users/by-role/Asesor") {
-                        // data = result.data.asesores;
+// Visibility per role
+function canSeeSale(sale) {
+  if (currentRole === 'directora') return ['verificada','aprobada'].includes(sale.status);
+  if (currentRole === 'administradora') return sale.status === 'aprobada';
+  // asesor/gerente: see all their sales
+  const myNames = roleParticipantMap[currentRole] || [];
+  return sale.participants.some(p => myNames.includes(p.name));
+}
 
-                        data = result.data.map(user => ({
-                            id: user._id,
-                            nombre: user.name
-                        }));
-          
-                    }
-                    
-                    apiCache[endpoint] = data;
-                    return data;
-                } else {
-                    throw new Error('Formato de respuesta inválido');
-                }
-            } catch (error) {
-                console.error(`Error al obtener datos de ${endpoint}:`, error);
-                throw error;
-            }
-        }
+function getMyParticipant(sale) {
+  const myNames = roleParticipantMap[currentRole] || [];
+  return sale.participants.find(p => myNames.includes(p.name));
+}
 
-        // ========== INICIALIZACIÓN ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('fechaRegistro').valueAsDate = new Date();
-            initializeCustomSelects();
-            loadAllSelectors();
-            setupCascadingSelects();
-        });
+// ══════════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════════════════════════════════
+function showNotif(title, body, type = '') {
+  const overlay = document.getElementById('notifOverlay');
+  const div = document.createElement('div');
+  div.className = `notif ${type ? 'notif-'+type : ''}`;
+  div.innerHTML = `
+    <button class="notif-close" onclick="dismissNotif(this)"><i class="fas fa-times"></i></button>
+    <div class="notif-title">${title}</div>
+    <div class="notif-body">${body}</div>
+    <div class="notif-progress"></div>
+  `;
+  overlay.appendChild(div);
+  setTimeout(() => dismissNotif(div.querySelector('.notif-close')), 5000);
+}
+function dismissNotif(btn) {
+  const notif = btn.closest ? btn.closest('.notif') : btn;
+  notif.classList.add('exit');
+  setTimeout(() => notif.remove(), 300);
+}
 
-        async function loadAllSelectors() {
-            const selectors = document.querySelectorAll('.custom-select[data-api]');
-            
-            for (const selector of selectors) {
-                await loadSelectorData(selector);
-            }
-        }
+// ══════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════
+function tipoBadge(t) {
+  const key = (t||'').toLowerCase();
+  const map = {simple:'tag',tradicional:'tag',compartida:'tag blue',multipunto:'tag amber',escalonada:'tag amber'};
+  return `<span class="${map[key]||'tag'}">${t}</span>`;
+}
 
-        async function loadSelectorData(selectorElement) {
-            const apiEndpoint = selectorElement.dataset.api;
-            const display = selectorElement.querySelector('.select-display');
-            const optionsContainer = selectorElement.querySelector('.select-options');
-            const arrow = selectorElement.querySelector('.select-arrow');
-            
-            display.classList.add('loading');
-            display.textContent = 'Cargando...';
-            arrow.className = 'fas fa-spinner select-arrow';
-            
-            optionsContainer.innerHTML = '<div class="loading-message"><i class="fas fa-spinner"></i>Cargando datos...</div>';
-            
-            try {
-                const data = await fetchFromAPI(apiEndpoint);
-                
-                display.classList.remove('loading');
-                const placeholder = selectorElement.querySelector('.select-search input').placeholder;
-                display.textContent = placeholder.replace('Buscar', 'Seleccionar');
-                arrow.className = 'fas fa-chevron-down select-arrow';
-                
-                populateSelect(selectorElement, data);
-                
-            } catch (error) {
-                display.classList.remove('loading');
-                display.textContent = 'Error al cargar';
-                arrow.className = 'fas fa-exclamation-circle select-arrow';
-                
-                optionsContainer.innerHTML = `
-                    <div class="error-message">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Error al cargar los datos. Por favor, intenta de nuevo.
-                    </div>
-                `;
-            }
-        }
+function buildWorkflowBar(sale) {
+  const steps = [
+    {key:'pendiente', label:'Registrada', icon:'fas fa-file-alt'},
+    {key:'verificada', label:'Verificada', icon:'fas fa-users'},
+    {key:'aprobada', label:'Aprobada', icon:'fas fa-check-circle'},
+    {key:'pagada', label:'Pagada', icon:'fas fa-money-bill-wave'},
+  ];
+  const order = ['pendiente','verificada','aprobada','pagada'];
+  const currentIdx = order.indexOf(sale.status === 'correccion' ? 'pendiente' : sale.status);
 
-        function populateSelect(selectorElement, data, autoSelect = null) {
-            const optionsContainer = selectorElement.querySelector('.select-options');
-            const display = selectorElement.querySelector('.select-display');
-            
-            optionsContainer.innerHTML = '';
-            
-            if (!data || data.length === 0) {
-                optionsContainer.innerHTML = '<div class="no-results">No hay datos disponibles</div>';
-                return;
-            }
-            
-            data.forEach(item => {
-                const option = document.createElement('div');
-                option.className = 'select-option';
-                option.textContent = item.nombre;
-                option.dataset.value = item.id;
-                
-                // Guardar datos adicionales necesarios para el filtrado
-                if (item.compania) option.dataset.compania = item.compania;
-                if (item.desarrollo) option.dataset.desarrollo = item.desarrollo;
-                
-                option.addEventListener('click', function() {
-                    selectOption(selectorElement, this);
-                });
-                
-                optionsContainer.appendChild(option);
-            });
-            
-            // Auto-seleccionar si se especifica
-            if (autoSelect) {
-                const optionToSelect = optionsContainer.querySelector(`[data-value="${autoSelect}"]`);
-                if (optionToSelect) {
-                    selectOption(selectorElement, optionToSelect, true);
-                }
-            }
-        }
+  let html = '<div class="workflow-bar">';
+  steps.forEach((s, i) => {
+    const idx = order.indexOf(s.key);
+    let cls = '';
+    if (sale.status === 'correccion' && s.key === 'pendiente') cls = 'correccion';
+    else if (idx < currentIdx) cls = 'done';
+    else if (idx === currentIdx) cls = 'current';
+    html += `
+      <div class="wf-step">
+        <div class="wf-step-inner">
+          <div class="wf-dot ${cls}"><i class="${s.icon}"></i></div>
+          <div class="wf-label ${cls === 'done' ? 'done' : cls === 'current' ? 'current' : ''}">${s.label}</div>
+        </div>
+      </div>`;
+    if (i < steps.length - 1) {
+      html += `<div class="wf-line ${idx < currentIdx ? 'done' : ''}"></div>`;
+    }
+  });
+  html += '</div>';
+  return html;
+}
 
-        function selectOption(selectorElement, optionElement, isAutoSelect = false) {
-            const optionsContainer = selectorElement.querySelector('.select-options');
-            const display = selectorElement.querySelector('.select-display');
-            
-            // Remover selección anterior
-            optionsContainer.querySelectorAll('.select-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            
-            // Seleccionar nueva opción
-            optionElement.classList.add('selected');
-            display.textContent = optionElement.textContent;
-            display.classList.remove('placeholder');
-            display.dataset.value = optionElement.dataset.value;
-            
-            // Guardar datos adicionales
-            if (optionElement.dataset.compania) {
-                display.dataset.compania = optionElement.dataset.compania;
-            }
-            if (optionElement.dataset.desarrollo) {
-                display.dataset.desarrollo = optionElement.dataset.desarrollo;
-            }
-            
-            // Agregar badge si es auto-selección
-            if (isAutoSelect) {
-                display.classList.add('auto-selected');
-                const badge = document.createElement('span');
-                badge.className = 'auto-select-badge';
-                badge.innerHTML = '<i class="fas fa-magic"></i> Auto';
-                display.appendChild(badge);
-                
-                // Remover el badge después de 3 segundos
-                setTimeout(() => {
-                    const existingBadge = display.querySelector('.auto-select-badge');
-                    if (existingBadge) {
-                        existingBadge.remove();
-                    }
-                    display.classList.remove('auto-selected');
-                }, 3000);
-            }
-            
-            // Restaurar el icono de flecha
-            const arrow = document.createElement('i');
-            arrow.className = 'fas fa-chevron-down select-arrow';
-            display.appendChild(arrow);
-            
-            // Cerrar dropdown
-            closeAllSelects();
-            
-            // Disparar evento de cambio para el efecto cascada
-            const field = selectorElement.dataset.field;
-            if (field === 'compania') {
-                handleCompaniaChange(optionElement.dataset.value);
-            } else if (field === 'desarrollo') {
-                handleDesarrolloChange(optionElement.dataset.value, isAutoSelect);
-            } else if (field === 'ubicacion') {
-                handleUbicacionChange(optionElement.dataset.desarrollo, isAutoSelect);
-            }
-        }
+function buildParticipantCard(p, sale) {
+  const canVerify = ['asesor','gerente'].includes(currentRole) && sale.status === 'pendiente';
+  const isMyP = roleParticipantMap[currentRole]?.includes(p.name);
+  const verifiedBadge = p.verified ? `<div class="verified-badge"><i class="fas fa-check"></i> Verificado</div>` : '';
 
-        // Función para seleccionar sin disparar eventos en cascada
-        function selectOptionSilent(selectorElement, optionElement, isAutoSelect = false) {
-            const optionsContainer = selectorElement.querySelector('.select-options');
-            const display = selectorElement.querySelector('.select-display');
-            
-            // Remover selección anterior
-            optionsContainer.querySelectorAll('.select-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            
-            // Seleccionar nueva opción
-            optionElement.classList.add('selected');
-            display.textContent = optionElement.textContent;
-            display.classList.remove('placeholder');
-            display.dataset.value = optionElement.dataset.value;
-            
-            // Guardar datos adicionales
-            if (optionElement.dataset.compania) {
-                display.dataset.compania = optionElement.dataset.compania;
-            }
-            if (optionElement.dataset.desarrollo) {
-                display.dataset.desarrollo = optionElement.dataset.desarrollo;
-            }
-            
-            // Agregar badge si es auto-selección
-            if (isAutoSelect) {
-                display.classList.add('auto-selected');
-                const badge = document.createElement('span');
-                badge.className = 'auto-select-badge';
-                badge.innerHTML = '<i class="fas fa-magic"></i> Auto';
-                display.appendChild(badge);
-                
-                // Remover el badge después de 3 segundos
-                setTimeout(() => {
-                    const existingBadge = display.querySelector('.auto-select-badge');
-                    if (existingBadge) {
-                        existingBadge.remove();
-                    }
-                    display.classList.remove('auto-selected');
-                }, 3000);
-            }
-            
-            // Restaurar el icono de flecha
-            const arrow = document.createElement('i');
-            arrow.className = 'fas fa-chevron-down select-arrow';
-            display.appendChild(arrow);
-            
-            // Cerrar dropdown
-            closeAllSelects();
-            
-            // NO disparar eventos en cascada
-        }
+  let verifyUI = '';
+  if (canVerify && isMyP && !p.verified) {
+    verifyUI = `
+      <div class="p-verify-row">
+        <label class="verify-check" id="chk-${p.id}">
+          <input type="checkbox" onchange="verifyParticipant('${sale.id}','${p.id}')">
+          <div class="check-box"><i class="fas fa-check"></i></div>
+          Confirmo que la información es correcta
+        </label>
+      </div>`;
+  } else if (p.verified) {
+    verifyUI = `<div class="p-verify-row">${verifiedBadge}</div>`;
+  }
 
-        // ========== EFECTO CASCADA (DOMINÓ) ==========
-        function setupCascadingSelects() {
-            // Ya manejado en selectOption
-        }
+  return `
+    <div class="participant ${p.verified ? 'verified-p' : ''}" id="pcard-${p.id}">
+      <div class="p-avatar ${p.avatar}">${p.initials}</div>
+      <div class="p-info">
+        <div class="p-name">${p.name}</div>
+        <div class="p-role-label">${p.role === 'gerente' ? 'Gerente' : 'Asesor'}</div>
+        ${verifyUI}
+      </div>
+      <div class="p-earnings">
+        <div class="p-pct">${p.pct}%</div>
+        <div class="p-amt">${fmt(p.earn)}</div>
+      </div>
+    </div>`;
+}
 
-        function handleCompaniaChange(companiaId) {
-            console.log('Compañía seleccionada:', companiaId);
-            
-            // Filtrar desarrollos por compañía
-            const desarrollosSelector = document.querySelector('.custom-select[data-field="desarrollo"]');
-            const desarrollosFiltrados = allData.desarrollos.filter(d => d.compania == companiaId);
-            
-            // Limpiar selección actual de desarrollo y ubicación
-            clearSelection('desarrollo');
-            clearSelection('ubicacion');
-            
-            // Repoblar desarrollos filtrados
-            populateSelect(desarrollosSelector, desarrollosFiltrados);
-            
-            // Limpiar ubicaciones
-            const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
-            populateSelect(ubicacionesSelector, []);
-        }
+function buildVerificationProgress(sale) {
+  if (sale.status !== 'pendiente' && sale.status !== 'correccion') return '';
+  const total = sale.participants.length;
+  const done = sale.participants.filter(p => p.verified).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  return `
+    <div class="verif-progress-row">
+      <span class="verif-progress-label">Verificaciones</span>
+      <div class="verif-bar-wrap"><div class="verif-bar-fill" style="width:${pct}%"></div></div>
+      <span class="verif-count">${done}/${total}</span>
+    </div>`;
+}
 
-        function handleDesarrolloChange(desarrolloId, isAutoSelect = false, preserveUbicacion = false) {
-            console.log('Desarrollo seleccionado:', desarrolloId);
-            
-            // Si no es auto-selección, auto-seleccionar la compañía
-            if (!isAutoSelect) {
-                const desarrollo = allData.desarrollos.find(d => d.id == desarrolloId);
-                if (desarrollo && desarrollo.compania) {
-                    const companiaSelector = document.querySelector('.custom-select[data-field="compania"]');
-                    const companiaOption = companiaSelector.querySelector(`[data-value="${desarrollo.compania}"]`);
-                    if (companiaOption && !companiaSelector.querySelector('.select-display').dataset.value) {
-                        selectOption(companiaSelector, companiaOption, true);
-                    }
-                }
-            }
-            
-            // Filtrar ubicaciones por desarrollo
-            const ubicacionesFiltradas = allData.ubicaciones.filter(u => u.desarrollo == desarrolloId);
-            
-            // Guardar la ubicación actual si existe
-            const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
-            const ubicacionDisplay = ubicacionesSelector.querySelector('.select-display');
-            const ubicacionActual = ubicacionDisplay.dataset.value;
-            
-            // Limpiar selección actual de ubicación solo si no queremos preservarla
-            if (!preserveUbicacion) {
-                clearSelection('ubicacion');
-            }
-            
-            // Repoblar ubicaciones filtradas
-            populateSelect(ubicacionesSelector, ubicacionesFiltradas);
-            
-            // Restaurar la ubicación si estamos preservándola y existe en las filtradas
-            if (preserveUbicacion && ubicacionActual) {
-                const ubicacionOption = ubicacionesSelector.querySelector(`[data-value="${ubicacionActual}"]`);
-                if (ubicacionOption) {
-                    // Re-seleccionar sin disparar eventos
-                    selectOptionSilent(ubicacionesSelector, ubicacionOption);
-                }
-            }
-        }
+function buildDirectorSection(sale) {
+  if (sale.status !== 'verificada') return '';
+  const statusText = sale.directorVerified
+    ? '<span class="director-status approved-dir"><i class="fas fa-check-circle"></i> Aprobado por directora</span>'
+    : '<span class="director-status pending-dir">Pendiente revisión directora</span>';
+  return `
+    <div class="director-verify-row">
+      <div class="director-avatar">LV</div>
+      <div class="director-info">
+        <div class="director-name">Dra. Laura Vega</div>
+        <div class="director-role">Directora</div>
+      </div>
+      ${statusText}
+    </div>`;
+}
 
-        function handleUbicacionChange(desarrolloId, isAutoSelect = false) {
-            console.log('Ubicación seleccionada, desarrollo:', desarrolloId);
-            
-            // Auto-seleccionar desarrollo y compañía
-            if (!isAutoSelect && desarrolloId) {
-                const desarrollo = allData.desarrollos.find(d => d.id == desarrolloId);
-                
-                if (desarrollo) {
-                    // Auto-seleccionar desarrollo
-                    const desarrolloSelector = document.querySelector('.custom-select[data-field="desarrollo"]');
-                    const desarrolloDisplay = desarrolloSelector.querySelector('.select-display');
-                    
-                    if (!desarrolloDisplay.dataset.value || desarrolloDisplay.dataset.value != desarrollo.id) {
-                        // Primero asegurarse de que el desarrollo esté visible
-                        if (desarrollo.compania) {
-                            // Auto-seleccionar compañía primero (sin limpiar ubicación)
-                            const companiaSelector = document.querySelector('.custom-select[data-field="compania"]');
-                            const companiaOption = companiaSelector.querySelector(`[data-value="${desarrollo.compania}"]`);
-                            if (companiaOption) {
-                                selectOptionSilent(companiaSelector, companiaOption, true);
-                                // Filtrar desarrollos manualmente
-                                const desarrollosFiltrados = allData.desarrollos.filter(d => d.compania == desarrollo.compania);
-                                const desarrolloSelector2 = document.querySelector('.custom-select[data-field="desarrollo"]');
-                                populateSelect(desarrolloSelector2, desarrollosFiltrados);
-                            }
-                        }
-                        
-                        // Ahora auto-seleccionar desarrollo (preservando la ubicación)
-                        const desarrolloOption = desarrolloSelector.querySelector(`[data-value="${desarrollo.id}"]`);
-                        if (desarrolloOption) {
-                            selectOptionSilent(desarrolloSelector, desarrolloOption, true);
-                            // Filtrar ubicaciones manualmente sin limpiar la selección
-                            const ubicacionesFiltradas = allData.ubicaciones.filter(u => u.desarrollo == desarrollo.id);
-                            const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
-                            const ubicacionActual = ubicacionesSelector.querySelector('.select-display').dataset.value;
-                            populateSelect(ubicacionesSelector, ubicacionesFiltradas);
-                            // Restaurar la ubicación seleccionada
-                            if (ubicacionActual) {
-                                const ubicacionOption = ubicacionesSelector.querySelector(`[data-value="${ubicacionActual}"]`);
-                                if (ubicacionOption) {
-                                    selectOptionSilent(ubicacionesSelector, ubicacionOption);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+function buildCorrectionNote(sale) {
+  if (!sale.correctionNote) return '';
+  return `
+    <div class="correction-note-display">
+      <i class="fas fa-exclamation-triangle correction-icon"></i>
+      <div class="correction-text-wrap">
+        <div class="correction-label">Nota de corrección</div>
+        <div class="correction-msg">${sale.correctionNote}</div>
+      </div>
+    </div>`;
+}
 
-        function clearSelection(field) {
-            const selector = document.querySelector(`.custom-select[data-field="${field}"]`);
-            if (selector) {
-                const display = selector.querySelector('.select-display');
-                const placeholder = selector.querySelector('.select-search input').placeholder;
-                
-                display.textContent = placeholder.replace('Buscar', 'Seleccionar');
-                display.classList.add('placeholder');
-                display.classList.remove('auto-selected');
-                delete display.dataset.value;
-                delete display.dataset.compania;
-                delete display.dataset.desarrollo;
-                
-                // Remover badge si existe
-                const badge = display.querySelector('.auto-select-badge');
-                if (badge) badge.remove();
-                
-                const arrow = document.createElement('i');
-                arrow.className = 'fas fa-chevron-down select-arrow';
-                display.appendChild(arrow);
-                
-                // Deseleccionar todas las opciones
-                const options = selector.querySelectorAll('.select-option');
-                options.forEach(opt => opt.classList.remove('selected'));
-            }
-        }
+function buildActionPanel(sale) {
+  let actions = '';
+  const s = sale.status;
 
-        // ========== FUNCIONES DE SELECTOR PERSONALIZADO ==========
-        function initializeCustomSelects() {
-            document.querySelectorAll('.custom-select').forEach(select => {
-                const display = select.querySelector('.select-display');
-                const dropdown = select.querySelector('.select-dropdown');
-                const searchInput = select.querySelector('.select-search input');
+  if (currentRole === 'directora' && s === 'verificada') {
+    actions = `
+      <button class="action-btn btn-approve" onclick="doAction('${sale.id}','aprobar')">
+        <i class="fas fa-check-double"></i> Aprobar
+      </button>
+      <button class="action-btn btn-correct" onclick="toggleCorrection('${sale.id}')">
+        <i class="fas fa-edit"></i> Mandar a corrección
+      </button>`;
+  } else if (currentRole === 'directora' && s === 'aprobada') {
+    actions = `
+      <button class="action-btn btn-correct" onclick="toggleCorrection('${sale.id}')">
+        <i class="fas fa-edit"></i> Mandar a corrección
+      </button>`;
+  } else if (currentRole === 'administradora' && s === 'aprobada') {
+    actions = `
+      <button class="action-btn btn-paid" onclick="doAction('${sale.id}','pagada')">
+        <i class="fas fa-money-bill-wave"></i> Marcar como Pagada
+      </button>`;
+  }
 
-                display.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    
-                    if (display.classList.contains('loading')) {
-                        return;
-                    }
-                    
-                    closeAllSelects();
-                    dropdown.classList.toggle('active');
-                    display.classList.toggle('active');
-                    if (dropdown.classList.contains('active')) {
-                        searchInput.focus();
-                    }
-                });
+  if (!actions) return '';
 
-                searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.toLowerCase();
-                    const options = select.querySelectorAll('.select-option');
-                    let hasResults = false;
+  return `
+    <div class="action-panel" id="ap-${sale.id}">
+      <div class="action-panel-title"><i class="fas fa-bolt"></i> Acciones disponibles</div>
+      <div class="action-btns">${actions}</div>
+      <div class="correction-note" id="cn-${sale.id}">
+        <textarea class="correction-textarea" id="ct-${sale.id}" placeholder="Describe qué debe corregirse…"></textarea>
+        <button class="correction-send-btn" onclick="sendCorrection('${sale.id}')">
+          <i class="fas fa-paper-plane"></i> Enviar nota de corrección
+        </button>
+      </div>
+    </div>`;
+}
 
-                    options.forEach(option => {
-                        // No buscar en opciones ya filtradas
-                        if (option.classList.contains('filtered-out')) {
-                            return;
-                        }
-                        
-                        const text = option.textContent.toLowerCase();
-                        if (text.includes(searchTerm)) {
-                            option.classList.remove('hidden');
-                            hasResults = true;
-                        } else {
-                            option.classList.add('hidden');
-                        }
-                    });
+function renderCard(sale, isNew = false) {
+  const el = document.createElement('div');
+  el.className = 'sale-card' + (isNew ? ' new-card' : '');
+  el.id = `card-${sale.id}`;
+  el.dataset.status = sale.status;
+  el.dataset.search = `${sale.empresa} ${sale.desarrollo} ${sale.clave} ${sale.concepto} ${sale.id}`.toLowerCase();
 
-                    let noResults = select.querySelector('.no-results');
-                    if (!hasResults && searchTerm) {
-                        if (!noResults) {
-                            noResults = document.createElement('div');
-                            noResults.className = 'no-results';
-                            noResults.innerHTML = '<i class="fas fa-search"></i> No se encontraron resultados';
-                            dropdown.appendChild(noResults);
-                        }
-                    } else if (noResults) {
-                        noResults.remove();
-                    }
-                });
+  const totalComision = sale.participants.reduce((a,p) => a + Number(p.earn), 0);
+  const gerentes = sale.participants.filter(p => p.role === 'gerente');
+  const asesores = sale.participants.filter(p => p.role === 'asesor');
+  const totalP = sale.participants.length;
+  const statusText = statusLabels[sale.status] || sale.status;
 
-                dropdown.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            });
+  const buildGroup = (title, people, colorClass) => {
+    if (!people.length) return '';
+    return `
+      <div class="team-group">
+        <div class="team-group-label ${colorClass}">${title} <span>${people.length}</span></div>
+        <div class="participants-grid">${people.map(p => buildParticipantCard(p, sale)).join('')}</div>
+      </div>`;
+  };
 
-            document.addEventListener('click', closeAllSelects);
-        }
+  el.innerHTML = `
+    <div class="sale-header" onclick="toggleCard('${sale.id}')">
+      <div class="sale-status-dot status-${sale.status}"></div>
+      <div class="sale-info">
+        <div class="sale-empresa">${sale.empresa}</div>
+        <div class="sale-dev">${sale.desarrollo}</div>
+        <div class="sale-meta">
+          <span class="tag blue">${sale.clave}</span>
+          <span class="tag">${sale.concepto}</span>
+          ${tipoBadge(sale.tipo)}
+          <span class="tag ref">ID: ${sale.id}</span>
+          <span class="tag status-tag-${sale.status}">${statusText}</span>
+        </div>
+      </div>
+      <div class="sale-amount">
+        <div class="sale-price">${fmt(sale.precio)}</div>
+        <div class="sale-commission">Comisión ${fmt(totalComision)}</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="sale-body" id="body-${sale.id}">
+      <div class="sale-body-inner">
+        ${buildWorkflowBar(sale)}
+        ${buildCorrectionNote(sale)}
+        ${buildVerificationProgress(sale)}
+        <div class="team-header-line">
+          <span>Equipo de venta</span>
+          <span style="font-size:0.68rem;color:rgba(143,173,160,0.5);font-weight:600;">${totalP} participante${totalP!==1?'s':''}</span>
+        </div>
+        ${buildGroup('Gerentes', gerentes, 'gl-blue')}
+        ${buildGroup('Asesores', asesores, 'gl-green')}
+        ${buildDirectorSection(sale)}
+        ${buildActionPanel(sale)}
+        <div class="totals-row">
+          <div class="total-pill"><span>Precio de venta</span><strong>${fmt(sale.precio)}</strong></div>
+          <div class="total-pill"><span>Comisión total</span><strong>${fmt(totalComision)}</strong></div>
+          <div class="total-pill"><span>Participantes</span><strong>${totalP}</strong></div>
+        </div>
+      </div>
+    </div>`;
 
-        function closeAllSelects() {
-            document.querySelectorAll('.select-dropdown.active').forEach(dropdown => {
-                dropdown.classList.remove('active');
-                dropdown.previousElementSibling.classList.remove('active');
-                const searchInput = dropdown.querySelector('.select-search input');
-                if (searchInput) {
-                    searchInput.value = '';
-                    dropdown.querySelectorAll('.select-option').forEach(opt => {
-                        opt.classList.remove('hidden');
-                    });
-                }
-                const noResults = dropdown.querySelector('.no-results');
-                if (noResults) noResults.remove();
-            });
-        }
+  return el;
+}
 
-        function getSelectValue(fieldName, rowNumber = null) {
-            const selector = rowNumber 
-                ? `.custom-select[data-field="${fieldName}"][data-row="${rowNumber}"]`
-                : `.custom-select[data-field="${fieldName}"]`;
-            
-            const selectElement = document.querySelector(selector);
-            if (!selectElement) return null;
-            
-            const display = selectElement.querySelector('.select-display');
-            return {
-                value: display.dataset.value || '',
-                text: display.classList.contains('placeholder') ? '' : display.textContent.replace('Auto', '').trim()
-            };
-        }
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.sale-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
 
-        // ========== GESTIÓN DE FILAS DE PERSONAL ==========
-        let rowCounter = 1;
-        let formDataGlobal = null;
-        let commissionsDataGlobal = null;
+// ══════════════════════════════════════════════════════════════════
+// FULL RENDER
+// ══════════════════════════════════════════════════════════════════
+function fullRender() {
+  const list = document.getElementById('saleList');
+  const openIds = [...document.querySelectorAll('.sale-card.open')].map(c => c.id.replace('card-',''));
+  list.innerHTML = '';
 
-        const mpCheckbox = document.getElementById('mpCheckbox');
-        mpCheckbox.addEventListener('change', function() {
-            if (mpCheckbox.checked && rowCounter == 1) {
-                addPersonnelRow();
-            }
-        });
+  const visibleSales = salesDB.filter(s => canSeeSale(s));
+  const filteredSales = visibleSales.filter(s => {
+    const matchF = activeFilter === 'all' || s.status === activeFilter;
+    const matchS = !searchTerm || `${s.empresa} ${s.desarrollo} ${s.clave} ${s.concepto} ${s.id}`.toLowerCase().includes(searchTerm);
+    return matchF && matchS;
+  });
 
-        async function addPersonnelRow() {
-            rowCounter++;
-            const container = document.getElementById('personnelRows');
-            const newRow = document.createElement('div');
-            newRow.className = 'personnel-row';
-            newRow.innerHTML = `
-                <div class="row-number">
-                    <i class="fas fa-hashtag"></i> Fila ${rowCounter}
-                </div>
-                <div class="form-group">
-                    <label>
-                        <i class="fas fa-user-tie"></i>
-                        Gerente
-                    </label>
-                    <div class="custom-select" data-field="gerente" data-row="${rowCounter}" data-api="/api/users/by-role/Gerente">
-                        <div class="select-display placeholder">
-                            Seleccionar gerente
-                            <i class="fas fa-chevron-down select-arrow"></i>
-                        </div>
-                        <div class="select-dropdown">
-                            <div class="select-search">
-                                <input type="text" placeholder="Buscar gerente...">
-                                <i class="fas fa-search"></i>
-                            </div>
-                            <div class="select-options"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <i class="fas fa-user"></i>
-                        Asesor
-                    </label>
-                    <div class="custom-select" data-field="asesor" data-row="${rowCounter}" data-api="/api/users/by-role/Asesor">
-                        <div class="select-display placeholder">
-                            Seleccionar asesor
-                            <i class="fas fa-chevron-down select-arrow"></i>
-                        </div>
-                        <div class="select-dropdown">
-                            <div class="select-search">
-                                <input type="text" placeholder="Buscar asesor...">
-                                <i class="fas fa-search"></i>
-                            </div>
-                            <div class="select-options"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(newRow);
-            
-            initializeCustomSelects();
-            
-            const newSelectors = newRow.querySelectorAll('.custom-select[data-api]');
-            for (const selector of newSelectors) {
-                await loadSelectorData(selector);
-            }
-            
-            newRow.style.opacity = '0';
-            newRow.style.transform = 'translateY(-20px)';
-            setTimeout(() => {
-                newRow.style.transition = 'all 0.4s ease';
-                newRow.style.opacity = '1';
-                newRow.style.transform = 'translateY(0)';
-            }, 10);
-        }
+  const count = document.getElementById('sectionCount');
+  count.textContent = `${filteredSales.length} transacción${filteredSales.length!==1?'es':''} visible${filteredSales.length!==1?'s':''} · haz clic para ver participantes`;
 
-        function deletePersonnelRow(){
-            const container = document.getElementById('personnelRows');
-            const rows = container.querySelectorAll('.personnel-row');
+  if (!filteredSales.length) {
+    list.innerHTML = `<div class="no-results-msg"><div class="nr-icon">🔍</div><div class="nr-text">Sin resultados</div></div>`;
+    return;
+  }
 
-            if (rows.length > 1) {
-                rows[rows.length - 1].remove();
-                rowCounter--;
-            }
-        }
+  filteredSales.forEach((s, i) => {
+    const el = renderCard(s);
+    el.style.animationDelay = `${0.05 * i}s`;
+    if (openIds.includes(s.id)) el.classList.add('open');
+    list.appendChild(el);
+  });
+}
 
-        // ========== FUNCIONES DEL FORMULARIO ==========
-        function cancelForm() {
-            if (confirm('¿Estás seguro de que deseas cancelar? Se perderán todos los cambios.')) {
-                document.getElementById('commissionForm').reset();
-                document.getElementById('fechaRegistro').valueAsDate = new Date();
-                
-                document.querySelectorAll('.select-display').forEach(display => {
-                    const placeholder = display.closest('.custom-select').querySelector('.select-search input').placeholder;
-                    display.textContent = placeholder.replace('Buscar', 'Seleccionar');
-                    display.classList.add('placeholder');
-                    display.classList.remove('auto-selected');
-                    delete display.dataset.value;
-                    
-                    const arrow = document.createElement('i');
-                    arrow.className = 'fas fa-chevron-down select-arrow';
-                    display.appendChild(arrow);
-                });
-                
-                // Recargar todos los datos sin filtros
-                const desarrollosSelector = document.querySelector('.custom-select[data-field="desarrollo"]');
-                populateSelect(desarrollosSelector, allData.desarrollos);
-                
-                const ubicacionesSelector = document.querySelector('.custom-select[data-field="ubicacion"]');
-                populateSelect(ubicacionesSelector, allData.ubicaciones);
-            }
-        }
+// ══════════════════════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════════════════════
+function verifyParticipant(saleId, participantId) {
+  const sale = salesDB.find(s => s.id === saleId);
+  if (!sale) return;
+  const p = sale.participants.find(p => p.id === participantId);
+  if (!p) return;
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return date.toLocaleDateString('es-ES', options);
-        }
+  p.verified = true;
+  showNotif('✅ Verificación registrada', `${p.name} ha confirmado la información de ${sale.desarrollo}`, 'green');
 
-        function collectFormData() {
-            const personnelRows = [];
-            const rows = document.querySelectorAll('.personnel-row');
-            
-            rows.forEach((row, index) => {
-                const rowNum = index + 1;
-                const gerente = getSelectValue('gerente', rowNum);
-                const asesor = getSelectValue('asesor', rowNum);
-                
-                if (gerente.value && asesor.value) {
-                    personnelRows.push({
-                        numero: rowNum,
-                        gerente: gerente.text,
-                        gerenteValue: gerente.value,
-                        asesor: asesor.text,
-                        asesorValue: asesor.value
-                    });
-                }
-            });
+  const allVerified = sale.participants.every(pp => pp.verified);
+  if (allVerified && sale.status === 'pendiente') {
+    setTimeout(() => {
+      sale.status = 'verificada';
+      showNotif('🔔 Estado actualizado', `${sale.desarrollo} pasó a Verificada — la Directora debe revisar`, 'blue');
+      fullRender();
+    }, 800);
+  } else {
+    fullRender();
+    // Re-open the card
+    setTimeout(() => {
+      const card = document.getElementById(`card-${saleId}`);
+      if (card) card.classList.add('open');
+    }, 50);
+  }
+}
 
-            const compania = getSelectValue('compania');
-            const desarrollo = getSelectValue('desarrollo');
-            const ubicacion = getSelectValue('ubicacion');
-            const concepto = getSelectValue('concepto');
+function toggleCorrection(saleId) {
+  const cn = document.getElementById(`cn-${saleId}`);
+  if (!cn) return;
+  cn.classList.toggle('visible');
+}
 
-            return {
-                compania: compania.value,
-                companiaText: compania.text,
-                fechaRegistro: document.getElementById('fechaRegistro').value,
-                desarrollo: desarrollo.value,
-                desarrolloText: desarrollo.text,
-                concepto: concepto.value,
-                conceptoText: concepto.text,
-                ubicacion: ubicacion.value,
-                ubicacionText: ubicacion.text,
-                fechaContrato: document.getElementById('fechaContrato').value,
-                mp: document.getElementById('mpCheckbox').checked,
-                personal: personnelRows
-            };
-        }
+function sendCorrection(saleId) {
+  const sale = salesDB.find(s => s.id === saleId);
+  if (!sale) return;
+  const ta = document.getElementById(`ct-${saleId}`);
+  const note = ta ? ta.value.trim() : '';
+  sale.status = 'correccion';
+  sale.correctionNote = note || 'Favor de revisar la información.';
+  sale.directorVerified = false;
+  sale.participants.forEach(p => p.verified = false);
+  showNotif('⚠️ Enviado a corrección', `${sale.desarrollo} fue marcada para corrección`, 'amber');
+  // Notify participants
+  setTimeout(() => {
+    showNotif('🔔 Acción requerida', `Debes re-verificar tu información en ${sale.desarrollo}`, 'amber');
+  }, 1200);
+  fullRender();
+}
 
-        // ========== API Y MODAL ==========
-        async function fetchPercentages(formData) {
-            try {
-                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.comisiones}/calcular`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Error al calcular comisiones');
-                }
-                
-                const data = await response.json();
-                
-                if (data.success && data.data) {
-                    return data.data;
-                }
-                
-                throw new Error('Formato de respuesta inválido');
-                
-            } catch (error) {
-                console.error('Error al obtener comisiones:', error);
-                console.warn('Usando datos simulados para comisiones');
-                
-                const commissions = formData.personal.map((person, index) => ({
-                    rowNumber: index + 1,
-                    gerentePercentage: (Math.random() * 20 + 10).toFixed(2),
-                    asesorPercentage: (Math.random() * 15 + 5).toFixed(2),
-                    gerenteAmount: (Math.random() * 50000 + 10000).toFixed(2),
-                    asesorAmount: (Math.random() * 30000 + 5000).toFixed(2)
-                }));
-                
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                return { commissions };
-            }
-        }
+function doAction(saleId, action) {
+  const sale = salesDB.find(s => s.id === saleId);
+  if (!sale) return;
 
-        function showConfirmationModal(formData, commissionsData) {
-            const modalBody = document.getElementById('modalBody');
-            
-            let tipoComision = '';
-            const totalPersonnel = formData.personal.length;
-            
-            if (formData.mp) {
-                tipoComision = 'Multipunto';
-            } else if (totalPersonnel === 1) {
-                tipoComision = 'Tradicional';
-            } else if (totalPersonnel > 1) {
-                tipoComision = 'Compartida';
-            }
-            
-            let personnelHTML = '';
-            if (formData.personal.length > 0) {
-                formData.personal.forEach((person, index) => {
-                    const commission = commissionsData.commissions[index];
-                    
-                    personnelHTML += `
-                        <div class="personnel-info">
-                            <div class="personnel-info-header">
-                                <i class="fas fa-hashtag"></i> Fila ${person.numero}
-                            </div>
-                            <div class="personnel-info-row">
-                                <div class="info-group" style="margin-bottom: 0;">
-                                    <div class="info-label">
-                                        <i class="fas fa-user-tie"></i>
-                                        Gerente
-                                    </div>
-                                    <div class="info-value">${person.gerente}</div>
-                                    <div class="commission-details">
-                                        <span class="commission-badge">
-                                            <i class="fas fa-percentage"></i>
-                                            ${commission.gerentePercentage}%
-                                        </span>
-                                        <span class="commission-badge commission-amount">
-                                            <i class="fas fa-dollar-sign"></i>
-                                            ${parseFloat(commission.gerenteAmount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="info-group" style="margin-bottom: 0;">
-                                    <div class="info-label">
-                                        <i class="fas fa-user"></i>
-                                        Asesor
-                                    </div>
-                                    <div class="info-value">${person.asesor}</div>
-                                    <div class="commission-details">
-                                        <span class="commission-badge">
-                                            <i class="fas fa-percentage"></i>
-                                            ${commission.asesorPercentage}%
-                                        </span>
-                                        <span class="commission-badge commission-amount">
-                                            <i class="fas fa-dollar-sign"></i>
-                                            ${parseFloat(commission.asesorAmount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
+  if (action === 'aprobar') {
+    sale.status = 'aprobada';
+    sale.directorVerified = true;
+    showNotif('✅ Comisión aprobada', `${sale.desarrollo} fue aprobada por la Directora`, 'green');
+    setTimeout(() => showNotif('🔔 Lista para pago', `${sale.desarrollo} ahora puede ser marcada como Pagada por Administración`, 'teal'), 1000);
+  } else if (action === 'pagada') {
+    sale.status = 'pagada';
+    showNotif('💰 Comisión pagada', `${sale.desarrollo} fue marcada como Pagada`, 'teal');
+    // Notify participants
+    sale.participants.forEach(p => {
+      setTimeout(() => showNotif(`💸 Pago registrado`, `${p.name}: ${fmt(p.earn)} de ${sale.desarrollo} fue procesado`), 1200);
+    });
+  }
+  fullRender();
+}
 
-            modalBody.innerHTML = `
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-building"></i>
-                        Compañía
-                    </div>
-                    <div class="info-value">${formData.companiaText}</div>
-                </div>
+// ══════════════════════════════════════════════════════════════════
+// FILTERS / SEARCH
+// ══════════════════════════════════════════════════════════════════
+let activeFilter = 'all';
+let searchTerm = '';
 
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-rocket"></i>
-                        Desarrollo
-                    </div>
-                    <div class="info-value">${formData.desarrolloText}</div>
-                </div>
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchTerm = this.value.toLowerCase().trim();
+  fullRender();
+});
 
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-map-marker-alt"></i>
-                        Ubicación
-                    </div>
-                    <div class="info-value">${formData.ubicacionText}</div>
-                </div>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    activeFilter = this.dataset.filter;
+    fullRender();
+  });
+});
 
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-calendar-day"></i>
-                        Fecha de Registro
-                    </div>
-                    <div class="info-value">${formatDate(formData.fechaRegistro)}</div>
-                </div>
+// ══════════════════════════════════════════════════════════════════
+// ROLE SWITCHER
+// ══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.role-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentRole = this.dataset.role;
+    currentUser = this.dataset.name;
+    document.getElementById('currentUserLabel').textContent = `${currentUser} · ${this.textContent}`;
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="all"]').classList.add('active');
+    fullRender();
+    showNotif(`👤 Rol cambiado`, `Ahora ves la plataforma como ${currentUser}`, '');
+  });
+});
 
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-receipt"></i>
-                        Concepto
-                    </div>
-                    <div class="info-value">${formData.conceptoText}</div>
-                </div>
+// ══════════════════════════════════════════════════════════════════
+// SIMULATE NEW SALE
+// ══════════════════════════════════════════════════════════════════
+const empresas = ['Grupo Punta Diamante','Desarrollos del Pacífico','Inmobiliaria Cenit','Nexus Propiedades'];
+const desarrollos = ['Torre Ópalo','Residencial Brisa Norte','Lofts del Centro','Bosque Real Sur','Alameda Towers'];
+const claves = ['CDMX-14','MTY-08','GDL-22','PUE-05','QRO-11'];
+const tipos = ['Simple','Compartida','Multipunto','Escalonada','Tradicional'];
 
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-calendar-check"></i>
-                        Fecha de Contrato
-                    </div>
-                    <div class="info-value">${formatDate(formData.fechaContrato)}</div>
-                </div>
+document.getElementById('btnAddDemo').addEventListener('click', () => {
+  const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const precio = Math.floor(Math.random() * 5000000) + 800000;
+  const newSale = {
+    id: `com-${Date.now()}`,
+    empresa: r(empresas), desarrollo: r(desarrollos), clave: r(claves),
+    concepto: `Unidad ${Math.floor(Math.random()*20+1)}`, tipo: r(tipos),
+    precio, status:'pendiente', correctionNote: null, directorVerified: false,
+    participants: [
+      {id:`np1-${Date.now()}`, name:'Carlos Mendoza', role:'asesor', initials:'CM', avatar:'av-teal', pct:3, earn:Math.floor(precio*0.03), verified:false},
+      {id:`np2-${Date.now()}`, name:'Ana Torres', role:'gerente', initials:'AT', avatar:'av-green', pct:2, earn:Math.floor(precio*0.02), verified:false},
+    ]
+  };
+  salesDB.unshift(newSale);
+  fullRender();
+  showNotif('🆕 Nueva venta registrada', `${newSale.desarrollo} fue agregada y requiere verificación`, 'amber');
+  setTimeout(() => {
+    const card = document.getElementById(`card-${newSale.id}`);
+    if (card) card.classList.add('open');
+  }, 100);
+});
 
-                <div class="info-group">
-                    <div class="info-label">
-                        <i class="fas fa-layer-group"></i>
-                        Tipo de Comisión
-                    </div>
-                    <div class="info-value">
-                        <span class="mp-badge">
-                            <i class="fas ${formData.mp ? 'fa-network-wired' : (totalPersonnel === 1 ? 'fa-user' : 'fa-users')}"></i>
-                            ${tipoComision}
-                        </span>
-                    </div>
-                </div>
+// ══════════════════════════════════════════════════════════════════
+// POLLING SIMULATION (simulates real-time updates)
+// ══════════════════════════════════════════════════════════════════
+// In production this would be: setInterval(() => fetchFromAPI().then(mergeAndRender), 5000)
+// Here we show a subtle indicator that the data is "live"
+let pollCount = 0;
+setInterval(() => {
+  pollCount++;
+  // Every 30s simulate a background refresh (no-op if no changes)
+  // In production: fetch API, compare with salesDB, update, re-render
+}, 5000);
 
-                ${formData.personal.length > 0 ? `
-                    <div class="info-section-title">
-                        <i class="fas fa-users"></i>
-                        Personal Asignado y Comisiones
-                    </div>
-                    ${personnelHTML}
-                ` : ''}
-            `;
+// ══════════════════════════════════════════════════════════════════
+// STARS
+// ══════════════════════════════════════════════════════════════════
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 100; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 2.4 + 0.4;
+  const colors = ['#ffffff','#7bc42a','#c8e88a'];
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;`;
+  starsEl.appendChild(s);
+}
 
-            document.getElementById('confirmationModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('confirmationModal').classList.remove('active');
-        }
-
-        async function confirmSave() {
-            try {
-                console.log(formDataGlobal);
-                console.log(commissionsDataGlobal);
-                const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.comisiones}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        formData: formDataGlobal,
-                        commissions: commissionsDataGlobal
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Error al guardar la comisión');
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    closeModal();
-                    alert('¡Comisión guardada exitosamente!');
-                } else {
-                    throw new Error(result.message || 'Error al guardar');
-                }
-                
-            } catch (error) {
-                console.error('Error al guardar:', error);
-                alert('Error al guardar la comisión. Por favor, intenta de nuevo.');
-            }
-        }
-
-        document.getElementById('confirmationModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-
-        // ========== SUBMIT DEL FORMULARIO ==========
-        document.getElementById('commissionForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            try {
-                formDataGlobal = collectFormData();
-                
-                if (!formDataGlobal.compania || !formDataGlobal.desarrollo || 
-                    !formDataGlobal.ubicacion || !formDataGlobal.concepto || 
-                    !formDataGlobal.fechaContrato) {
-                    alert('Por favor completa todos los campos obligatorios');
-                    return;
-                }
-                
-                if (formDataGlobal.personal.length === 0) {
-                    alert('Por favor selecciona al menos un gerente y asesor');
-                    return;
-                }
-                
-                commissionsDataGlobal = await fetchPercentages(formDataGlobal);
-                showConfirmationModal(formDataGlobal, commissionsDataGlobal);
-            } catch (error) {
-                alert('Error al calcular las comisiones. Por favor, intenta de nuevo.');
-                console.error(error);
-            }
-        });
-    </script>
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+fullRender();
+setTimeout(() => showNotif('👋 Bienvenido', 'Los datos se actualizan en tiempo real. Cambia de rol para explorar el flujo.', ''), 800);
+</script>
 </body>
 </html>

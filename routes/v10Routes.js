@@ -94,7 +94,7 @@ router.get('/desarrollos', async (req, res) => {
 router.get('/ubicaciones', async (req, res) => {
 
   try {
-    const result = await pool.request().query("SELECT ubi.Nombre as nombre, ubi.IdDesarrollo as desarrollo, ubi.Id as id FROM scv_ubicaciones ubi INNER JOIN scv_Ventas_Ubicaciones vta_ubi ON ubi.Id = vta_ubi.IdUbicacion INNER JOIN uvw_SCV_Ventas vta ON vta_ubi.IdVenta = vta.ID INNER JOIN uvw_SCV_Expedientes_Seguimientos_Etapas seg ON vta.IdExpediente = seg.IdExpediente WHERE seg.[Etapa.Nombre] = 'RECEPCION DE EXPEDIENTE' AND seg.FechaCierre IS NULL AND seg.FechaInicio IS NOT NULL;");
+    const result = await pool.request().query("SELECT ubi.Nombre as nombre, ubi.IdDesarrollo as desarrollo, ubi.Id as id, vta.importe as importe_venta FROM scv_ubicaciones ubi INNER JOIN scv_Ventas_Ubicaciones vta_ubi ON ubi.Id = vta_ubi.IdUbicacion INNER JOIN uvw_SCV_Ventas vta ON vta_ubi.IdVenta = vta.ID INNER JOIN uvw_SCV_Expedientes_Seguimientos_Etapas seg ON vta.IdExpediente = seg.IdExpediente WHERE seg.[Etapa.Nombre] = 'RECEPCION DE EXPEDIENTE' AND seg.FechaCierre IS NULL AND seg.FechaInicio IS NOT NULL;");
 
     res.status(200).json({
       success: true,
