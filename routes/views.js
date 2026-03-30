@@ -19,12 +19,18 @@ router.get('/register-commission', (req, res) => {
 });
 
 router.get('/dashboard-commission', (req, res) => {
-  res.render('dashboard-commission', { title: 'Comisiones' });
+  res.render('dashboard-commission', { title: 'Comisiones', layout: false});
 });
 
 router.get('/commission-historic', (req, res) => {
-  res.render('commission-historic', { title: 'Historial' });
+  res.render('commission-historic', { title: 'Historial', layout: false });
 });
+
+
+router.get('/permissions', (req, res) => {
+  res.render('permissions', { title: 'Permisos', layout: false });
+});
+
 
 router.get('/test', (req, res) => {
   res.render('prueba', { title: 'PRUEBA' });
