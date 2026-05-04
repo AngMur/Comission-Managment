@@ -68,6 +68,14 @@ router.post(['/', '/save'], authorizePermission('crear_comision'), async (req, r
     const Commission = require('../models/Commission');
     const populated  = await populateCommission(Commission.findById(commission._id));
 
+    const managerIds = populated.participants.managers.map(m =>
+        m.user?._id?.toString() ?? m.user.toString()
+    );
+
+    const advisorIds = populated.participants.advisors.map(a => 
+        a.user?._id?.toString() ?? a.user.toString()
+    );
+
     res.status(201).json({
       success: true,
       message: 'Comisión registrada correctamente',

@@ -65,6 +65,28 @@ async function _notifyAllParticipants(commission, type, title, body, meta = null
 }
 
 /**
+ * Notifica a todos los participantes, excluyendo al creador.
+ */
+async function _notifyInvolvedExcludingCreator(commission, type, title, body, meta = null) {
+  const participantIds = [
+    ...commission.participants.managers.map(m => m.user),
+    ...commission.participants.advisors.map(a => a.user)
+  ];
+  
+  const creatorIdString = commission.created_by.toString();
+
+  // Eliminar duplicados de los participantes
+  const uniqueParticipantIds = [...new Set(participantIds.map(id => id.toString()))];
+
+  // Filtrar para excluir al creador
+  const targetIds = uniqueParticipantIds.filter(id => id !== creatorIdString);
+
+  await Promise.all(
+    targetIds.map(id => _notify(id, type, title, body, commission._id, meta))
+  );
+}
+
+/**
  * Devuelve todos los IDs de participantes (managers + advisors) de una comisión.
  */
 function _getParticipantIds(commission) {
@@ -129,13 +151,24 @@ async function createCommission(data, createdById) {
   await _logHistory(commission._id, createdById, 'registrada', 'pendiente', 'pendiente');
 
   // Notificar a todos los participantes que hay una comisión pendiente de verificación
-  await _notifyAllParticipants(
+  // await _notifyAllParticipants(
+  //   commission,
+  //   'participante_verifico',
+  //   'Nueva comisión registrada',
+  //   `Se registró la comisión "${commission.development.text}". Por favor verifica tu información.`,
+  //   { registered_by: createdById }
+  // );
+  // Notificar a todos los participantes involucrados (excluyendo a Héctor o quien la haya creado)
+  
+  await _notifyInvolvedExcludingCreator(
     commission,
-    'participante_verifico',
+    'comision_creada', // <- Asegúrate de añadir este type en Notification.js como vimos antes
     'Nueva comisión registrada',
-    `Se registró la comisión "${commission.development.text}". Por favor verifica tu información.`,
+    `Has sido asignado a una nueva comisión. Por favor verifica tu información.`,
     { registered_by: createdById }
   );
+
+  
 
   return commission;
 }
