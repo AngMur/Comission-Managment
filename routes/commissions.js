@@ -140,7 +140,7 @@ router.post('/:id/verify', async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 });
-
+//api para no generar 
 // POST /api/commission/:id/director  — { action: 'aprobada'|'correccion', note? }
 router.post('/:id/director', authorizePermission('asignar_roles'), async (req, res) => {
   try {

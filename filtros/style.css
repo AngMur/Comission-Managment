@@ -1,0 +1,108 @@
+/* 1. RESETEO GLOBAL 
+   Limpiamos los márgenes por defecto para tener control total */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #050a09; /* Fondo negro verdoso profundo */
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Centra el componente verticalmente en la pantalla */
+    padding: 20px;
+}
+
+/* 2. CONTENEDOR PRINCIPAL 
+   El recuadro con bordes redondeados y fondo oscuro */
+.panel-filtros {
+    background-color: #0b1a16; /* Color de la imagen */
+    border: 1px solid #1a332a; /* Borde sutil */
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 1100px; /* Ancho máximo para que no se estire de más */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
+}
+
+/* 3. ENCABEZADO (FILTROS) */
+.encabezado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.encabezado .icono-embudo {
+    color: #4caf50; /* Verde brillante para el icono */
+    font-size: 14px;
+}
+
+.encabezado .titulo {
+    color: #a0b0ab;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+/* 4. CUERPO DE FILTROS 
+   Usamos Flexbox para poner las 3 columnas en fila */
+.cuerpo-filtros {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap; /* Permite que en móviles los filtros caigan uno debajo de otro */
+}
+
+/* Cada columna (Label + Select) */
+.grupo-filtro {
+    flex: 1; /* Hace que las 3 columnas ocupen el mismo ancho */
+    min-width: 280px; /* Evita que se hagan demasiado flacas en tablets */
+}
+
+/* 5. ETIQUETAS (LABELS) */
+.grupo-filtro label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c0d1cc;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+/* 6. ESTILO DE LOS SELECTORES 
+   Aquí es donde logramos el look moderno */
+.grupo-filtro select {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.03); /* Fondo casi transparente */
+    border: 1px solid #2a473e;
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: #8da19b;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    /* Personalización de la flecha */
+    appearance: none; /* Quitamos la flecha fea del navegador */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234caf50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center; /* Colocamos la flecha verde a la derecha */
+}
+
+/* Efectos de interacción */
+.grupo-filtro select:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: #3e6357;
+}
+
+.grupo-filtro select:focus {
+    border-color: #4caf50; /* El borde se ilumina en verde al hacer clic */
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
