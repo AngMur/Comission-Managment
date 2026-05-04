@@ -17,6 +17,7 @@ const notificationSchema = new mongoose.Schema({
       'comision_verificada',    // Director
       'comision_aprobada',      // participantes + Administrador
       'comision_pagada',        // todos los participantes
+      'comision_creada',        // todos los participantes - creador
       'participante_verifico'   // creador (informativo)
     ]
   },
