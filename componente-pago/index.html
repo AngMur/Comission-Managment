@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Componente de Pago</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="card-container" id="main-card">
+        <div class="card-header">
+            <h3>Confirmación de Pago</h3>
+            <p>Al confirmar, esta comisión se moverá al historial.</p>
+        </div>
+
+        <div class="card-body">
+            <div class="amount-display">
+                <span class="label">Monto a pagar:</span>
+                <span class="value">$15,450.93</span>
+            </div>
+            
+            <button class="btn-pay" onclick="ejecutarPago()">
+                <i class="fas fa-check-circle"></i>
+                Marcar como Pagada
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function ejecutarPago() {
+            const elemento = document.getElementById('main-card');
+            
+
+            if(confirm("¿Deseas marcar esta comisión como pagada?")) {
+                
+
+                elemento.classList.add('animacion-salida');
+
+
+                setTimeout(() => {
+                    elemento.remove();
+
+                    document.body.innerHTML = '<h2 style="color: white; text-align: center; margin-top: 50px;">¡Pago procesado con éxito! ✅</h2>';
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>
