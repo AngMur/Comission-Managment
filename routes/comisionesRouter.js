@@ -328,6 +328,149 @@ router.get('/pendientes-pago', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/comisiones/mis-comisiones
+ */
+router.get('/mis-comisiones', async (req, res) => {
+  try {
+    const db = req.app.locals.mongoClient.db(DB_NAME);
+    const userId = new ObjectId(req.user.id);
+
+    const comisiones = await db.collection('comisiones').aggregate([
+      // 1. Filtrar donde el usuario es asesor o gerente
+      {
+        $match: {
+          $or: [
+            { 'participants.advisors.user': userId },
+            { 'participants.managers.user': userId },
+          ],
+        },
+      },
+
+      // 2. Populate del estatus
+      {
+        $lookup: {
+          from:         'estatus',
+          localField:   'status',
+          foreignField: '_id',
+          as:           'status',
+        },
+      },
+      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
+
+      // 3. Populate de advisors
+      {
+        $lookup: {
+          from:         'usuarios',
+          localField:   'participants.advisors.user',
+          foreignField: '_id',
+          as:           '_advisorDocs',
+          pipeline: [
+            { $project: { name: 1, username: 1, picture: 1 } },
+          ],
+        },
+      },
+
+      // 4. Populate de managers
+      {
+        $lookup: {
+          from:         'usuarios',
+          localField:   'participants.managers.user',
+          foreignField: '_id',
+          as:           '_managerDocs',
+          pipeline: [
+            { $project: { name: 1, username: 1, picture: 1 } },
+          ],
+        },
+      },
+
+      // 5. Reconstruir participants con datos del usuario
+      {
+        $addFields: {
+          'participants.advisors': {
+            $map: {
+              input: '$participants.advisors',
+              as:    'a',
+              in: {
+                $mergeObjects: [
+                  '$$a',
+                  {
+                    user: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$_advisorDocs',
+                            as:    'd',
+                            cond:  { $eq: ['$$d._id', '$$a.user'] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          'participants.managers': {
+            $map: {
+              input: '$participants.managers',
+              as:    'm',
+              in: {
+                $mergeObjects: [
+                  '$$m',
+                  {
+                    user: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$_managerDocs',
+                            as:    'd',
+                            cond:  { $eq: ['$$d._id', '$$m.user'] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      // 6. Limpiar campos temporales
+      {
+        $project: {
+          _advisorDocs:  0,
+          _managerDocs:  0,
+        },
+      },
+
+      // 7. Ordenar por fecha de registro descendente
+      { $sort: { register_date: -1 } },
+
+    ]).toArray();
+
+    return res.status(200).json({
+      success: true,
+      message: `Se encontraron ${comisiones.length} comisiones`,
+      data:    { comisiones },
+      error:   null,
+    });
+
+  } catch (error) {
+    console.error('[GET /api/comisiones/mis-comisiones]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error en el servidor',
+      data:    null,
+      error:   error.message,
+    });
+  }
+});
+
 
 
 module.exports = router;
