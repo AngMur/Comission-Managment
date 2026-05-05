@@ -6,6 +6,10 @@ router.get('/', (req, res) => {
   res.render('login', { layout: false });  // ← express-ejs-layouts lee esto directamente
 });
 
+router.get('/login-successfully', (req, res) => {
+  res.render('dashboard-commission', { title: 'Comisiones'});
+});
+
 router.get('/register', (req, res) => {
   res.render('register', { title: 'Registrar Usuario' });
 });
@@ -19,7 +23,7 @@ router.get('/register-commission', (req, res) => {
 });
 
 router.get('/dashboard-commission', (req, res) => {
-  res.render('dashboard-commission', { title: 'Comisiones', layout: false});
+  res.render('dashboard-commission', { title: 'Comisiones'});
 });
 
 router.get('/commission-historic', (req, res) => {
