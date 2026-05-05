@@ -1,6 +1,12 @@
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const router  = express.Router();
+const {
+  setAuthCookie,
+  clearAuthCookie,
+   authenticate
+} = require('../JWT/authCookies');
+
 
 const DB_NAME = 'roles_usuarios';
 
@@ -146,7 +152,7 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/comisiones/pendientes-pago
  */
-router.get('/pendientes-pago', async (req, res) => {
+router.get('/pendientes-pago', authenticate, async (req, res) => {
   try {
     const db = req.app.locals.mongoClient.db(DB_NAME);
 
@@ -331,7 +337,7 @@ router.get('/pendientes-pago', async (req, res) => {
 /**
  * GET /api/comisiones/mis-comisiones
  */
-router.get('/mis-comisiones', async (req, res) => {
+router.get('/mis-comisiones', authenticate, async (req, res) => {
   try {
     const db = req.app.locals.mongoClient.db(DB_NAME);
     const userId = new ObjectId(req.user.id);
