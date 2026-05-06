@@ -83,12 +83,7 @@ router.post('/login', async (req, res) => {
  */
 router.post('/logout', (req, res) => {
   clearAuthCookie(res);
-  return res.status(200).json({
-    success: true,
-    message: 'Sesión cerrada correctamente',
-    data:    null,
-    error:   null,
-  });
+  return res.redirect('/');
 });
 
 /**
