@@ -1,17 +1,17 @@
 require('dotenv').config();
-const path         = require('path');
-const express      = require('express');
+const path = require('path');
+const express = require('express');
 const { MongoClient } = require('mongodb');
-const cors         = require('cors');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const ejsLayouts   = require('express-ejs-layouts');
+const ejsLayouts = require('express-ejs-layouts');
 const { injectUserLocals } = require('./JWT/authCookies');
 
 const app = express();
 
 // ── Middlewares globales ──────────────────────────────────────────────────────
 app.use(cors({
-  origin:      process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true,
 }));
 app.use(express.json());
@@ -42,14 +42,16 @@ async function connectDatabase() {
 }
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
-app.use('/',                   require('./routes/views'));
-app.use('/api/auth',           require('./routes/authRouter'));
-app.use('/api/comisiones',           require('./routes/comisionesRouter'));
+app.use('/', require('./routes/views'));
+app.use('/api/auth', require('./routes/authRouter'));
+app.use('/api/comisiones', require('./routes/comisionesRouter'));
 // app.use('/api/roles',          require('./routes/rolesRoutes'));
 // app.use('/api/comisiones',     require('./routes/comisiones'));
 // app.use('/api/notifications',  require('./routes/notifications'));
 // app.use('/api/percentages',    require('./routes/percentages'));
-app.use('/v10',                require('./routes/v10Router'));
+app.use('/v10', require('./routes/v10Router'));
+app.use('/api/users', require('./routes/userRouter'));
+app.use('/api/roles', require('./routes/rolesRouter'));
 
 // ── Test de error (ELIMINAR EN PRODUCCIÓN) ────────────────────────────────────
 if (process.env.NODE_ENV !== 'production') {
