@@ -1,9 +1,30 @@
 const express = require('express');
 const router  = express.Router();
+const {
+    setAuthCookie,
+    clearAuthCookie,
+    authenticate
+} = require('../JWT/authCookies');
 
 // Login — sin layout (no header)
 router.get('/', (req, res) => {
-  res.render('login', { layout: false });  // ← express-ejs-layouts lee esto directamente
+  // Sobreescribir res.status temporalmente para interceptar el 401
+  // que lanzaría authenticate si no hay sesión válida
+  const originalStatus = res.status.bind(res);
+  let intercepted = false;
+
+  res.status = (code) => {
+    if (code === 401) {
+      intercepted = true;
+      return { json: () => res.render('login', { layout: false }) };
+    }
+    return originalStatus(code);
+  };
+  authenticate(req, res, () => {
+    if (!intercepted) {
+      return res.redirect('/login-successfully');
+    }
+  });
 });
 
 router.get('/login-successfully', (req, res) => {
