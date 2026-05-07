@@ -31,7 +31,7 @@ app.use(injectUserLocals);
 // ── Base de datos ─────────────────────────────────────────────────────────────
 async function connectDatabase() {
   try {
-    const mongoClient = new MongoClient("mongodb://localhost:27017/nova_db");
+    const mongoClient = new MongoClient("mongodb://localhost:27017/roles_usuarios", {retryWrites: false});
     await mongoClient.connect();
     console.log('✅ MongoDB conectado');
     app.locals.mongoClient = mongoClient;
@@ -52,11 +52,6 @@ app.use('/api/comisiones', require('./routes/comisionesRouter'));
 app.use('/v10', require('./routes/v10Router'));
 app.use('/api/users', require('./routes/userRouter'));
 app.use('/api/roles', require('./routes/rolesRouter'));
-
-// ── Test de error (ELIMINAR EN PRODUCCIÓN) ────────────────────────────────────
-if (process.env.NODE_ENV !== 'production') {
-  app.get('/500test', (req, res) => { throw new Error('Error de prueba'); });
-}
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -202,6 +202,227 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/comisiones/:id
+ */
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const db = req.app.locals.mongoClient.db(DB_NAME);
+    const { id } = req.params;
+
+    // ── Validar ObjectId ──────────────────────────────────────────────────
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'El parámetro id no es un ObjectId válido',
+        data:    null,
+        error:   null,
+      });
+    }
+
+    // ── 1. Traer la ubicación ─────────────────────────────────────────────
+    const ubicacion = await db.collection('comisiones-ubicaciones').aggregate([
+      {
+        $match: { _id: new ObjectId(id) },
+      },
+
+      // Populate status
+      {
+        $lookup: {
+          from:         'estatus',
+          localField:   'status',
+          foreignField: '_id',
+          as:           'status',
+        },
+      },
+      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
+
+      // Populate created_by
+      {
+        $lookup: {
+          from:         'usuarios',
+          localField:   'created_by',
+          foreignField: '_id',
+          as:           'created_by',
+          pipeline: [
+            { $project: { password: 0 } },
+          ],
+        },
+      },
+      { $unwind: { path: '$created_by', preserveNullAndEmptyArrays: true } },
+
+    ]).next();
+
+    if (!ubicacion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Comisión no encontrada',
+        data:    null,
+        error:   null,
+      });
+    }
+
+    // ── 2. Traer participantes ────────────────────────────────────────────
+    const participantes = await db.collection('comisiones-participantes').aggregate([
+      {
+        $match: { comision_id: new ObjectId(id) },
+      },
+
+      // Populate user
+      {
+        $lookup: {
+          from:         'usuarios',
+          localField:   'user',
+          foreignField: '_id',
+          as:           'user',
+          pipeline: [
+            { $project: { name: 1, username: 1, picture: 1 } },
+          ],
+        },
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+
+      // Populate status
+      {
+        $lookup: {
+          from:         'estatus',
+          localField:   'status',
+          foreignField: '_id',
+          as:           'status',
+        },
+      },
+      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
+
+    ]).toArray();
+
+    // ── 3. Separar asesores y gerentes (mismo formato que al crear) ───────
+    const participants = {
+      advisors: participantes
+        .filter(p => p.role_in_comision === 'asesor')
+        .map(({ role_in_comision, ...p }) => p),
+      managers: participantes
+        .filter(p => p.role_in_comision === 'gerente')
+        .map(({ role_in_comision, ...p }) => p),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Comisión encontrada',
+      data: {
+        comision: {
+          ...ubicacion,
+          participants,
+        },
+      },
+      error: null,
+    });
+
+  } catch (error) {
+    console.error('[GET /api/comisiones/:id]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error en el servidor',
+      data:    null,
+      error:   error.message,
+    });
+  }
+});
+
+/**
+ * DELETE /api/comisiones/:id
+ */
+router.delete('/:id', authenticate, async (req, res) => {
+  const client = req.app.locals.mongoClient;
+  const db     = client.db(DB_NAME);
+  const { id } = req.params;
+
+  // ── Validar ObjectId ────────────────────────────────────────────────────
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: 'El parámetro id no es un ObjectId válido',
+      data:    null,
+      error:   null,
+    });
+  }
+
+  // ── Iniciar sesión para transacción ────────────────────────────────────
+  const session = client.startSession();
+
+  try {
+    const comisionId = new ObjectId(id);
+
+    // ── Verificar que la comisión existe ────────────────────────────────
+    const ubicacion = await db
+      .collection('comisiones-ubicaciones')
+      .findOne({ _id: comisionId }, { session });
+
+    if (!ubicacion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Comisión no encontrada',
+        data:    null,
+        error:   null,
+      });
+    }
+
+    // ── Obtener participantes para borrar sus notificaciones ────────────
+    const participantes = await db
+      .collection('comisiones-participantes')
+      .find({ comision_id: comisionId }, { session })
+      .toArray();
+
+    const userIds = [...new Set(participantes.map(p => p.user.toString()))]
+      .map(uid => new ObjectId(uid));
+
+    // ── Ejecutar borrado en transacción ─────────────────────────────────
+    await session.withTransaction(async () => {
+
+      // 1. Eliminar participantes
+      const { deletedCount: participantesEliminados } = await db
+        .collection('comisiones-participantes')
+        .deleteMany({ comision_id: comisionId }, { session });
+
+      // 2. Eliminar notificaciones relacionadas
+      // Notificaciones que mencionen la ubicación de esta comisión
+      const { deletedCount: notificacionesEliminadas } = await db
+        .collection('notificaciones')
+        .deleteMany({
+          usuario_id: { $in: userIds },
+          descripcion: { $regex: ubicacion.location.text, $options: 'i' },
+        }, { session });
+
+      // 3. Eliminar la ubicación
+      await db
+        .collection('comisiones-ubicaciones')
+        .deleteOne({ _id: comisionId }, { session });
+
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Comisión '${ubicacion.location.text}' eliminada correctamente`,
+      data: {
+        comision_id:   comisionId,
+        location:      ubicacion.location.text,
+        commission_type: ubicacion.commission_type,
+      },
+      error: null,
+    });
+
+  } catch (error) {
+    console.error('[DELETE /api/comisiones/:id]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al eliminar la comisión',
+      data:    null,
+      error:   error.message,
+    });
+  } finally {
+    await session.endSession();
+  }
+});
+
 // GET /api/comisiones
 router.get('/', authenticate, async (req, res) => {
   const client = req.app.locals.mongoClient;
