@@ -1,406 +1,589 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --green:#60a61e;
-  --green-dim:rgba(96,166,30,.08);
-  --green-mid:rgba(96,166,30,.18);
-  --green-border:rgba(96,166,30,.3);
-  --white:#ffffff;
-  --off:#f7f8f5;
-  --ink:#0e0e0c;
-  --ink2:#3a3a36;
-  --ink3:#7a7a72;
-  --ink4:#b8b8b0;
-  --line:#e8e8e2;
-  --line2:#d4d4cc;
-}
-body{background:var(--white);color:var(--ink);font-family:'Geist',sans-serif;font-size:14px;min-height:600px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comisiones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── loading ── */
-.screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:12px}
-.spinner{width:22px;height:22px;border:2px solid var(--line2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.screen-sub{font-size:13px;color:var(--ink3)}
-.screen-title{font-size:15px;font-weight:500}
-.retry-btn{padding:7px 18px;border-radius:6px;background:var(--green);color:#fff;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:'Geist',sans-serif;margin-top:4px}
+    :root {
+      --bg:       #f5f4f0;
+      --surface:  #ffffff;
+      --border:   #e2e0d8;
+      --border-md:#c8c5bc;
+      --text-1:   #1a1917;
+      --text-2:   #6b6860;
+      --text-3:   #9c9a94;
+      --accent:   #1a1917;
+      --green-bg: #eaf3de;
+      --green-tx: #3b6d11;
+      --green-br: #c0dd97;
+      --amber-bg: #faeeda;
+      --amber-tx: #854f0b;
+      --amber-br: #fac775;
+      --red-bg:   #fcebeb;
+      --red-tx:   #a32d2d;
+      --red-br:   #f7c1c1;
+      --blue-bg:  #e6f1fb;
+      --blue-tx:  #185fa5;
+      --blue-br:  #b5d4f4;
+      --gray-bg:  #f1efe8;
+      --gray-tx:  #5f5e5a;
+      --gray-br:  #d3d1c7;
+      --radius:   10px;
+      --radius-sm:6px;
+    }
 
-/* ── header ── */
-.header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:10}
-.header-left{display:flex;align-items:center;gap:14px}
-.logo{display:flex;align-items:center;gap:7px}
-.logo-mark{width:8px;height:8px;border-radius:50%;background:var(--green)}
-.logo-text{font-size:14px;font-weight:600;letter-spacing:-.3px;color:var(--ink)}
-.logo-sep{width:1px;height:16px;background:var(--line2)}
-.dev-label{font-size:12px;color:var(--ink3);font-family:'Geist Mono',monospace}
-.header-right{display:flex;align-items:center;gap:8px}
-.user-pill{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--off)}
-.user-avatar{width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;font-family:'Geist Mono',monospace;flex-shrink:0}
-.user-name{font-size:12px;font-weight:500;color:var(--ink2)}
-.user-role-tag{font-size:10px;color:var(--ink3);font-family:'Geist Mono',monospace;background:var(--line);padding:1px 6px;border-radius:3px}
-.btn-new{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;background:var(--green);color:#fff;font-size:12px;font-weight:500;border:none;cursor:pointer;font-family:'Geist',sans-serif;transition:opacity .15s}
-.btn-new:hover{opacity:.85}
-.btn-new svg{width:12px;height:12px}
-.btn-logout{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:6px;background:transparent;color:var(--ink3);font-size:12px;font-weight:400;border:1px solid var(--line);cursor:pointer;font-family:'Geist',sans-serif;transition:all .15s}
-.btn-logout:hover{border-color:var(--line2);color:var(--ink);background:var(--off)}
-.btn-logout svg{width:12px;height:12px}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+    }
 
-/* ── toolbar ── */
-.toolbar{display:flex;align-items:center;gap:10px;padding:10px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--white)}
-.search-wrap{position:relative;flex:1;min-width:160px;max-width:240px}
-.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ink4);width:12px;height:12px}
-.search-input{width:100%;background:var(--off);border:1px solid var(--line);border-radius:6px;padding:6px 9px 6px 28px;color:var(--ink);font-size:12px;font-family:'Geist',sans-serif;outline:none;transition:border-color .15s}
-.search-input::placeholder{color:var(--ink4)}
-.search-input:focus{border-color:var(--green)}
-.chips{display:flex;gap:5px;flex-wrap:wrap;flex:1}
-.chip{padding:4px 10px;border-radius:20px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--ink3);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .12s;white-space:nowrap}
-.chip:hover{border-color:var(--line2);color:var(--ink2)}
-.chip.active{background:var(--green-dim);color:var(--green);border-color:var(--green-border)}
-.count{font-size:11px;font-family:'Geist Mono',monospace;color:var(--ink4);white-space:nowrap;margin-left:auto}
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-brand {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      color: var(--text-1);
+    }
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--text-1);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .03em;
+      flex-shrink: 0;
+    }
+    .topbar-user-info p  { font-size: 13px; font-weight: 500; line-height: 1.2; }
+    .topbar-user-info span { font-size: 11px; color: var(--text-2); }
 
-/* ── table ── */
-.table-wrap{overflow-x:auto;padding:0 24px 40px}
-table{width:100%;border-collapse:collapse;margin-top:16px}
-thead th{font-size:10px;font-weight:500;color:var(--ink4);text-transform:uppercase;letter-spacing:.8px;font-family:'Geist Mono',monospace;padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
-tbody tr{border-bottom:1px solid var(--line);transition:background .08s}
-tbody tr:hover{background:var(--off)}
-tbody tr:last-child{border-bottom:none}
-td{padding:11px 10px;vertical-align:middle}
-.cell-main{font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap}
-.cell-sub{font-size:11px;color:var(--ink3);font-family:'Geist Mono',monospace;margin-top:2px;white-space:nowrap}
+    /* ── Layout ── */
+    .page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-/* ── status pill ── */
-.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:500;font-family:'Geist Mono',monospace;letter-spacing:.2px;white-space:nowrap;border:1px solid}
-.p-pv{background:#fffbeb;color:#92400e;border-color:#fde68a}
-.p-ve{background:#f0fdf4;color:#166534;border-color:#bbf7d0}
-.p-pa{background:#faf5ff;color:#6b21a8;border-color:#e9d5ff}
-.p-ap{background:var(--green-dim);color:var(--green);border-color:var(--green-border)}
-.p-pp{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
-.p-pg{background:#f0fdf4;color:#166534;border-color:#bbf7d0}
-.p-co{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .page-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .page-title { font-size: 20px; font-weight: 500; }
+    .page-count { font-size: 13px; color: var(--text-2); }
 
-/* ── role tag ── */
-.rtag{padding:2px 7px;border-radius:3px;font-size:10px;font-family:'Geist Mono',monospace;border:1px solid}
-.rt-asesor{background:var(--green-dim);color:var(--green);border-color:var(--green-border)}
-.rt-gerente{background:var(--off);color:var(--ink3);border-color:var(--line2)}
+    /* ── Estado skeleton / error ── */
+    .state-msg {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-2);
+      font-size: 14px;
+    }
+    .state-msg i { font-size: 36px; display: block; margin-bottom: 10px; color: var(--text-3); }
 
-/* ── verification ── */
-.vcheck svg{width:14px;height:14px}
-.vcheck.ok svg{color:var(--green)}.vcheck.no svg{color:var(--ink4)}
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      animation: fadeUp .25s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-/* ── action btns ── */
-.act{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:500;border:1px solid;cursor:pointer;font-family:'Geist',sans-serif;transition:all .12s;white-space:nowrap;background:transparent}
-.act-v{color:var(--ink2);border-color:var(--line2)}.act-v:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
-.act-a{color:var(--green);border-color:var(--green-border);background:var(--green-dim)}.act-a:hover{background:var(--green-mid)}
-.act-p{color:var(--green);border-color:var(--green);background:var(--green-dim)}.act-p:hover{background:var(--green);color:#fff}
-.act-none{font-size:11px;color:var(--ink4);font-family:'Geist Mono',monospace}
+    .card-head {
+      padding: 1.1rem 1.25rem .9rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-loc  { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text-1); }
+    .card-dev  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 
-/* ── logout confirm modal ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(2px)}
-.modal{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:24px;width:280px;box-shadow:0 8px 32px rgba(0,0,0,.08)}
-.modal h3{font-size:14px;font-weight:600;margin-bottom:6px}
-.modal p{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:18px}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.mbtn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--line);cursor:pointer;font-family:'Geist',sans-serif;background:transparent;color:var(--ink2);transition:all .12s}
-.mbtn:hover{background:var(--off)}
-.mbtn-confirm{background:var(--ink);color:#fff;border-color:var(--ink)}.mbtn-confirm:hover{background:var(--ink2)}
+    /* ── Badge ── */
+    .badge {
+      font-size: 11px; font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .b-pv { background: var(--amber-bg); color: var(--amber-tx); border-color: var(--amber-br); }
+    .b-v  { background: var(--blue-bg);  color: var(--blue-tx);  border-color: var(--blue-br);  }
+    .b-pa { background: var(--amber-bg); color: var(--amber-tx); border-color: var(--amber-br); }
+    .b-ap { background: var(--green-bg); color: var(--green-tx); border-color: var(--green-br); }
+    .b-pp { background: var(--blue-bg);  color: var(--blue-tx);  border-color: var(--blue-br);  }
+    .b-pg { background: var(--green-bg); color: var(--green-tx); border-color: var(--green-br); }
+    .b-co { background: var(--red-bg);   color: var(--red-tx);   border-color: var(--red-br);   }
 
-/* ── toast ── */
-.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;border-radius:6px;padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;z-index:999;transform:translateY(50px);opacity:0;transition:all .2s;pointer-events:none;font-family:'Geist',monospace}
-.toast.show{transform:translateY(0);opacity:1}
-.t-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.t-ok .t-dot{background:var(--green)}.t-err .t-dot{background:#f87171}.t-info .t-dot{background:#60a5fa}
-</style>
+    /* ── Meta grid ── */
+    .card-meta {
+      padding: .9rem 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .meta-item .lbl { font-size: 11px; color: var(--text-3); margin-bottom: 2px; }
+    .meta-item .val { font-size: 13px; font-weight: 500; }
+
+    /* ── Banner corrección ── */
+    .corr-banner {
+      margin: 0 1.25rem .75rem;
+      padding: 8px 12px;
+      background: var(--red-bg);
+      border: 1px solid var(--red-br);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--red-tx);
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-top: .75rem;
+    }
+    .corr-banner i { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Participantes ── */
+    .participants-section { padding: .75rem 1.25rem 1rem; }
+    .participants-label {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+    .p-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+    .p-left  { display: flex; align-items: center; gap: 10px; }
+    .p-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 500;
+      flex-shrink: 0;
+    }
+    .p-avatar.asesor  { background: var(--blue-bg);  color: var(--blue-tx); }
+    .p-avatar.gerente { background: var(--amber-bg); color: var(--amber-tx); }
+    .p-name { font-size: 13px; font-weight: 500; }
+    .p-role { font-size: 11px; color: var(--text-2); }
+    .p-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .p-amount { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-2); }
+
+    /* ── Botón verificar ── */
+    .btn-verify {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      cursor: pointer;
+      color: var(--text-2);
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-verify:hover:not(:disabled) {
+      border-color: var(--green-tx);
+      color: var(--green-tx);
+      background: var(--green-bg);
+    }
+    .btn-verify.verified {
+      border-color: var(--green-br);
+      background: var(--green-bg);
+      color: var(--green-tx);
+      cursor: default;
+    }
+    .btn-verify i { font-size: 13px; }
+
+    /* verified badge (otros participantes) */
+    .p-verified {
+      font-size: 11px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .p-verified.yes { color: var(--green-tx); }
+    .p-verified.no  { color: var(--text-3); }
+
+    /* ── Acciones ── */
+    .card-actions {
+      padding: .75rem 1.25rem 1rem;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-md);
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-1);
+      transition: background .15s, border-color .15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn:hover { background: var(--bg); }
+    .btn i { font-size: 15px; }
+    .btn-green { color: var(--green-tx); border-color: var(--green-br); }
+    .btn-green:hover { background: var(--green-bg); }
+    .btn-amber { color: var(--amber-tx); border-color: var(--amber-br); }
+    .btn-amber:hover { background: var(--amber-bg); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--text-2);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem; right: 1.5rem;
+      background: var(--text-1);
+      color: #fff;
+      font-size: 13px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      z-index: 999;
+      max-width: 280px;
+    }
+    #toast.show { opacity: 1; }
+  </style>
 </head>
 <body>
 
-<div id="app"></div>
-<div class="toast" id="toast"><div class="t-dot" id="tDot"></div><span id="tMsg"></span></div>
+<!-- Topbar -->
+<header class="topbar">
+  <span class="topbar-brand">COMISIONES</span>
+  <div class="topbar-user">
+    <div class="avatar" id="av"></div>
+    <div class="topbar-user-info">
+      <p id="uname">—</p>
+      <span id="urole">—</span>
+    </div>
+  </div>
+</header>
+
+<!-- Page -->
+<main class="page">
+  <div class="page-header">
+    <h1 class="page-title" id="page-title">Comisiones</h1>
+    <span class="page-count" id="page-count"></span>
+  </div>
+  <div id="list"></div>
+</main>
+
+<div id="toast"></div>
 
 <script>
-const API = '';
-const ENDPOINTS = {
-  me:          `${API}/api/auth/me`,
-  logout:      `${API}/api/auth/logout`,
-  comisiones:  `${API}/api/comisiones`,
-  misCom:      `${API}/api/comisiones/mis-comisiones`,
-  patch:       id => `${API}/api/comisiones/participantes/${id}`,
-};
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
 
-let user   = null;
-let rows   = [];
-let filter = 'all';
-let search = '';
-
-const fmt = n => '$' + Number(n).toLocaleString('es-MX', {minimumFractionDigits:0,maximumFractionDigits:0});
-const qs  = id => document.getElementById(id);
-const canAct = r => r === 'Directora' || r === 'Administradora';
-
-const ST = {
-  'Pendiente Verificacion': { cls:'p-pv', label:'Pend. Verificación' },
-  'Verificada':             { cls:'p-ve', label:'Verificada'         },
-  'Pendiente Aprobacion':   { cls:'p-pa', label:'Pend. Aprobación'  },
-  'Aprobada':               { cls:'p-ap', label:'Aprobada'           },
-  'Pendiente Pago':         { cls:'p-pp', label:'Pend. Pago'         },
-  'Pagada':                 { cls:'p-pg', label:'Pagada'             },
-  'Correccion':             { cls:'p-co', label:'Corrección'         },
-};
+function fmt(n) {
+  return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0 });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+}
+function initials(name) {
+  return (name || '').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+}
 
 let toastTimer;
-function toast(msg, type='ok') {
-  const el=qs('toast'); qs('tMsg').textContent=msg;
-  el.className=`toast t-${type} show`;
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-async function apiFetch(url, opts={}) {
-  const res  = await fetch(url, { credentials:'include', ...opts });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.message || 'Error de API');
-  return json;
-}
+// ── Estado global ─────────────────────────────────────────────────────────────
+let USER = null;   // objeto del JWT
+let DATA = [];     // comisiones cargadas
 
-function renderLoading(msg='Cargando…') {
-  qs('app').innerHTML=`<div class="screen"><div class="spinner"></div><div class="screen-sub">${msg}</div></div>`;
-}
+const STATUS_MAP = {
+  'Pendiente Verificacion': { cls: 'b-pv', label: 'Pendiente verificación' },
+  'Verificada':             { cls: 'b-v',  label: 'Verificada'             },
+  'Pendiente Aprobacion':   { cls: 'b-pa', label: 'Pendiente aprobación'   },
+  'Aprobada':               { cls: 'b-ap', label: 'Aprobada'               },
+  'Pendiente Pago':         { cls: 'b-pp', label: 'Pendiente pago'         },
+  'Pagada':                 { cls: 'b-pg', label: 'Pagada'                 },
+  'Correccion':             { cls: 'b-co', label: 'Corrección'             },
+};
 
-function renderError(title, sub) {
-  qs('app').innerHTML=`<div class="screen"><div class="screen-title">${title}</div><div class="screen-sub">${sub}</div><button class="retry-btn" onclick="init()">Reintentar</button></div>`;
-}
-
+// ── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
-  renderLoading('Verificando sesión…');
+  // 1. Obtener usuario desde cookie/JWT
   try {
-    const me = await apiFetch(ENDPOINTS.me);
-    user = me.data.user;
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    const j = await r.json();
+    if (!j.success) { showError('Sesión no válida. Inicia sesión.'); return; }
+    USER = j.data.user;
   } catch(e) {
-    renderError('Sin sesión activa', 'Inicia sesión para continuar.');
+    showError('No se pudo conectar con el servidor.');
     return;
   }
-  renderLoading('Cargando comisiones…');
-  const ep = (user.roleName==='Asesor'||user.roleName==='Gerente') ? ENDPOINTS.misCom : ENDPOINTS.comisiones;
+
+  // 2. Pintar topbar
+  $('av').textContent    = initials(USER.name);
+  $('uname').textContent = USER.name;
+  $('urole').textContent = USER.roleName;
+
+  // 3. Elegir endpoint según rol
+  const isLimitado = ['Asesor', 'Gerente'].includes(USER.roleName);
+  $('page-title').textContent = isLimitado ? 'Mis comisiones' : 'Todas las comisiones';
+
+  await loadComisiones(isLimitado);
+}
+
+// ── Carga de comisiones ───────────────────────────────────────────────────────
+async function loadComisiones(misComisiones) {
+  $('list').innerHTML = `<div class="state-msg"><div class="spinner"></div>Cargando comisiones…</div>`;
+
+  const url = misComisiones ? '/api/comisiones/mis-comisiones' : '/api/comisiones';
   try {
-    const d = await apiFetch(ep);
-    rows = d.data.filas || d.data.comisiones || [];
+    const r = await fetch(url, { credentials: 'include' });
+    const j = await r.json();
+    if (!j.success) { showError(j.message); return; }
+    DATA = j.data;
+    $('page-count').textContent = `${DATA.length} comisión${DATA.length !== 1 ? 'es' : ''}`;
+    render();
   } catch(e) {
-    renderError('Error al cargar', e.message);
+    showError('Error al obtener las comisiones.');
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  if (!DATA.length) {
+    $('list').innerHTML = `<div class="state-msg"><i class="ti ti-inbox"></i>Sin comisiones para mostrar</div>`;
     return;
   }
-  renderApp();
+  $('list').innerHTML = DATA.map(cardHTML).join('');
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-function showLogoutModal() {
-  const m = document.createElement('div');
-  m.className = 'overlay';
-  m.id = 'logoutModal';
-  m.innerHTML = `
-    <div class="modal">
-      <h3>Cerrar sesión</h3>
-      <p>¿Seguro que quieres salir de tu cuenta?</p>
-      <div class="modal-btns">
-        <button class="mbtn" onclick="closeLogoutModal()">Cancelar</button>
-        <button class="mbtn mbtn-confirm" onclick="doLogout()">Cerrar sesión</button>
-      </div>
-    </div>`;
-  document.body.appendChild(m);
-}
-function closeLogoutModal() {
-  const m = qs('logoutModal');
-  if (m) m.remove();
-}
-async function doLogout() {
-  closeLogoutModal();
-  try {
-    await apiFetch(ENDPOINTS.logout, { method:'POST' });
-  } catch(e) { /* el servidor puede responder sin success si ya expiró */ }
-  window.location.href = "/"
-  renderError('Sesión cerrada', 'Hasta pronto, ' + user.name.split(' ')[0] + '.');
-  user = null; rows = [];
-}
+function cardHTML(c) {
+  const st = STATUS_MAP[c.status?.name] || { cls: 'b-v', label: c.status?.name || '—' };
+  const isCreator = c.created_by?._id === USER.id;
 
-// ── App shell ─────────────────────────────────────────────────────────────────
-function renderApp() {
-  const initials = user.name.split(' ').slice(0,2).map(w=>w[0]).join('');
-  const isGerente = user.roleName === 'Gerente';
+  // participantes
+  const partRows = (c.participantes || []).map((p, i) => {
+    const isMe = p.usuario?._id === USER.id;
+    let rightHtml;
 
-  qs('app').innerHTML = `
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">
-          <div class="logo-mark"></div>
-          <span class="logo-text">Comisiones</span>
-        </div>
-        <div class="logo-sep"></div>
-        <span class="dev-label">TOKIO 616</span>
-      </div>
-      <div class="header-right">
-        ${isGerente ? `
-        <button class="btn-new" onclick="goRegistrar()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          Nueva comisión
-        </button>` : ''}
-        <div class="user-pill">
-          <div class="user-avatar">${initials}</div>
-          <div>
-            <div class="user-name">${user.name.split(' ').slice(0,2).join(' ')}</div>
-          </div>
-          <span class="user-role-tag">${user.roleName}</span>
-        </div>
-        <button class="btn-logout" onclick="showLogoutModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-          Salir
-        </button>
-      </div>
-    </div>
-
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input class="search-input" id="searchInput" placeholder="Buscar…" oninput="onSearch(this.value)">
-      </div>
-      <div class="chips">
-        <button class="chip active" data-f="all"                     onclick="setFilter(this)">Todas</button>
-        <button class="chip" data-f="Pendiente Verificacion"         onclick="setFilter(this)">Pend. Verificación</button>
-        <button class="chip" data-f="Verificada"                     onclick="setFilter(this)">Verificada</button>
-        <button class="chip" data-f="Aprobada"                       onclick="setFilter(this)">Aprobada</button>
-        <button class="chip" data-f="Pendiente Pago"                 onclick="setFilter(this)">Pend. Pago</button>
-        <button class="chip" data-f="Pagada"                         onclick="setFilter(this)">Pagada</button>
-      </div>
-      <span class="count" id="countTag"></span>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Ubicación</th>
-            <th>Cliente</th>
-            <th>Tipo</th>
-            <th>Venta</th>
-            <th>Participante</th>
-            <th>Rol</th>
-            <th>% / Monto</th>
-            <th>Ver.</th>
-            <th>Estatus</th>
-            ${canAct(user.roleName) ? '<th>Acción</th>' : ''}
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>`;
-
-  renderRows();
-}
-
-// ── Filas ─────────────────────────────────────────────────────────────────────
-function renderRows() {
-  const q = search.toLowerCase();
-  const data = rows.filter(r => {
-    const st  = r.status?.name || '';
-    const okF = filter==='all' || st===filter;
-    const okQ = !q ||
-      (r.location?.text||'').toLowerCase().includes(q) ||
-      (r.client_name||'').toLowerCase().includes(q) ||
-      (r.commission_type||'').toLowerCase().includes(q) ||
-      (r.usuario?.name||'').toLowerCase().includes(q);
-    return okF && okQ;
-  });
-
-  if (qs('countTag')) qs('countTag').textContent = `${data.length} registro${data.length!==1?'s':''}`;
-  const tbody = qs('tbody');
-  if (!tbody) return;
-
-  if (!data.length) {
-    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:48px;color:var(--ink4);font-size:13px">Sin registros</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map(r => {
-    const stName = r.status?.name || '—';
-    const stOrd  = r.status?.order || 0;
-    const st     = ST[stName] || { cls:'p-pv', label:stName };
-    const isDir  = user.roleName==='Directora';
-    const isAdm  = user.roleName==='Administradora';
-
-    let accion = '';
-    if (canAct(user.roleName)) {
-      let btn = `<span class="act-none">—</span>`;
-      if      (isDir && stOrd===1) btn=`<button class="act act-v" onclick="patchStatus('${r._id}','Verificada',2)">Verificar</button>`;
-      else if (isDir && stOrd===2) btn=`<button class="act act-a" onclick="patchStatus('${r._id}','Aprobada',4)">Aprobar</button>`;
-      else if (isAdm && stOrd===5) btn=`<button class="act act-p" onclick="patchStatus('${r._id}','Pagada',6)">Marcar pagada</button>`;
-      accion = `<td>${btn}</td>`;
+    if (isMe && c.status?.name === 'Pendiente Verificacion') {
+      rightHtml = `
+        <span class="p-amount">${fmt(p.commission_amount)}</span>
+        <button class="btn-verify ${p.verification ? 'verified' : ''}"
+          onclick="verificar('${c._id}')"
+          ${p.verification ? 'disabled' : ''}>
+          <i class="ti ${p.verification ? 'ti-circle-check' : 'ti-circle'}"></i>
+          ${p.verification ? 'Verificado' : 'Verificar'}
+        </button>`;
+    } else {
+      const vIcon = p.verification ? 'ti-circle-check' : 'ti-circle';
+      const vCls  = p.verification ? 'yes' : 'no';
+      const vTxt  = p.verification ? 'Verificado' : 'Pendiente';
+      rightHtml = `
+        <span class="p-amount">${fmt(p.commission_amount)}</span>
+        <span class="p-verified ${vCls}"><i class="ti ${vIcon}" style="font-size:13px"></i>${vTxt}</span>`;
     }
 
-    const ver = r.verification
-      ? `<div class="vcheck ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>`
-      : `<div class="vcheck no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>`;
-
-    return `<tr>
-      <td>
-        <div class="cell-main">${r.location?.text||'—'}</div>
-        <div class="cell-sub">${r.development?.text||''} · ${r.concept?.text||''}</div>
-      </td>
-      <td>
-        <div style="font-size:13px;color:var(--ink2)">${r.client_name||'—'}</div>
-        <div class="cell-sub">${(r.operation_date||'').split('T')[0]||'—'}</div>
-      </td>
-      <td><span style="font-size:12px;font-family:'Geist Mono',monospace;color:var(--ink2)">${r.commission_type||'—'}</span></td>
-      <td>
-        <div style="font-size:13px;font-weight:500;font-family:'Geist Mono',monospace">${fmt(r.sale_price||0)}</div>
-        <div class="cell-sub">Total: ${fmt(r.total_commission||0)}</div>
-      </td>
-      <td>
-        <div style="font-size:13px;color:var(--ink2)">${r.usuario?.name||'—'}</div>
-        <div class="cell-sub">${r.usuario?.username||''}</div>
-      </td>
-      <td><span class="rtag ${r.role_in_comision==='asesor'?'rt-asesor':'rt-gerente'}">${r.role_in_comision||'—'}</span></td>
-      <td>
-        <div style="font-size:13px;font-weight:500;font-family:'Geist Mono',monospace">${fmt(r.commission_amount||0)}</div>
-        <div class="cell-sub">${((r.percentage||0)*100).toFixed(2)}%</div>
-      </td>
-      <td>${ver}</td>
-      <td><span class="pill ${st.cls}">${st.label}</span></td>
-      ${accion}
-    </tr>`;
+    return `
+      <div class="p-row">
+        <div class="p-left">
+          <div class="p-avatar ${p.role_in_comision}">${initials(p.usuario?.name)}</div>
+          <div>
+            <div class="p-name">${p.usuario?.name || '—'}${isMe ? ' <span style="font-size:10px;color:var(--text-3)">(tú)</span>' : ''}</div>
+            <div class="p-role">${p.role_in_comision}</div>
+          </div>
+        </div>
+        <div class="p-right">${rightHtml}</div>
+      </div>`;
   }).join('');
-}
 
-// ── Patch ─────────────────────────────────────────────────────────────────────
-async function patchStatus(id, statusName, statusOrder) {
-  try {
-    await apiFetch(ENDPOINTS.patch(id), {
-      method:  'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body:    JSON.stringify({ statusOrder }),
-    });
-    const r = rows.find(r => r._id===id);
-    if (r) r.status = { name:statusName, order:statusOrder };
-    renderRows();
-    toast(`Estatus → ${statusName}`, 'ok');
-  } catch(e) {
-    toast(e.message, 'err');
+  // banner corrección
+  const corrBanner = c.correction_comments
+    ? `<div class="corr-banner">
+        <i class="ti ti-alert-triangle"></i>
+        <span>${c.correction_comments}</span>
+      </div>`
+    : '';
+
+  // acciones según rol + estatus
+  let actions = '';
+  const sName = c.status?.name;
+
+  if (USER.roleName === 'Directora' && sName === 'Pendiente Aprobacion') {
+    actions += `
+      <button class="btn btn-green" onclick="aprobar('${c._id}', 'aprobar')">
+        <i class="ti ti-circle-check"></i> Aprobar
+      </button>
+      <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')">
+        <i class="ti ti-alert-circle"></i> Corregir
+      </button>`;
   }
+
+  if (USER.roleName === 'Administradora' && sName === 'Pendiente Pago') {
+    actions += `
+      <button class="btn btn-green" onclick="pagar('${c._id}')">
+        <i class="ti ti-cash"></i> Marcar como pagada
+      </button>
+      <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')">
+        <i class="ti ti-alert-circle"></i> Corregir
+      </button>`;
+  }
+
+  const actionsBlock = actions
+    ? `<div class="card-actions">${actions}</div>`
+    : '';
+
+  return `
+    <div class="card" id="card-${c._id}">
+      <div class="card-head">
+        <div>
+          <div class="card-loc">${c.location?.text || '—'}</div>
+          <div class="card-dev">${c.development?.text} · ${c.company?.text}</div>
+        </div>
+        <span class="badge ${st.cls}">${st.label}</span>
+      </div>
+
+      <div class="card-meta">
+        <div class="meta-item"><div class="lbl">Cliente</div><div class="val">${c.client_name || '—'}</div></div>
+        <div class="meta-item"><div class="lbl">Tipo</div><div class="val">${c.commission_type}</div></div>
+        <div class="meta-item"><div class="lbl">Precio venta</div><div class="val">${fmt(c.sale_price)}</div></div>
+        <div class="meta-item"><div class="lbl">Comisión total</div><div class="val">${fmt(c.total_commission)}</div></div>
+        <div class="meta-item"><div class="lbl">Fecha operación</div><div class="val">${fmtDate(c.operation_date)}</div></div>
+      </div>
+
+      ${corrBanner}
+
+      <div class="participants-section">
+        <div class="participants-label">Participantes</div>
+        ${partRows}
+      </div>
+
+      ${actionsBlock}
+    </div>`;
 }
 
-function goRegistrar() {
-  window.location.href = '/registrar-comision';
-  toast('Redirigiendo a /registrar-comision…', 'info');
+// ── Acciones ──────────────────────────────────────────────────────────────────
+async function verificar(comisionId) {
+  try {
+    const r = await fetch(`/api/comisiones/${comisionId}/verificar`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    const j = await r.json();
+    if (!j.success) { toast(j.message); return; }
+    toast(j.message);
+    await reloadComision(comisionId);
+  } catch(e) { toast('Error al verificar'); }
 }
 
-function setFilter(el) {
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  filter = el.dataset.f;
-  renderRows();
-}
-function onSearch(v) { search=v; renderRows(); }
+async function aprobar(comisionId, accion, correction_comments = null) {
+  const body = { accion };
+  if (correction_comments) body.correction_comments = correction_comments;
 
+  try {
+    const r = await fetch(`/api/comisiones/${comisionId}/aprobar`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    if (!j.success) { toast(j.message); return; }
+    toast(j.message);
+    await reloadComision(comisionId);
+  } catch(e) { toast('Error al procesar'); }
+}
+
+async function pagar(comisionId) {
+  try {
+    const r = await fetch(`/api/comisiones/${comisionId}/pagar`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    const j = await r.json();
+    if (!j.success) { toast(j.message); return; }
+    toast(j.message);
+    await reloadComision(comisionId);
+  } catch(e) { toast('Error al marcar como pagada'); }
+}
+
+function pedirCorreccion(comisionId) {
+  const comentario = prompt('Indica el motivo de la corrección:');
+  if (!comentario) return;
+
+  // Directora usa /aprobar con accion=correccion
+  // Administradora también puede usar el mismo endpoint o uno propio
+  aprobar(comisionId, 'correccion', comentario);
+}
+
+// ── Recarga una sola comisión sin recargar toda la lista ──────────────────────
+async function reloadComision(comisionId) {
+  // Recargamos todo el listado para mantener consistencia
+  const isLimitado = ['Asesor', 'Gerente'].includes(USER.roleName);
+  await loadComisiones(isLimitado);
+}
+
+// ── Error global ──────────────────────────────────────────────────────────────
+function showError(msg) {
+  $('list').innerHTML = `<div class="state-msg"><i class="ti ti-alert-circle"></i>${msg}</div>`;
+}
+
+// ── Arrancar ──────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
