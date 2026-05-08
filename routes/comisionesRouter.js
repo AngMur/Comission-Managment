@@ -10,518 +10,6 @@ const {
 
 const DB_NAME = 'roles_usuarios';
 
-// POST /api/comisiones
-router.post('/', async (req, res) => {
-  const client = req.app.locals.mongoClient;
-  const db     = client.db(DB_NAME);
-
-  try {
-    const {
-      company,
-      development,
-      location,
-      concept,
-      commission_type,
-      sale_price,
-      operation_date,
-      register_date,
-      client_name,
-      created_by,
-      participants,
-    } = req.body;
-
-    // ── 1. Validaciones ───────────────────────────────────────────────────────
-    if (!company || !development || !location || !concept) {
-      return res.status(400).json({
-        success: false,
-        data:    null,
-        message: 'Faltan campos obligatorios de ubicación',
-        error:   null,
-      });
-    }
-
-    if (!commission_type || !sale_price || !operation_date || !register_date) {
-      return res.status(400).json({
-        success: false,
-        data:    null,
-        message: 'Faltan campos obligatorios de la comisión',
-        error:   null,
-      });
-    }
-
-    if (!participants?.advisors?.length || !participants?.managers?.length) {
-      return res.status(400).json({
-        success: false,
-        data:    null,
-        message: 'Debe incluir al menos un asesor y un gerente',
-        error:   null,
-      });
-    }
-
-    const typeMap = {
-      Tradicional: 'traditional',
-      Compartida:  'shared',
-      Multipunto:  'multipoint',
-    };
-    const pKey = typeMap[commission_type];
-    if (!pKey) {
-      return res.status(400).json({
-        success: false,
-        data:    null,
-        message: `Tipo de comisión no válido: ${commission_type}`,
-        error:   null,
-      });
-    }
-
-    // ── 2. Obtener estatus inicial y porcentajes desde la DB ──────────────────
-    const [statusInicial, percentagesDoc] = await Promise.all([
-      db.collection('estatus').findOne({ order: 1 }),
-      db.collection('percentages').findOne({}),
-    ]);
-
-    if (!statusInicial) {
-      return res.status(500).json({
-        success: false,
-        data:    null,
-        message: 'No se encontró el estatus inicial en la base de datos',
-        error:   null,
-      });
-    }
-
-    const pType = percentagesDoc?.v1?.[pKey];
-    if (!pType) {
-      return res.status(500).json({
-        success: false,
-        data:    null,
-        message: 'No se encontraron los porcentajes en la base de datos',
-        error:   null,
-      });
-    }
-
-    // ── 3. Construir documentos de participantes ──────────────────────────────
-    const advisorKeys = ['advisor1', 'advisor2'];
-    const managerKeys = ['manager1', 'manager2'];
-    const now         = new Date();
-
-    const buildParticipante = (userId, percentageKey, roleInComision) => {
-      const percentage = pType[percentageKey];
-      if (percentage === undefined) return null; // clave no existe (ej: advisor2 en Tradicional)
-
-      return {
-        comision_id:         null, // se rellena después del insert de ubicación
-        user:                new ObjectId(userId),
-        role_in_comision:    roleInComision,
-        percentage,
-        commission_amount:   sale_price * percentage,
-        adjusted_commission: null,
-        verification:        false,
-        status:              statusInicial._id,
-        correction_comments: null,
-        created_at:          now,
-        updated_at:          now,
-      };
-    };
-
-    const participanteDocs = [
-      ...participants.advisors
-        .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor'))
-        .filter(Boolean),
-      ...participants.managers
-        .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente'))
-        .filter(Boolean),
-    ];
-
-    // ── 4. Calcular comisión total ────────────────────────────────────────────
-    const total_commission = participanteDocs.reduce(
-      (sum, p) => sum + p.commission_amount, 0
-    );
-
-    // ── 5. Insertar en comisiones-ubicaciones ─────────────────────────────────
-    const ubicacionDoc = {
-      company,
-      development,
-      location,
-      concept,
-      commission_type,
-      sale_price,
-      total_commission,
-      client_name:         client_name ?? null,
-      operation_date:      new Date(operation_date),
-      register_date:       new Date(register_date),
-      status:              statusInicial._id,
-      correction_comments: null,
-      created_by:          new ObjectId(created_by),
-      created_at:          now,
-      updated_at:          now,
-    };
-
-    const { insertedId: comisionId } = await db
-      .collection('comisiones-ubicaciones')
-      .insertOne(ubicacionDoc);
-
-    // ── 6. Asignar comision_id e insertar participantes ───────────────────────
-    const participantesConId = participanteDocs.map((p) => ({
-      ...p,
-      comision_id: comisionId,
-    }));
-
-    await db
-      .collection('comisiones-participantes')
-      .insertMany(participantesConId);
-
-    // ── 7. Notificaciones para cada participante ──────────────────────────────
-    await db.collection('notificaciones').insertMany(
-      participantesConId.map((p) => ({
-        usuario_id:  p.user,
-        titulo:      'Nueva comisión registrada',
-        descripcion: `Se registró una nueva comisión para ${location.text}.`,
-        fecha:       now,
-      }))
-    );
-
-    // ── 8. Respuesta ──────────────────────────────────────────────────────────
-    return res.status(201).json({
-      success: true,
-      data: {
-        comision_id:      comisionId,
-        total_commission,
-        participantes:    participantesConId.length,
-      },
-      message: 'Comisión creada exitosamente',
-      error:   null,
-    });
-
-  } catch (error) {
-    console.error('[POST /api/comisiones]', error);
-    return res.status(500).json({
-      success: false,
-      data:    null,
-      message: 'Error al crear la comisión',
-      error:   error.message,
-    });
-  }
-});
-
-/**
- * GET /api/comisiones/:id
- */
-router.get('/:id', authenticate, async (req, res) => {
-  try {
-    const db = req.app.locals.mongoClient.db(DB_NAME);
-    const { id } = req.params;
-
-    // ── Validar ObjectId ──────────────────────────────────────────────────
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'El parámetro id no es un ObjectId válido',
-        data:    null,
-        error:   null,
-      });
-    }
-
-    // ── 1. Traer la ubicación ─────────────────────────────────────────────
-    const ubicacion = await db.collection('comisiones-ubicaciones').aggregate([
-      {
-        $match: { _id: new ObjectId(id) },
-      },
-
-      // Populate status
-      {
-        $lookup: {
-          from:         'estatus',
-          localField:   'status',
-          foreignField: '_id',
-          as:           'status',
-        },
-      },
-      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
-
-      // Populate created_by
-      {
-        $lookup: {
-          from:         'usuarios',
-          localField:   'created_by',
-          foreignField: '_id',
-          as:           'created_by',
-          pipeline: [
-            { $project: { password: 0 } },
-          ],
-        },
-      },
-      { $unwind: { path: '$created_by', preserveNullAndEmptyArrays: true } },
-
-    ]).next();
-
-    if (!ubicacion) {
-      return res.status(404).json({
-        success: false,
-        message: 'Comisión no encontrada',
-        data:    null,
-        error:   null,
-      });
-    }
-
-    // ── 2. Traer participantes ────────────────────────────────────────────
-    const participantes = await db.collection('comisiones-participantes').aggregate([
-      {
-        $match: { comision_id: new ObjectId(id) },
-      },
-
-      // Populate user
-      {
-        $lookup: {
-          from:         'usuarios',
-          localField:   'user',
-          foreignField: '_id',
-          as:           'user',
-          pipeline: [
-            { $project: { name: 1, username: 1, picture: 1 } },
-          ],
-        },
-      },
-      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-
-      // Populate status
-      {
-        $lookup: {
-          from:         'estatus',
-          localField:   'status',
-          foreignField: '_id',
-          as:           'status',
-        },
-      },
-      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
-
-    ]).toArray();
-
-    // ── 3. Separar asesores y gerentes (mismo formato que al crear) ───────
-    const participants = {
-      advisors: participantes
-        .filter(p => p.role_in_comision === 'asesor')
-        .map(({ role_in_comision, ...p }) => p),
-      managers: participantes
-        .filter(p => p.role_in_comision === 'gerente')
-        .map(({ role_in_comision, ...p }) => p),
-    };
-
-    return res.status(200).json({
-      success: true,
-      message: 'Comisión encontrada',
-      data: {
-        comision: {
-          ...ubicacion,
-          participants,
-        },
-      },
-      error: null,
-    });
-
-  } catch (error) {
-    console.error('[GET /api/comisiones/:id]', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error en el servidor',
-      data:    null,
-      error:   error.message,
-    });
-  }
-});
-
-/**
- * DELETE /api/comisiones/:id
- */
-router.delete('/:id', authenticate, async (req, res) => {
-  const client = req.app.locals.mongoClient;
-  const db     = client.db(DB_NAME);
-  const { id } = req.params;
-
-  // ── Validar ObjectId ────────────────────────────────────────────────────
-  if (!ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'El parámetro id no es un ObjectId válido',
-      data:    null,
-      error:   null,
-    });
-  }
-
-  // ── Iniciar sesión para transacción ────────────────────────────────────
-  const session = client.startSession();
-
-  try {
-    const comisionId = new ObjectId(id);
-
-    // ── Verificar que la comisión existe ────────────────────────────────
-    const ubicacion = await db
-      .collection('comisiones-ubicaciones')
-      .findOne({ _id: comisionId }, { session });
-
-    if (!ubicacion) {
-      return res.status(404).json({
-        success: false,
-        message: 'Comisión no encontrada',
-        data:    null,
-        error:   null,
-      });
-    }
-
-    // ── Obtener participantes para borrar sus notificaciones ────────────
-    const participantes = await db
-      .collection('comisiones-participantes')
-      .find({ comision_id: comisionId }, { session })
-      .toArray();
-
-    const userIds = [...new Set(participantes.map(p => p.user.toString()))]
-      .map(uid => new ObjectId(uid));
-
-    // ── Ejecutar borrado en transacción ─────────────────────────────────
-    await session.withTransaction(async () => {
-
-      // 1. Eliminar participantes
-      const { deletedCount: participantesEliminados } = await db
-        .collection('comisiones-participantes')
-        .deleteMany({ comision_id: comisionId }, { session });
-
-      // 2. Eliminar notificaciones relacionadas
-      // Notificaciones que mencionen la ubicación de esta comisión
-      const { deletedCount: notificacionesEliminadas } = await db
-        .collection('notificaciones')
-        .deleteMany({
-          usuario_id: { $in: userIds },
-          descripcion: { $regex: ubicacion.location.text, $options: 'i' },
-        }, { session });
-
-      // 3. Eliminar la ubicación
-      await db
-        .collection('comisiones-ubicaciones')
-        .deleteOne({ _id: comisionId }, { session });
-
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: `Comisión '${ubicacion.location.text}' eliminada correctamente`,
-      data: {
-        comision_id:   comisionId,
-        location:      ubicacion.location.text,
-        commission_type: ubicacion.commission_type,
-      },
-      error: null,
-    });
-
-  } catch (error) {
-    console.error('[DELETE /api/comisiones/:id]', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error al eliminar la comisión',
-      data:    null,
-      error:   error.message,
-    });
-  } finally {
-    await session.endSession();
-  }
-});
-
-// GET /api/comisiones
-router.get('/', authenticate, async (req, res) => {
-  const client = req.app.locals.mongoClient;
-  const db     = client.db(DB_NAME);
-
-  try {
-    const comisiones = await db
-      .collection('comisiones-ubicaciones')
-      .aggregate([
-
-        // ── 1. Join estatus de la comisión ────────────────────────────────────
-        {
-          $lookup: {
-            from:         'estatus',
-            localField:   'status',
-            foreignField: '_id',
-            as:           'status',
-          },
-        },
-        { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
-
-        // ── 2. Join participantes ─────────────────────────────────────────────
-        {
-          $lookup: {
-            from:         'comisiones-participantes',
-            localField:   '_id',
-            foreignField: 'comision_id',
-            as:           'participantes',
-          },
-        },
-
-        // ── 3. Join usuarios de los participantes ─────────────────────────────
-        {
-          $lookup: {
-            from:         'usuarios',
-            localField:   'participantes.user',
-            foreignField: '_id',
-            as:           'usuarios_info',
-          },
-        },
-
-        // ── 4. Mapear participantes con su usuario ────────────────────────────
-        {
-          $addFields: {
-            participantes: {
-              $map: {
-                input: '$participantes',
-                as:    'p',
-                in: {
-                  _id:                 '$$p._id',
-                  role_in_comision:    '$$p.role_in_comision',
-                  percentage:          '$$p.percentage',
-                  commission_amount:   '$$p.commission_amount',
-                  adjusted_commission: '$$p.adjusted_commission',
-                  verification:        '$$p.verification',
-                  correction_comments: '$$p.correction_comments',
-                  usuario: {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: '$usuarios_info',
-                          as:    'u',
-                          cond:  { $eq: ['$$u._id', '$$p.user'] },
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-
-
-
-        { $sort: { register_date: -1 } },
-      ])
-      .toArray();
-
-    return res.status(200).json({
-      success: true,
-      data:    comisiones,
-      message: `${comisiones.length} comisión(es) encontrada(s)`,
-      error:   null,
-    });
-
-  } catch (error) {
-    console.error('[GET /api/comisiones]', error);
-    return res.status(500).json({
-      success: false,
-      data:    null,
-      message: 'Error al obtener las comisiones',
-      error:   error.message,
-    });
-  }
-});
-
-
 // GET /api/comisiones/mis-comisiones
 router.get('/mis-comisiones', authenticate, async (req, res) => {
   const client = req.app.locals.mongoClient;
@@ -631,6 +119,7 @@ router.get('/mis-comisiones', authenticate, async (req, res) => {
             register_date:        1,
             correction_comments:  1,
             created_at:           1,
+            created_by:           1,
             'status.name':        1,
             'status.order':       1,
             'status.description': 1,
@@ -843,11 +332,11 @@ router.patch('/:id/aprobar', authenticate, async (req, res) => {
       });
     }
 
-    if (comision.status.order !== 3) {
+    if (!(comision.status.order === 3 || comision.status.order === 5)) {
       return res.status(400).json({
         success: false,
         data:    null,
-        message: `La comisión debe estar en "Pendiente Aprobación" para esta acción. Estado actual: ${comision.status.name}`,
+        message: `La comisión debe estar en "Pendiente Aprobación" o "Pendiente de Pago" para esta acción. Estado actual: ${comision.status.name}`,
         error:   null,
       });
     }
@@ -1007,6 +496,749 @@ router.patch('/:id/pagar', authenticate, async (req, res) => {
     });
   }
 });
+
+
+// POST /api/comisiones
+router.post('/', authenticate, async (req, res) => {
+  const client = req.app.locals.mongoClient;
+  const db     = client.db(DB_NAME);
+
+  try {
+    const {
+      company,
+      development,
+      location,
+      concept,
+      commission_type,
+      sale_price,
+      operation_date,
+      register_date,
+      client_name,
+      participants,
+    } = req.body;
+
+    const created_by = new ObjectId(req.user.id); 
+    // console.log(created_by);
+
+    // ── 1. Validaciones ───────────────────────────────────────────────────────
+    if (!company || !development || !location || !concept) {
+      return res.status(400).json({
+        success: false,
+        data:    null,
+        message: 'Faltan campos obligatorios de ubicación',
+        error:   null,
+      });
+    }
+
+    if (!commission_type || !sale_price || !operation_date || !register_date) {
+      return res.status(400).json({
+        success: false,
+        data:    null,
+        message: 'Faltan campos obligatorios de la comisión',
+        error:   null,
+      });
+    }
+
+    if (!participants?.advisors?.length || !participants?.managers?.length) {
+      return res.status(400).json({
+        success: false,
+        data:    null,
+        message: 'Debe incluir al menos un asesor y un gerente',
+        error:   null,
+      });
+    }
+
+    const typeMap = {
+      Tradicional: 'traditional',
+      Compartida:  'shared',
+      Multipunto:  'multipoint',
+    };
+    const pKey = typeMap[commission_type];
+    if (!pKey) {
+      return res.status(400).json({
+        success: false,
+        data:    null,
+        message: `Tipo de comisión no válido: ${commission_type}`,
+        error:   null,
+      });
+    }
+
+    // ── 2. Obtener estatus inicial y porcentajes desde la DB ──────────────────
+    const [statusInicial, percentagesDoc] = await Promise.all([
+      db.collection('estatus').findOne({ order: 1 }),
+      db.collection('percentages').findOne({}),
+    ]);
+
+    if (!statusInicial) {
+      return res.status(500).json({
+        success: false,
+        data:    null,
+        message: 'No se encontró el estatus inicial en la base de datos',
+        error:   null,
+      });
+    }
+
+    const pType = percentagesDoc?.v1?.[pKey];
+    if (!pType) {
+      return res.status(500).json({
+        success: false,
+        data:    null,
+        message: 'No se encontraron los porcentajes en la base de datos',
+        error:   null,
+      });
+    }
+
+    // ── 3. Construir documentos de participantes ──────────────────────────────
+    const advisorKeys = ['advisor1', 'advisor2'];
+    const managerKeys = ['manager1', 'manager2'];
+    const now         = new Date();
+
+    const buildParticipante = (userId, percentageKey, roleInComision) => {
+      const percentage = pType[percentageKey];
+      if (percentage === undefined) return null; // clave no existe (ej: advisor2 en Tradicional)
+
+      return {
+        comision_id:         null, // se rellena después del insert de ubicación
+        user:                new ObjectId(userId),
+        role_in_comision:    roleInComision,
+        percentage,
+        commission_amount:   sale_price * percentage,
+        adjusted_commission: null,
+        verification:        false,
+        status:              statusInicial._id,
+        correction_comments: null,
+        created_at:          now,
+        updated_at:          now,
+      };
+    };
+
+    const participanteDocs = [
+      ...participants.advisors
+        .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor'))
+        .filter(Boolean),
+      ...participants.managers
+        .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente'))
+        .filter(Boolean),
+    ];
+
+    // ── 4. Calcular comisión total ────────────────────────────────────────────
+    const total_commission = participanteDocs.reduce(
+      (sum, p) => sum + p.commission_amount, 0
+    );
+
+    // ── 5. Insertar en comisiones-ubicaciones ─────────────────────────────────
+    const ubicacionDoc = {
+      company,
+      development,
+      location,
+      concept,
+      commission_type,
+      sale_price,
+      total_commission,
+      client_name:         client_name ?? null,
+      operation_date:      new Date(operation_date),
+      register_date:       new Date(register_date),
+      status:              statusInicial._id,
+      correction_comments: null,
+      created_by:          created_by,
+      created_at:          now,
+      updated_at:          now,
+    };
+
+    console.log(ubicacionDoc);
+
+    const { insertedId: comisionId } = await db
+      .collection('comisiones-ubicaciones')
+      .insertOne(ubicacionDoc);
+
+    // ── 6. Asignar comision_id e insertar participantes ───────────────────────
+    const participantesConId = participanteDocs.map((p) => ({
+      ...p,
+      comision_id: comisionId,
+    }));
+
+    await db
+      .collection('comisiones-participantes')
+      .insertMany(participantesConId);
+
+    // ── 7. Notificaciones para cada participante ──────────────────────────────
+    await db.collection('notificaciones').insertMany(
+      participantesConId.map((p) => ({
+        usuario_id:  p.user,
+        titulo:      'Nueva comisión registrada',
+        descripcion: `Se registró una nueva comisión para ${location.text}.`,
+        fecha:       now,
+      }))
+    );
+
+    // ── 8. Respuesta ──────────────────────────────────────────────────────────
+    return res.status(201).json({
+      success: true,
+      data: {
+        comision_id:      comisionId,
+        total_commission,
+        participantes:    participantesConId.length,
+      },
+      message: 'Comisión creada exitosamente',
+      error:   null,
+    });
+
+  } catch (error) {
+    console.error('[POST /api/comisiones]', error);
+    return res.status(500).json({
+      success: false,
+      data:    null,
+      message: 'Error al crear la comisión',
+      error:   error.message,
+    });
+  }
+});
+
+// GET /api/comisiones
+router.get('/', authenticate, async (req, res) => {
+  const client = req.app.locals.mongoClient;
+  const db     = client.db(DB_NAME);
+
+  try {
+    const comisiones = await db
+      .collection('comisiones-ubicaciones')
+      .aggregate([
+
+        // ── 1. Join estatus de la comisión ────────────────────────────────────
+        {
+          $lookup: {
+            from:         'estatus',
+            localField:   'status',
+            foreignField: '_id',
+            as:           'status',
+          },
+        },
+        { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
+
+        // ── 2. Join participantes ─────────────────────────────────────────────
+        {
+          $lookup: {
+            from:         'comisiones-participantes',
+            localField:   '_id',
+            foreignField: 'comision_id',
+            as:           'participantes',
+          },
+        },
+
+        // ── 3. Join usuarios de los participantes ─────────────────────────────
+        {
+          $lookup: {
+            from:         'usuarios',
+            localField:   'participantes.user',
+            foreignField: '_id',
+            as:           'usuarios_info',
+          },
+        },
+
+        // ── 4. Mapear participantes con su usuario ────────────────────────────
+        {
+          $addFields: {
+            participantes: {
+              $map: {
+                input: '$participantes',
+                as:    'p',
+                in: {
+                  _id:                 '$$p._id',
+                  role_in_comision:    '$$p.role_in_comision',
+                  percentage:          '$$p.percentage',
+                  commission_amount:   '$$p.commission_amount',
+                  adjusted_commission: '$$p.adjusted_commission',
+                  verification:        '$$p.verification',
+                  correction_comments: '$$p.correction_comments',
+                  usuario: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: '$usuarios_info',
+                          as:    'u',
+                          cond:  { $eq: ['$$u._id', '$$p.user'] },
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+
+
+
+        { $sort: { register_date: -1 } },
+      ])
+      .toArray();
+
+    return res.status(200).json({
+      success: true,
+      data:    comisiones,
+      message: `${comisiones.length} comisión(es) encontrada(s)`,
+      error:   null,
+    });
+
+  } catch (error) {
+    console.error('[GET /api/comisiones]', error);
+    return res.status(500).json({
+      success: false,
+      data:    null,
+      message: 'Error al obtener las comisiones',
+      error:   error.message,
+    });
+  }
+});
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH /api/comisiones/:id
+// Edita una comisión y resetea verificaciones + estatus a Pendiente Verificacion
+// Solo el Gerente creador puede editar
+// ─────────────────────────────────────────────────────────────────────────────
+router.patch('/editar/:id/', authenticate, async (req, res) => {
+  const db     = req.app.locals.mongoClient.db(DB_NAME);
+  const userId = new ObjectId(req.user.id);
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false, data: null,
+      message: 'ID de comisión no válido', error: null,
+    });
+  }
+
+  try {
+    // ── 1. Verificar que existe y que el usuario es el creador ────────────────
+    const comision = await db
+      .collection('comisiones-ubicaciones')
+      .findOne({ _id: new ObjectId(id) });
+
+    if (!comision) {
+      return res.status(404).json({
+        success: false, data: null,
+        message: 'Comisión no encontrada', error: null,
+      });
+    }
+
+    if (comision.created_by.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false, data: null,
+        message: 'Solo el creador puede editar esta comisión', error: null,
+      });
+    }
+
+    const {
+      company, development, location, concept,
+      commission_type, sale_price, operation_date,
+      register_date, client_name, participants,
+    } = req.body;
+
+    // ── 2. Obtener estatus "Pendiente Verificacion" (order: 1) ────────────────
+    const [statusInicial, percentagesDoc] = await Promise.all([
+      db.collection('estatus').findOne({ order: 1 }),
+      db.collection('percentages').findOne({}),
+    ]);
+
+    const typeMap = {
+      Tradicional: 'traditional',
+      Compartida:  'shared',
+      Multipunto:  'multipoint',
+    };
+    const pKey  = typeMap[commission_type];
+    const pType = percentagesDoc?.v1?.[pKey];
+
+    if (!pType) {
+      return res.status(400).json({
+        success: false, data: null,
+        message: `Tipo de comisión no válido: ${commission_type}`, error: null,
+      });
+    }
+
+    const now = new Date();
+    const advisorKeys = ['advisor1', 'advisor2'];
+    const managerKeys = ['manager1', 'manager2'];
+
+    // ── 3. Recalcular participantes con porcentajes frescos ───────────────────
+    const buildParticipante = (userId, percentageKey, roleInComision) => {
+      const percentage = pType[percentageKey];
+      if (percentage === undefined) return null;
+      return {
+        comision_id:         new ObjectId(id),
+        user:                new ObjectId(userId),
+        role_in_comision:    roleInComision,
+        percentage,
+        commission_amount:   sale_price * percentage,
+        adjusted_commission: null,
+        verification:        false,          // ← reset
+        status:              statusInicial._id, // ← reset
+        correction_comments: null,
+        created_at:          now,
+        updated_at:          now,
+      };
+    };
+
+    const participanteDocs = [
+      ...(participants.advisors || [])
+        .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor'))
+        .filter(Boolean),
+      ...(participants.managers || [])
+        .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente'))
+        .filter(Boolean),
+    ];
+
+    const total_commission = participanteDocs.reduce(
+      (sum, p) => sum + p.commission_amount, 0
+    );
+
+    // ── 4. Actualizar comisiones-ubicaciones ──────────────────────────────────
+    await db.collection('comisiones-ubicaciones').updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          company, development, location, concept,
+          commission_type, sale_price, total_commission,
+          client_name:         client_name ?? null,
+          operation_date:      new Date(operation_date),
+          register_date:       new Date(register_date),
+          status:              statusInicial._id,   // ← reset
+          correction_comments: null,
+          updated_at:          now,
+        },
+      }
+    );
+
+    // ── 5. Borrar participantes anteriores y reinsertar ───────────────────────
+    await db.collection('comisiones-participantes')
+      .deleteMany({ comision_id: new ObjectId(id) });
+
+    await db.collection('comisiones-participantes')
+      .insertMany(participanteDocs);
+
+    // ── 6. Notificar a cada participante ──────────────────────────────────────
+    await db.collection('notificaciones').insertMany(
+      participanteDocs.map(p => ({
+        usuario_id:  p.user,
+        titulo:      'Comisión actualizada',
+        descripcion: `La comisión de ${location.text} fue editada y requiere nueva verificación.`,
+        fecha:       now,
+      }))
+    );
+
+    return res.status(200).json({
+      success: true,
+      data:    { comision_id: id, total_commission, participantes: participanteDocs.length },
+      message: 'Comisión actualizada. Estatus y verificaciones han sido reiniciados.',
+      error:   null,
+    });
+
+  } catch (error) {
+    console.error('[PATCH /api/comisiones/:id]', error);
+    return res.status(500).json({
+      success: false, data: null,
+      message: 'Error al actualizar la comisión', error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/comisiones/:id
+ */
+router.get('/obtener/:id', authenticate, async (req, res) => {
+  try {
+    const db = req.app.locals.mongoClient.db(DB_NAME);
+    const { id } = req.params;
+
+    // ── Validar ObjectId ──────────────────────────────────────────────────
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'El parámetro id no es un ObjectId válido',
+        data:    null,
+        error:   null,
+      });
+    }
+
+    // ── 1. Traer la ubicación ─────────────────────────────────────────────
+    const ubicacion = await db.collection('comisiones-ubicaciones').aggregate([
+      {
+        $match: { _id: new ObjectId(id) },
+      },
+
+      // Populate status
+      {
+        $lookup: {
+          from:         'estatus',
+          localField:   'status',
+          foreignField: '_id',
+          as:           'status',
+        },
+      },
+      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
+
+      // Populate created_by
+      {
+        $lookup: {
+          from:         'usuarios',
+          localField:   'created_by',
+          foreignField: '_id',
+          as:           'created_by',
+          pipeline: [
+            { $project: { password: 0 } },
+          ],
+        },
+      },
+      { $unwind: { path: '$created_by', preserveNullAndEmptyArrays: true } },
+
+    ]).next();
+
+    if (!ubicacion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Comisión no encontrada',
+        data:    null,
+        error:   null,
+      });
+    }
+
+    // ── 2. Traer participantes ────────────────────────────────────────────
+    const participantes = await db.collection('comisiones-participantes').aggregate([
+      {
+        $match: { comision_id: new ObjectId(id) },
+      },
+
+      // Populate user
+      {
+        $lookup: {
+          from:         'usuarios',
+          localField:   'user',
+          foreignField: '_id',
+          as:           'user',
+          pipeline: [
+            { $project: { name: 1, username: 1, picture: 1 } },
+          ],
+        },
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+
+      // Populate status
+      {
+        $lookup: {
+          from:         'estatus',
+          localField:   'status',
+          foreignField: '_id',
+          as:           'status',
+        },
+      },
+      { $unwind: { path: '$status', preserveNullAndEmptyArrays: true } },
+
+    ]).toArray();
+
+    // ── 3. Separar asesores y gerentes (mismo formato que al crear) ───────
+    const participants = {
+      advisors: participantes
+        .filter(p => p.role_in_comision === 'asesor')
+        .map(({ role_in_comision, ...p }) => p),
+      managers: participantes
+        .filter(p => p.role_in_comision === 'gerente')
+        .map(({ role_in_comision, ...p }) => p),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Comisión encontrada',
+      data: {
+        comision: {
+          ...ubicacion,
+          participants,
+        },
+      },
+      error: null,
+    });
+
+  } catch (error) {
+    console.error('[GET /api/comisiones/:id]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error en el servidor',
+      data:    null,
+      error:   error.message,
+    });
+  }
+});
+
+// DELETE /api/comisiones/eliminar/:id
+router.delete('/eliminar/:id', authenticate, async (req, res) => {
+  const db     = req.app.locals.mongoClient.db(DB_NAME);
+  const userId = new ObjectId(req.user.id);
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false, data: null,
+      message: 'ID de comisión no válido', error: null,
+    });
+  }
+
+  try {
+    // ── 1. Verificar que existe y que el usuario es el creador ────────────────
+    const comision = await db
+      .collection('comisiones-ubicaciones')
+      .findOne({ _id: new ObjectId(id) });
+
+    if (!comision) {
+      return res.status(404).json({
+        success: false, data: null,
+        message: 'Comisión no encontrada', error: null,
+      });
+    }
+
+    if (comision.created_by.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false, data: null,
+        message: 'Solo el creador puede eliminar esta comisión', error: null,
+      });
+    }
+
+    // ── 2. Solo se puede eliminar si está en Pendiente Verificacion ───────────
+    const statusActual = await db
+      .collection('estatus')
+      .findOne({ _id: comision.status });
+
+    if (statusActual?.order !== 1) {
+      return res.status(400).json({
+        success: false, data: null,
+        message: `No se puede eliminar una comisión en estatus "${statusActual?.name}"`,
+        error: null,
+      });
+    }
+
+    // ── 3. Eliminar participantes y ubicación ─────────────────────────────────
+    await db.collection('comisiones-participantes')
+      .deleteMany({ comision_id: new ObjectId(id) });
+
+    await db.collection('comisiones-ubicaciones')
+      .deleteOne({ _id: new ObjectId(id) });
+
+    return res.status(200).json({
+      success: true,
+      data:    { comision_id: id },
+      message: 'Comisión eliminada correctamente',
+      error:   null,
+    });
+
+  } catch (error) {
+    console.error('[DELETE /api/comisiones/eliminar/:id]', error);
+    return res.status(500).json({
+      success: false, data: null,
+      message: 'Error al eliminar la comisión', error: error.message,
+    });
+  }
+});
+
+/**
+ * DELETE /api/comisiones/:id
+ */
+// router.delete('/:id', authenticate, async (req, res) => {
+//   const client = req.app.locals.mongoClient;
+//   const db     = client.db(DB_NAME);
+//   const { id } = req.params;
+
+//   // ── Validar ObjectId ────────────────────────────────────────────────────
+//   if (!ObjectId.isValid(id)) {
+//     return res.status(400).json({
+//       success: false,
+//       message: 'El parámetro id no es un ObjectId válido',
+//       data:    null,
+//       error:   null,
+//     });
+//   }
+
+//   // ── Iniciar sesión para transacción ────────────────────────────────────
+//   const session = client.startSession();
+
+//   try {
+//     const comisionId = new ObjectId(id);
+
+//     // ── Verificar que la comisión existe ────────────────────────────────
+//     const ubicacion = await db
+//       .collection('comisiones-ubicaciones')
+//       .findOne({ _id: comisionId }, { session });
+
+//     if (!ubicacion) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Comisión no encontrada',
+//         data:    null,
+//         error:   null,
+//       });
+//     }
+
+//     // ── Obtener participantes para borrar sus notificaciones ────────────
+//     const participantes = await db
+//       .collection('comisiones-participantes')
+//       .find({ comision_id: comisionId }, { session })
+//       .toArray();
+
+//     const userIds = [...new Set(participantes.map(p => p.user.toString()))]
+//       .map(uid => new ObjectId(uid));
+
+//     // ── Ejecutar borrado en transacción ─────────────────────────────────
+//     await session.withTransaction(async () => {
+
+//       // 1. Eliminar participantes
+//       const { deletedCount: participantesEliminados } = await db
+//         .collection('comisiones-participantes')
+//         .deleteMany({ comision_id: comisionId }, { session });
+
+//       // 2. Eliminar notificaciones relacionadas
+//       // Notificaciones que mencionen la ubicación de esta comisión
+//       const { deletedCount: notificacionesEliminadas } = await db
+//         .collection('notificaciones')
+//         .deleteMany({
+//           usuario_id: { $in: userIds },
+//           descripcion: { $regex: ubicacion.location.text, $options: 'i' },
+//         }, { session });
+
+//       // 3. Eliminar la ubicación
+//       await db
+//         .collection('comisiones-ubicaciones')
+//         .deleteOne({ _id: comisionId }, { session });
+
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: `Comisión '${ubicacion.location.text}' eliminada correctamente`,
+//       data: {
+//         comision_id:   comisionId,
+//         location:      ubicacion.location.text,
+//         commission_type: ubicacion.commission_type,
+//       },
+//       error: null,
+//     });
+
+//   } catch (error) {
+//     console.error('[DELETE /api/comisiones/:id]', error);
+//     return res.status(500).json({
+//       success: false,
+//       message: 'Error al eliminar la comisión',
+//       data:    null,
+//       error:   error.message,
+//     });
+//   } finally {
+//     await session.endSession();
+//   }
+// });
+
+
+
+
+
+
 
 // // ─────────────────────────────────────────────────────────────────────────────
 // // GET /api/comisiones

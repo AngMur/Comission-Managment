@@ -38,7 +38,7 @@
             backdrop-filter: blur(10px); border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.05);
             box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden;
-            opacity: 0; animation: fadeIn 0.8s ease-out 2.3s forwards;
+            /* opacity: 0; animation: fadeIn 0.8s ease-out 2.3s forwards; */
         }
         .registration-header { padding: 40px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
         .header-badge { display: inline-block; background: rgba(96,166,30,0.15); border: 1px solid rgba(96,166,30,0.3); color: #60a61e; padding: 6px 16px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; }
@@ -129,10 +129,10 @@
 <div class="main-area">
 <%- include('partials/header') %>
 
-    <div class="loader-container">
+    <!-- <div class="loader-container">
         <div class="loader"></div>
         <div class="loader-text">Cargando...</div>
-    </div>
+    </div> -->
 
     <div class="registration-container">
         <div class="registration-header">
@@ -313,8 +313,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadRoles();
             initImageUpload();
-            setTimeout(updateConnectionStatus, 1000);
-            setInterval(updateConnectionStatus, 30000);
+            // setTimeout(updateConnectionStatus, 1000);
+            // setInterval(updateConnectionStatus, 30000);
         });
 
         // ── Cargar roles desde la API ─────────────────────────────────────────

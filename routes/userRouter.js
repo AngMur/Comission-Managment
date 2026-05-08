@@ -125,10 +125,57 @@ router.post('/', authenticate, async (req, res) => {
     }
 });
 
+// GET /api/users
+router.get('/', authenticate, async (req, res) => {
+  const db = req.app.locals.mongoClient.db(DB_NAME);
+
+  try {
+    const usuarios = await db.collection('usuarios')
+      .aggregate([
+        // ── Join con roles ──────────────────────────────────────────────────
+        {
+          $lookup: {
+            from:         'roles',
+            localField:   'role',
+            foreignField: '_id',
+            as:           'role',
+          },
+        },
+        { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
+
+        // ── Proyección (sin password) ───────────────────────────────────────
+        {
+          $project: {
+            password: 0,
+          },
+        },
+
+        { $sort: { created_at: -1 } },
+      ])
+      .toArray();
+
+    return res.status(200).json({
+      success: true,
+      data:    usuarios,
+      message: `${usuarios.length} usuario(s) encontrado(s)`,
+      error:   null,
+    });
+
+  } catch (error) {
+    console.error('[GET /api/users]', error);
+    return res.status(500).json({
+      success: false,
+      data:    null,
+      message: 'Error al obtener los usuarios',
+      error:   error.message,
+    });
+  }
+});
+
 /**
  * GET /api/roles
  */
-router.get('/', authenticate, async (req, res) => {
+router.get('/roles', authenticate, async (req, res) => {
     try {
         const db = req.app.locals.mongoClient.db(DB_NAME);
 
@@ -155,79 +202,121 @@ router.get('/', authenticate, async (req, res) => {
 /**
  * GET /api/users/by-role/:role
  */
-router.get('/by-role/:role', authenticate, async (req, res) => {
-    try {
-        const db = req.app.locals.mongoClient.db(DB_NAME);
-        const { role } = req.params;
+// router.get('/by-role/:role', authenticate, async (req, res) => {
+//     try {
+//         const db = req.app.locals.mongoClient.db(DB_NAME);
+//         const { role } = req.params;
 
-        // ── Validar que el role sea un ObjectId válido ────────────────────────
-        if (!ObjectId.isValid(role)) {
-            return res.status(400).json({
-                success: false,
-                message: 'El parámetro role no es un ObjectId válido',
-                data: null,
-                error: null,
-            });
-        }
+//         // ── Validar que el role sea un ObjectId válido ────────────────────────
+//         if (!ObjectId.isValid(role)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'El parámetro role no es un ObjectId válido',
+//                 data: null,
+//                 error: null,
+//             });
+//         }
 
-        // ── Validar que el rol exista ─────────────────────────────────────────
-        const roleDoc = await db.collection('roles').findOne({ _id: new ObjectId(role) });
-        if (!roleDoc) {
-            return res.status(404).json({
-                success: false,
-                message: 'El rol especificado no existe',
-                data: null,
-                error: null,
-            });
-        }
+//         // ── Validar que el rol exista ─────────────────────────────────────────
+//         const roleDoc = await db.collection('roles').findOne({ _id: new ObjectId(role) });
+//         if (!roleDoc) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'El rol especificado no existe',
+//                 data: null,
+//                 error: null,
+//             });
+//         }
 
-        // ── Traer usuarios con populate del rol ──────────────────────────────
-        const usuarios = await db.collection('usuarios').aggregate([
-            {
-                $match: {
-                    role: new ObjectId(role),
-                    active: true,
-                },
-            },
+//         // ── Traer usuarios con populate del rol ──────────────────────────────
+//         const usuarios = await db.collection('usuarios').aggregate([
+//             {
+//                 $match: {
+//                     role: new ObjectId(role),
+//                     active: true,
+//                 },
+//             },
 
-            // Populate del rol
-            {
-                $lookup: {
-                    from: 'roles',
-                    localField: 'role',
-                    foreignField: '_id',
-                    as: 'role',
-                },
-            },
-            { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
+//             // Populate del rol
+//             {
+//                 $lookup: {
+//                     from: 'roles',
+//                     localField: 'role',
+//                     foreignField: '_id',
+//                     as: 'role',
+//                 },
+//             },
+//             { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
 
-            // Excluir password
-            {
-                $project: {
-                    password: 0,
-                },
-            },
+//             // Excluir password
+//             {
+//                 $project: {
+//                     password: 0,
+//                 },
+//             },
 
-            { $sort: { name: 1 } },
+//             { $sort: { name: 1 } },
 
-        ]).toArray();
+//         ]).toArray();
 
-        return res.status(200).json({
-            success: true,
-            message: `Se encontraron ${usuarios.length} usuarios con el rol '${roleDoc.name}'`,
-            data: { role: roleDoc, usuarios },
-            error: null,
-        });
+//         return res.status(200).json({
+//             success: true,
+//             message: `Se encontraron ${usuarios.length} usuarios con el rol '${roleDoc.name}'`,
+//             data: { role: roleDoc, usuarios },
+//             error: null,
+//         });
 
-    } catch (error) {
-        console.error('[GET /api/usuarios/by-role/:role]', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error en el servidor',
-            data: null,
-            error: error.message,
-        });
+//     } catch (error) {
+//         console.error('[GET /api/usuarios/by-role/:role]', error);
+//         return res.status(500).json({
+//             success: false,
+//             message: 'Error en el servidor',
+//             data: null,
+//             error: error.message,
+//         });
+//     }
+// });
+
+router.get('/by-role/:roleName', authenticate, async (req, res) => {
+  const client = req.app.locals.mongoClient;
+  const db     = client.db(DB_NAME);
+
+  try {
+    // ── 1. Buscar el rol por nombre (case-insensitive) ────────────────────────
+    const role = await db.collection('roles').findOne({
+      name: { $regex: new RegExp(`^${req.params.roleName}$`, 'i') }
+    });
+
+    if (!role) {
+      return res.status(404).json({
+        success: false,
+        data:    null,
+        message: `Rol "${req.params.roleName}" no encontrado`,
+        error:   null,
+      });
     }
+
+    // ── 2. Buscar usuarios con ese rol ────────────────────────────────────────
+    const users = await db.collection('usuarios')
+      .find({ role: role._id, active: true })
+      .project({ _id: 1, name: 1, username: 1, picture: 1 })
+      .toArray();
+
+    return res.status(200).json({
+      success: true,
+      data:    users,
+      message: `${users.length} usuario(s) con rol "${role.name}"`,
+      error:   null,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      data:    null,
+      message: 'Error al obtener usuarios por rol',
+      error:   err.message,
+    });
+  }
 });
 
 module.exports = router;

@@ -27,9 +27,7 @@ router.get('/', (req, res) => {
   });
 });
 
-router.get("/prueba", (req, res) => {
-  res.render("index", {title:"prueba"})
-});
+
 
 router.get('/login-successfully', (req, res) => {
   res.render('comisiones', { title: 'Comisiones', currentPage: 'comisiones' });
@@ -48,7 +46,7 @@ router.get('/registrar-comision', (req, res) => {
 });
 
 router.get('/comisiones', (req, res) => {
-  res.render('comisiones-asesor', { title: 'Comisiones', currentPage: 'comisiones' });
+  res.render('comisiones', { title: 'Comisiones', currentPage: 'comisiones' });
 });
 
 router.post('/logout', (req, res) => {

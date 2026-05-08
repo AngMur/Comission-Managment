@@ -48,7 +48,7 @@ app.use('/api/comisiones', require('./routes/comisionesRouter'));
 // app.use('/api/roles',          require('./routes/rolesRoutes'));
 // app.use('/api/comisiones',     require('./routes/comisiones'));
 // app.use('/api/notifications',  require('./routes/notifications'));
-// app.use('/api/percentages',    require('./routes/percentages'));
+app.use('/api/percentages',    require('./routes/percentagesRouter'));
 app.use('/v10', require('./routes/v10Router'));
 app.use('/api/users', require('./routes/userRouter'));
 app.use('/api/roles', require('./routes/rolesRouter'));
