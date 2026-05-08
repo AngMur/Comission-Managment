@@ -242,6 +242,23 @@
     .p-verified.yes { color: var(--green-tx); }
     .p-verified.no  { color: var(--text-3); }
 
+    /* ── Botón nueva comisión ── */
+    .btn-new {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-md);
+      background: var(--text-1);
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-new:hover { opacity: .85; }
+    .btn-new i { font-size: 15px; }
+
     /* ── Acciones ── */
     .card-actions {
       padding: .75rem 1.25rem 1rem;
@@ -316,7 +333,12 @@
 <main class="page">
   <div class="page-header">
     <h1 class="page-title" id="page-title">Comisiones</h1>
-    <span class="page-count" id="page-count"></span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="page-count" id="page-count"></span>
+      <a id="btn-nueva" class="btn-new" href="/registrar-comision" style="display:none">
+        <i class="ti ti-plus"></i> Nueva comisión
+      </a>
+    </div>
   </div>
   <div id="list"></div>
 </main>
@@ -378,6 +400,10 @@ async function init() {
   $('av').textContent    = initials(USER.name);
   $('uname').textContent = USER.name;
   $('urole').textContent = USER.roleName;
+
+  if (['Gerente', 'Directora', 'Administradora'].includes(USER.roleName)) {
+    $('btn-nueva').style.display = 'inline-flex';
+  }
 
   // 3. Elegir endpoint según rol
   const isLimitado = ['Asesor', 'Gerente'].includes(USER.roleName);
