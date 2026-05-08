@@ -6,9 +6,10 @@
     <title>NOVU</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>    
+    <link rel="stylesheet" href="/styles/layout.css">
+    <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #ffffff; overflow-x: hidden; padding: 40px 20px; padding-top: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #ffffff; overflow-x: hidden; }
     </style> 
     <style>
         body { background: #0f1e1e; min-height: 100vh; }
@@ -31,7 +32,7 @@
         .novu-unicorn-wrap { position: relative; width: clamp(75px, 8vw, 110px); height: clamp(75px, 8vw, 110px); }
         .novu-glow-bubble { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 80%; height: 80%; border-radius: 50%; background: radial-gradient(circle, rgba(74,133,24,0.5) 0%, transparent 70%); filter: blur(12px); }
         .novu-svg { position: relative; z-index: 1; width: 100%; height: 100%; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
-        .container { position: relative; z-index: 1; }
+        .container { position: relative; z-index: 1; padding: 2rem 2rem 3rem; }
         @media (max-width: 640px) { #novu-header { padding: 1.2rem 1.4rem; } .novu-ver-btn span { display: none; } .novu-ver-btn { padding: 10px 12px; } }
     </style>
     <style>
@@ -188,6 +189,10 @@
     </style>
 </head>
 <body>
+<%- include('partials/sidebar') %>
+<div class="main-area">
+<%- include('partials/header') %>
+
     <!-- <div id="novu-stars"></div>
     <div id="novu-beam"></div>
 
@@ -486,11 +491,11 @@
 
         function closePayloadModal() { document.getElementById('payloadModal').classList.remove('active'); pendingPayload = null; }
 
-        document.getElementById('confirmSaveBtn').addEventListener('click', async () => {
-            if (!pendingPayload) return;
-            await sendCommission(pendingPayload);
-            closePayloadModal();
-        });
+        // document.getElementById('confirmSaveBtn').addEventListener('click', async () => {
+        //     if (!pendingPayload) return;
+        //     await sendCommission(pendingPayload);
+        //     closePayloadModal();
+        // });
 
         async function sendCommission(data) {
             try {
@@ -547,19 +552,129 @@
             } catch (error) { console.error(`Error al obtener datos de ${endpoint}:`, error); throw error; }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('fechaRegistro').valueAsDate = new Date();
-            initializeCustomSelects();
-            loadAllSelectors();
+// Fuera de DOMContentLoaded — scope global
+const params     = new URLSearchParams(window.location.search);
+const editId     = params.get('edit');
+const isEditMode = !!editId;
 
-            document.getElementById('fechaContrato').addEventListener('change', function() {
-                if (this.value) { clearFieldError('fechaContrato'); this.classList.remove('has-error'); this.classList.add('valid'); }
-            });
-            document.getElementById('salePrice').addEventListener('input', function() {
-                if (this.dataset.raw && parseInt(this.dataset.raw) > 0) { clearFieldError('salePrice'); this.classList.remove('has-error'); this.classList.add('valid'); }
-            });
-        });
+document.addEventListener('DOMContentLoaded', async function() {
+    document.getElementById('fechaRegistro').valueAsDate = new Date();
+    initializeCustomSelects();
+    await loadAllSelectors(); // ← await aquí, esperar a que terminen TODAS las APIs
 
+    if (isEditMode) {
+        document.querySelector('h1').textContent = 'Editar Comisión';
+        document.querySelector('.btn-primary').innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+        await loadComisionForEdit(editId); // ← ahora allData ya está lleno
+    }
+
+    document.getElementById('fechaContrato').addEventListener('change', function() {
+        if (this.value) { clearFieldError('fechaContrato'); this.classList.remove('has-error'); this.classList.add('valid'); }
+    });
+    document.getElementById('salePrice').addEventListener('input', function() {
+        if (this.dataset.raw && parseInt(this.dataset.raw) > 0) { clearFieldError('salePrice'); this.classList.remove('has-error'); this.classList.add('valid'); }
+    });
+});
+
+        /// EDIDDIDIT
+async function loadComisionForEdit(comisionId) {
+  try {
+    const r = await fetch(`/api/comisiones/obtener/${comisionId}`, { credentials: 'include' });
+    const j = await r.json();
+    if (!j.success) { showAlert('Error', j.message, 'error'); return; }
+
+    const c            = j.data.comision;
+    const participantes = j.data.participantes; // por si también los necesitas
+
+    // ── Fechas ────────────────────────────────────────────────────────────────
+    document.getElementById('fechaRegistro').value = c.register_date?.split('T')[0] || '';
+    document.getElementById('fechaContrato').value = c.operation_date?.split('T')[0] || '';
+    document.getElementById('fechaContrato').classList.add('valid');
+
+    // ── Precio ────────────────────────────────────────────────────────────────
+    const sp = document.getElementById('salePrice');
+    const rawPrice = Number(c.sale_price) || 0;
+    sp.dataset.raw = rawPrice;
+    sp.value = rawPrice ? '$' + rawPrice.toLocaleString('es-MX') : '';
+    sp.classList.add('valid');
+
+    // ── Concepto ──────────────────────────────────────────────────────────────
+    setSelectValue('concepto', String(c.concept?.id));
+
+    // ── Compañía ──────────────────────────────────────────────────────────────
+    setSelectValue('compania', String(c.company?.id));
+
+    // ── Desarrollo: poblar filtrado por compañía, luego setear ────────────────
+    const devsFiltrados = allData.desarrollos.filter(d => d.compania == c.company?.id);
+    populateSelect(document.querySelector('.custom-select[data-field="desarrollo"]'), devsFiltrados);
+    setSelectValue('desarrollo', String(c.development?.id));
+
+    // ── Ubicación: poblar filtrada por desarrollo, luego setear ───────────────
+    const locsFiltradas = allData.ubicaciones.filter(u => u.desarrollo == c.development?.id);
+    populateSelect(document.querySelector('.custom-select[data-field="ubicacion"]'), locsFiltradas);
+    setSelectValue('ubicacion', String(c.location?.id));
+
+    // ── Tipo de comisión ──────────────────────────────────────────────────────
+    if (c.commission_type === 'Multipunto') {
+      document.getElementById('mpCheckbox').checked = true;
+    }
+
+    // ── Participantes ─────────────────────────────────────────────────────────
+    const managers = c.participants?.managers || [];
+    const advisors = c.participants?.advisors || [];
+
+    if ((managers.length > 1 || advisors.length > 1) && rowCounter === 1) {
+      await addPersonnelRow();
+    }
+
+managers.forEach((m, i) => {
+  const uid = m.user?._id || m.user;  // si user es objeto, toma ._id
+  if (uid) setSelectValue('gerente', String(uid), i + 1);
+});
+advisors.forEach((a, i) => {
+  const uid = a.user?._id || a.user;
+  if (uid) setSelectValue('asesor', String(uid), i + 1);
+});
+
+  } catch(e) {
+    console.error(e);
+    showAlert('Error', 'No se pudo cargar la comisión para editar.', 'error');
+  }
+}
+
+
+// Setea un valor en un custom-select por data-value
+// Reemplaza setSelectValue por esta versión robusta
+function setSelectValue(field, value, row = null) {
+  if (!value) return;
+
+  const selector = row
+    ? `.custom-select[data-field="${field}"][data-row="${row}"]`
+    : `.custom-select[data-field="${field}"]`;
+  const el = document.querySelector(selector);
+  if (!el) return;
+
+  const strValue = String(value).trim();
+
+  // Buscar recorriendo en lugar de querySelector — evita problemas de tipo
+  const options = el.querySelectorAll('.select-option');
+  let found = null;
+  options.forEach(opt => {
+    if (String(opt.dataset.value).trim() === strValue) found = opt;
+  });
+
+  if (found) {
+    selectOptionSilent(el, found);
+    el.classList.add('valid');
+    el.classList.remove('has-error');
+  } else {
+    console.warn(`setSelectValue: no encontró opción para field="${field}" value="${strValue}"`);
+    // Listar opciones disponibles para diagnóstico
+    console.log(`Opciones disponibles en "${field}":`, 
+      [...options].map(o => o.dataset.value).join(', ')
+    );
+  }
+}
         async function loadAllSelectors() {
             const selectors = document.querySelectorAll('.custom-select[data-api]');
             for (const selector of selectors) { await loadSelectorData(selector); }
@@ -977,7 +1092,8 @@ else if (field === 'ubicacion') {
             const mp            = document.getElementById('mpCheckbox').checked;
             const commissionTypeES = mp ? 'Multipunto' : (rowCounter === 1 ? 'Tradicional' : 'Compartida');
             const commissionType   = mp ? 'multipoint' : (rowCounter === 1 ? 'traditional' : 'shared');
-            const rates = porcentajes.rates[commissionType];
+            console.log(porcentajes);
+            const rates = porcentajes.data[commissionType];
             const managers = [], advisors = [];
             document.querySelectorAll('.personnel-row').forEach((row, index) => {
                 const rowNum = index + 1;
@@ -996,13 +1112,56 @@ else if (field === 'ubicacion') {
             };
         }
 
-        document.getElementById("commissionForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!validateForm()) return;
-            const data = await buildPayLoad();
-            if (!data) return;
-            showPayloadModal(data);
-        });
+        // document.getElementById("commissionForm").addEventListener("submit", async (e) => {
+        //     e.preventDefault();
+        //     if (!validateForm()) return;
+        //     const data = await buildPayLoad();
+        //     if (!data) return;
+        //     showPayloadModal(data);
+        // });
+        // Reemplaza el addEventListener del submit existente
+document.getElementById('commissionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
+  const data = await buildPayLoad();
+  if (!data) return;
+
+  if (isEditMode) {
+    // En modo edición mostramos el mismo modal de confirmación
+    // pero el botón "Confirmar y guardar" llama a PATCH en vez de POST
+    document.getElementById('confirmSaveBtn').onclick = async () => {
+      await updateCommission(editId, data);
+      closePayloadModal();
+    };
+  } 
+    showPayloadModal(data);
+  
+
+});
+
+async function updateCommission(comisionId, data) {
+  try {
+    const r = await fetch(`/api/comisiones/editar/${comisionId}`, {
+      method:      'PATCH',
+      headers:     { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body:        JSON.stringify(data),
+    });
+    const j = await r.json();
+    if (!j.success) { showAlert('Error', j.message, 'error'); return; }
+
+    showAlert('¡Comisión actualizada!',
+      'Los cambios fueron guardados. El estatus y verificaciones fueron reiniciados.',
+      'success');
+
+    // Regresar al listado después de 1.5s
+    setTimeout(() => window.location.href = '/', 1500);
+
+  } catch(e) {
+    showAlert('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
+  }
+}
     </script>
+</div><!-- /.main-area -->
 </body>
 </html>

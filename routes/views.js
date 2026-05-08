@@ -27,12 +27,16 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get("/prueba", (req, res) => {
+  res.render("index", {title:"prueba"})
+});
+
 router.get('/login-successfully', (req, res) => {
-  res.render('comisiones', { title: 'Comisiones'});
+  res.render('comisiones', { title: 'Comisiones', currentPage: 'comisiones' });
 });
 
 router.get('/registrar-usuario', (req, res) => {
-  res.render('registrar-usuario', { title: 'Registrar Usuario' });
+  res.render('registrar-usuario', { title: 'Registrar Usuario', currentPage: 'registrar-usuario' });
 });
 
 // router.get('/selector', (req, res) => {
@@ -40,11 +44,16 @@ router.get('/registrar-usuario', (req, res) => {
 // });
 
 router.get('/registrar-comision', (req, res) => {
-  res.render('registrar-comision', { title: 'Registro de Comisión' });
+  res.render('registrar-comision', { title: 'Registro de Comisión', currentPage: 'registrar-comision' });
 });
 
 router.get('/comisiones', (req, res) => {
-  res.render('comisiones', { title: 'Comisiones'});
+  res.render('comisiones-asesor', { title: 'Comisiones', currentPage: 'comisiones' });
+});
+
+router.post('/logout', (req, res) => {
+  clearAuthCookie(res);
+  res.redirect('/');
 });
 
 // router.get('/commission-historic', (req, res) => {

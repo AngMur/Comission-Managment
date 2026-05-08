@@ -1,0 +1,18 @@
+<header class="app-header">
+  <span class="app-header-title"><%= typeof title !== 'undefined' ? title : '' %></span>
+  <div class="app-header-user">
+    <% if (typeof user !== 'undefined' && user) { %>
+      <div class="app-header-avatar">
+        <%= user.name ? user.name.trim().split(/\s+/).slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase() : '?' %>
+      </div>
+      <div class="app-header-info">
+        <p><%= user.name %></p>
+        <span><%= user.roleName %></span>
+      </div>
+    <% } %>
+    <button class="btn-logout" onclick="(async()=>{ await fetch('/logout',{method:'POST',credentials:'include'}); window.location.href='/'; })()">
+      <i class="fas fa-sign-out-alt"></i>
+      Salir
+    </button>
+  </div>
+</header>

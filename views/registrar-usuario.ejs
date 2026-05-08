@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuario - Sistema NOVA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/layout.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #0a0a0a; color: #ffffff; min-height: 100vh;
-            overflow-x: hidden; display: flex; align-items: center;
-            justify-content: center; padding: 20px;
-            flex-direction: column;
+            overflow-x: hidden;
         }
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -35,7 +34,7 @@
         @keyframes fadeIn  { to { opacity: 1; } }
 
         .registration-container {
-            width: 100%; max-width: 1000px; background: #0f1e1e;
+            width: 100%; max-width: 1000px; margin: 2rem auto; background: #0f1e1e;
             backdrop-filter: blur(10px); border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.05);
             box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden;
@@ -125,6 +124,10 @@
     </style>
 </head>
 <body>
+
+<%- include('partials/sidebar') %>
+<div class="main-area">
+<%- include('partials/header') %>
 
     <div class="loader-container">
         <div class="loader"></div>
@@ -503,5 +506,6 @@
             });
         });
     </script>
+</div><!-- /.main-area -->
 </body>
 </html>

@@ -1,0 +1,153 @@
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  background: #0f1e1e;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  border-right: 1px solid rgba(96,166,30,0.15);
+}
+
+.sidebar-brand {
+  padding: 1.4rem 1.25rem 1.2rem;
+  font-family: 'Space Mono', 'DM Mono', 'Courier New', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(96,166,30,0.12);
+  text-decoration: none;
+  display: block;
+}
+.sidebar-brand .dot { color: #60a61e; }
+
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.85rem 1.25rem 0.3rem;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0.25rem 0;
+  list-style: none;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 1rem;
+  margin: 2px 8px;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-nav a:hover {
+  background: rgba(96,166,30,0.1);
+  color: rgba(255,255,255,0.9);
+}
+.sidebar-nav a.active {
+  background: rgba(96,166,30,0.18);
+  color: #7bc42a;
+}
+.sidebar-nav a i {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ── Main Area ───────────────────────────────────────────────────── */
+.main-area {
+  margin-left: 220px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── App Header ──────────────────────────────────────────────────── */
+.app-header {
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  background: rgba(15,30,30,0.97);
+  border-bottom: 1px solid rgba(96,166,30,0.15);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.app-header-title {
+  font-family: 'Space Mono', 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.app-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-header-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(96,166,30,0.15);
+  border: 1px solid rgba(96,166,30,0.35);
+  color: #7bc42a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+.app-header-info p {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: rgba(255,255,255,0.85);
+}
+.app-header-info span {
+  font-size: 10px;
+  color: rgba(255,255,255,0.38);
+}
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: rgba(255,255,255,0.38);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn-logout:hover {
+  background: rgba(220,50,50,0.12);
+  border-color: rgba(220,50,50,0.3);
+  color: #f05555;
+}
+.btn-logout i { font-size: 11px; }

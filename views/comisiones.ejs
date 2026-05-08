@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/styles/layout.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -45,59 +47,101 @@
       min-height: 100vh;
     }
 
-    /* ── Topbar ── */
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .topbar-brand {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: .04em;
-      color: var(--text-1);
-    }
-    .topbar-user {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
+    /* ── Botón nueva comisión ── */
+    .btn-new {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 500;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--text-1);
       background: var(--text-1);
       color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 500;
-      letter-spacing: .03em;
-      flex-shrink: 0;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: opacity .15s;
+      white-space: nowrap;
+      text-decoration: none;
     }
-    .topbar-user-info p  { font-size: 13px; font-weight: 500; line-height: 1.2; }
-    .topbar-user-info span { font-size: 11px; color: var(--text-2); }
+    .btn-new:hover { opacity: .8; }
+    .btn-new i { font-size: 14px; }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+      animation: fadeIn .15s ease;
+    }
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 300px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.1);
+      animation: slideUp .18s ease;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(10px) }
+      to   { opacity:1; transform:translateY(0) }
+    }
+    .modal-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--red-bg);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .modal-icon i { font-size: 20px; color: var(--red-tx); }
+    .modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .modal p  { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    .mbtn {
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500;
+      border: 1px solid var(--border-md);
+      background: transparent;
+      color: var(--text-1);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background .12s;
+    }
+    .mbtn:hover { background: var(--bg); }
+    .mbtn-danger {
+      background: var(--text-1);
+      color: #fff;
+      border-color: var(--text-1);
+    }
+    .mbtn-danger:hover { background: #333; }
+    .mbtn-danger:disabled { opacity: .5; cursor: not-allowed; }
+    .mbtn-danger .spinner-sm {
+      width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
 
     /* ── Layout ── */
     .page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
-
     .page-header {
-      display: flex;
-      align-items: baseline;
+      display: flex; align-items: baseline;
       justify-content: space-between;
       margin-bottom: 1.75rem;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 12px; flex-wrap: wrap;
     }
     .page-title { font-size: 20px; font-weight: 500; }
     .page-count { font-size: 13px; color: var(--text-2); }
 
-    /* ── Estado skeleton / error ── */
+    /* ── Estado ── */
     .state-msg {
       text-align: center;
       padding: 4rem 1rem;
@@ -119,17 +163,32 @@
       from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
     .card-head {
       padding: 1.1rem 1.25rem .9rem;
-      display: flex;
-      align-items: flex-start;
+      display: flex; align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
       border-bottom: 1px solid var(--border);
     }
-    .card-loc  { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text-1); }
-    .card-dev  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .card-loc { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+    .card-dev { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+    /* head right: badge + gerente actions */
+    .card-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .btn-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-md);
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-2);
+      transition: all .15s;
+      font-size: 15px;
+    }
+    .btn-icon:hover { background: var(--bg); color: var(--text-1); border-color: var(--border-md); }
+    .btn-icon.edit:hover  { background: var(--blue-bg);  color: var(--blue-tx);  border-color: var(--blue-br); }
+    .btn-icon.delete:hover{ background: var(--red-bg);   color: var(--red-tx);   border-color: var(--red-br); }
 
     /* ── Badge ── */
     .badge {
@@ -138,7 +197,6 @@
       border-radius: 20px;
       border: 1px solid;
       white-space: nowrap;
-      flex-shrink: 0;
     }
     .b-pv { background: var(--amber-bg); color: var(--amber-tx); border-color: var(--amber-br); }
     .b-v  { background: var(--blue-bg);  color: var(--blue-tx);  border-color: var(--blue-br);  }
@@ -161,45 +219,36 @@
 
     /* ── Banner corrección ── */
     .corr-banner {
-      margin: 0 1.25rem .75rem;
+      margin: .75rem 1.25rem 0;
       padding: 8px 12px;
       background: var(--red-bg);
       border: 1px solid var(--red-br);
       border-radius: var(--radius-sm);
-      font-size: 12px;
-      color: var(--red-tx);
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      margin-top: .75rem;
+      font-size: 12px; color: var(--red-tx);
+      display: flex; gap: 8px; align-items: flex-start;
     }
     .corr-banner i { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
 
     /* ── Participantes ── */
     .participants-section { padding: .75rem 1.25rem 1rem; }
     .participants-label {
-      font-size: 11px;
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: .06em;
+      font-size: 11px; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .06em;
       margin-bottom: 8px;
     }
     .p-row {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       justify-content: space-between;
       padding: 7px 10px;
       border-radius: var(--radius-sm);
       background: var(--bg);
-      margin-bottom: 6px;
-      gap: 8px;
+      margin-bottom: 6px; gap: 8px;
     }
     .p-left  { display: flex; align-items: center; gap: 10px; }
     .p-avatar {
       width: 28px; height: 28px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 500;
-      flex-shrink: 0;
+      font-size: 10px; font-weight: 500; flex-shrink: 0;
     }
     .p-avatar.asesor  { background: var(--blue-bg);  color: var(--blue-tx); }
     .p-avatar.gerente { background: var(--amber-bg); color: var(--amber-tx); }
@@ -208,18 +257,14 @@
     .p-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .p-amount { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-2); }
 
-    /* ── Botón verificar ── */
     .btn-verify {
       display: flex; align-items: center; gap: 5px;
       font-size: 11px; font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 20px;
+      padding: 4px 10px; border-radius: 20px;
       border: 1px solid var(--border-md);
       background: var(--surface);
-      cursor: pointer;
-      color: var(--text-2);
-      transition: all .15s;
-      white-space: nowrap;
+      cursor: pointer; color: var(--text-2);
+      transition: all .15s; white-space: nowrap;
     }
     .btn-verify:hover:not(:disabled) {
       border-color: var(--green-tx);
@@ -234,20 +279,14 @@
     }
     .btn-verify i { font-size: 13px; }
 
-    /* verified badge (otros participantes) */
-    .p-verified {
-      font-size: 11px;
-      display: flex; align-items: center; gap: 4px;
-    }
+    .p-verified { font-size: 11px; display: flex; align-items: center; gap: 4px; }
     .p-verified.yes { color: var(--green-tx); }
     .p-verified.no  { color: var(--text-3); }
 
-    /* ── Acciones ── */
+    /* ── Acciones card ── */
     .card-actions {
       padding: .75rem 1.25rem 1rem;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      display: flex; gap: 8px; flex-wrap: wrap;
       border-top: 1px solid var(--border);
     }
     .btn {
@@ -257,8 +296,7 @@
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-md);
       background: transparent;
-      cursor: pointer;
-      color: var(--text-1);
+      cursor: pointer; color: var(--text-1);
       transition: background .15s, border-color .15s;
       font-family: 'DM Sans', sans-serif;
     }
@@ -284,47 +322,42 @@
     #toast {
       position: fixed;
       bottom: 1.5rem; right: 1.5rem;
-      background: var(--text-1);
-      color: #fff;
+      background: var(--text-1); color: #fff;
       font-size: 13px;
       padding: 10px 16px;
       border-radius: var(--radius-sm);
-      opacity: 0;
-      pointer-events: none;
+      opacity: 0; pointer-events: none;
       transition: opacity .2s;
-      z-index: 999;
-      max-width: 280px;
+      z-index: 999; max-width: 280px;
     }
     #toast.show { opacity: 1; }
   </style>
 </head>
 <body>
 
-<!-- Topbar -->
-<header class="topbar">
-  <span class="topbar-brand">COMISIONES</span>
-  <div class="topbar-user">
-    <div class="avatar" id="av"></div>
-    <div class="topbar-user-info">
-      <p id="uname">—</p>
-      <span id="urole">—</span>
-    </div>
-  </div>
-</header>
+<%- include('partials/sidebar') %>
+<div class="main-area">
+<%- include('partials/header') %>
 
 <!-- Page -->
 <main class="page">
   <div class="page-header">
     <h1 class="page-title" id="page-title">Comisiones</h1>
+    <a href="/registrar-comision" class="btn-new" id="btnNew" style="display:none">
+      <i class="ti ti-plus"></i>
+      Nueva comisión
+    </a>
     <span class="page-count" id="page-count"></span>
+    
   </div>
+  
   <div id="list"></div>
 </main>
 
 <div id="toast"></div>
+</div><!-- /.main-area -->
 
 <script>
-// ── Helpers ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
 function fmt(n) {
@@ -347,9 +380,8 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ── Estado global ─────────────────────────────────────────────────────────────
-let USER = null;   // objeto del JWT
-let DATA = [];     // comisiones cargadas
+let USER = null;
+let DATA = [];
 
 const STATUS_MAP = {
   'Pendiente Verificacion': { cls: 'b-pv', label: 'Pendiente verificación' },
@@ -361,9 +393,8 @@ const STATUS_MAP = {
   'Correccion':             { cls: 'b-co', label: 'Corrección'             },
 };
 
-// ── Bootstrap ────────────────────────────────────────────────────────────────
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
 async function init() {
-  // 1. Obtener usuario desde cookie/JWT
   try {
     const r = await fetch('/api/auth/me', { credentials: 'include' });
     const j = await r.json();
@@ -374,28 +405,74 @@ async function init() {
     return;
   }
 
-  // 2. Pintar topbar
-  $('av').textContent    = initials(USER.name);
-  $('uname').textContent = USER.name;
-  $('urole').textContent = USER.roleName;
 
-  // 3. Elegir endpoint según rol
+  // Mostrar "Nueva comisión" para Gerente, Directora y Administradora
+  const rolesConAcceso = ['Gerente', 'Directora', 'Administradora'];
+  if (rolesConAcceso.includes(USER.roleName)) {
+    $('btnNew').style.display = 'flex';
+  }
+
   const isLimitado = ['Asesor', 'Gerente'].includes(USER.roleName);
   $('page-title').textContent = isLimitado ? 'Mis comisiones' : 'Todas las comisiones';
-
   await loadComisiones(isLimitado);
 }
 
-// ── Carga de comisiones ───────────────────────────────────────────────────────
+// ── Logout ─────────────────────────────────────────────────────────────────────
+function showLogoutModal() {
+  if (document.getElementById('logoutModal')) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'logoutModal';
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-icon"><i class="ti ti-logout"></i></div>
+      <h3>Cerrar sesión</h3>
+      <p>¿Seguro que quieres salir? Tu sesión se cerrará y tendrás que volver a iniciar.</p>
+      <div class="modal-btns">
+        <button class="mbtn" onclick="closeLogoutModal()">Cancelar</button>
+        <button class="mbtn mbtn-danger" id="confirmLogoutBtn" onclick="doLogout()">Cerrar sesión</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeLogoutModal(); });
+  document.body.appendChild(overlay);
+}
+
+function closeLogoutModal() {
+  const m = document.getElementById('logoutModal');
+  if (m) m.remove();
+}
+
+async function doLogout() {
+  const btn = $('confirmLogoutBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> Saliendo…';
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch(e) { /* limpiamos igual */ }
+  finally {
+  window.location.href = "/"
+}
+  
+  closeLogoutModal();
+  USER = null; DATA = [];
+  $('av').textContent    = '';
+  $('uname').textContent = '—';
+  $('urole').textContent = '—';
+  $('btnLogout').style.display = 'none';
+  $('btnNew').style.display    = 'none';
+  $('page-count').textContent  = '';
+  showError('Sesión cerrada. <a href="/login" style="color:var(--text-1);font-weight:500">Volver a iniciar sesión →</a>');
+} 
+
+// ── Comisiones ────────────────────────────────────────────────────────────────
 async function loadComisiones(misComisiones) {
   $('list').innerHTML = `<div class="state-msg"><div class="spinner"></div>Cargando comisiones…</div>`;
-
   const url = misComisiones ? '/api/comisiones/mis-comisiones' : '/api/comisiones';
   try {
     const r = await fetch(url, { credentials: 'include' });
     const j = await r.json();
     if (!j.success) { showError(j.message); return; }
-    DATA = j.data;
+    DATA = j.data.filas || j.data.comisiones || j.data || [];
     $('page-count').textContent = `${DATA.length} comisión${DATA.length !== 1 ? 'es' : ''}`;
     render();
   } catch(e) {
@@ -403,7 +480,6 @@ async function loadComisiones(misComisiones) {
   }
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   if (!DATA.length) {
     $('list').innerHTML = `<div class="state-msg"><i class="ti ti-inbox"></i>Sin comisiones para mostrar</div>`;
@@ -414,13 +490,23 @@ function render() {
 
 function cardHTML(c) {
   const st = STATUS_MAP[c.status?.name] || { cls: 'b-v', label: c.status?.name || '—' };
-  const isCreator = c.created_by?._id === USER.id;
 
-  // participantes
-  const partRows = (c.participantes || []).map((p, i) => {
+  // Botones editar/eliminar solo para Gerente
+  // const gerenteActions = USER.roleName === 'Gerente' ? `
+  //   <button class="btn-icon edit"   title="Editar comisión"   onclick="editarComision('${c._id}')"><i class="ti ti-pencil"></i></button>
+  //   <button class="btn-icon delete" title="Eliminar comisión" onclick="eliminarComision('${c._id}')"><i class="ti ti-trash"></i></button>
+  // ` : '';
+
+  const isCreador = c.created_by === USER.id;
+  console.log(c.created_by);
+  const gerenteActions = isCreador ? `
+    <button class="btn-icon edit"   title="Editar"   onclick="editarComision('${c._id}')"><i class="ti ti-pencil"></i></button>
+    <button class="btn-icon delete" title="Eliminar" onclick="eliminarComision('${c._id}', '${c.location?.text}')"><i class="ti ti-trash"></i></button>
+  ` : '';
+
+  const partRows = (c.participantes || []).map(p => {
     const isMe = p.usuario?._id === USER.id;
     let rightHtml;
-
     if (isMe && c.status?.name === 'Pendiente Verificacion') {
       rightHtml = `
         <span class="p-amount">${fmt(p.commission_amount)}</span>
@@ -431,14 +517,13 @@ function cardHTML(c) {
           ${p.verification ? 'Verificado' : 'Verificar'}
         </button>`;
     } else {
-      const vIcon = p.verification ? 'ti-circle-check' : 'ti-circle';
-      const vCls  = p.verification ? 'yes' : 'no';
-      const vTxt  = p.verification ? 'Verificado' : 'Pendiente';
       rightHtml = `
         <span class="p-amount">${fmt(p.commission_amount)}</span>
-        <span class="p-verified ${vCls}"><i class="ti ${vIcon}" style="font-size:13px"></i>${vTxt}</span>`;
+        <span class="p-verified ${p.verification ? 'yes' : 'no'}">
+          <i class="ti ${p.verification ? 'ti-circle-check' : 'ti-circle'}" style="font-size:13px"></i>
+          ${p.verification ? 'Verificado' : 'Pendiente'}
+        </span>`;
     }
-
     return `
       <div class="p-row">
         <div class="p-left">
@@ -452,138 +537,175 @@ function cardHTML(c) {
       </div>`;
   }).join('');
 
-  // banner corrección
   const corrBanner = c.correction_comments
-    ? `<div class="corr-banner">
-        <i class="ti ti-alert-triangle"></i>
-        <span>${c.correction_comments}</span>
-      </div>`
+    ? `<div class="corr-banner"><i class="ti ti-alert-triangle"></i><span>${c.correction_comments}</span></div>`
     : '';
 
-  // acciones según rol + estatus
   let actions = '';
   const sName = c.status?.name;
-
   if (USER.roleName === 'Directora' && sName === 'Pendiente Aprobacion') {
-    actions += `
-      <button class="btn btn-green" onclick="aprobar('${c._id}', 'aprobar')">
-        <i class="ti ti-circle-check"></i> Aprobar
-      </button>
-      <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')">
-        <i class="ti ti-alert-circle"></i> Corregir
-      </button>`;
+    actions = `
+      <button class="btn btn-green" onclick="aprobar('${c._id}','aprobar')"><i class="ti ti-circle-check"></i>Aprobar</button>
+      <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')"><i class="ti ti-alert-circle"></i>Corregir</button>`;
   }
-
   if (USER.roleName === 'Administradora' && sName === 'Pendiente Pago') {
-    actions += `
-      <button class="btn btn-green" onclick="pagar('${c._id}')">
-        <i class="ti ti-cash"></i> Marcar como pagada
-      </button>
-      <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')">
-        <i class="ti ti-alert-circle"></i> Corregir
-      </button>`;
+    actions = `
+      <button class="btn btn-green" onclick="pagar('${c._id}')"><i class="ti ti-cash"></i>Marcar como pagada</button>
+      <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')"><i class="ti ti-alert-circle"></i>Corregir</button>`;
   }
-
-  const actionsBlock = actions
-    ? `<div class="card-actions">${actions}</div>`
-    : '';
 
   return `
     <div class="card" id="card-${c._id}">
       <div class="card-head">
         <div>
           <div class="card-loc">${c.location?.text || '—'}</div>
-          <div class="card-dev">${c.development?.text} · ${c.company?.text}</div>
+          <div class="card-dev">${c.development?.text || ''} · ${c.company?.text || ''}</div>
         </div>
-        <span class="badge ${st.cls}">${st.label}</span>
+        <div class="card-head-right">
+          ${gerenteActions}
+          <span class="badge ${st.cls}">${st.label}</span>
+        </div>
       </div>
-
       <div class="card-meta">
-        <div class="meta-item"><div class="lbl">Cliente</div><div class="val">${c.client_name || '—'}</div></div>
-        <div class="meta-item"><div class="lbl">Tipo</div><div class="val">${c.commission_type}</div></div>
-        <div class="meta-item"><div class="lbl">Precio venta</div><div class="val">${fmt(c.sale_price)}</div></div>
-        <div class="meta-item"><div class="lbl">Comisión total</div><div class="val">${fmt(c.total_commission)}</div></div>
-        <div class="meta-item"><div class="lbl">Fecha operación</div><div class="val">${fmtDate(c.operation_date)}</div></div>
+       <div class="meta-item"><div class="lbl">Cliente</div><div class="val">${c.client_name || '—'}</div></div>
+<div class="meta-item"><div class="lbl">Tipo</div><div class="val">${c.commission_type || '—'}</div></div>
+<div class="meta-item"><div class="lbl">Concepto</div><div class="val">${c.concept?.text || '—'}</div></div>
+<div class="meta-item"><div class="lbl">Precio venta</div><div class="val">${fmt(c.sale_price)}</div></div>
+<div class="meta-item"><div class="lbl">Comisión total</div><div class="val">${fmt(c.total_commission)}</div></div>
+<div class="meta-item"><div class="lbl">Fecha operación</div><div class="val">${fmtDate(c.operation_date)}</div></div>
       </div>
-
       ${corrBanner}
-
       <div class="participants-section">
         <div class="participants-label">Participantes</div>
         ${partRows}
       </div>
-
-      ${actionsBlock}
+      ${actions ? `<div class="card-actions">${actions}</div>` : ''}
     </div>`;
 }
 
-// ── Acciones ──────────────────────────────────────────────────────────────────
-async function verificar(comisionId) {
+// ── Acciones Gerente ──────────────────────────────────────────────────────────
+function editarComision(comisionId) {
+  // TODO: redirigir a /editar-comision/:id
+  
+  window.location.href = `/registrar-comision?edit=${comisionId}`;
+
+  // alert(`Editar comisión: ${comisionId}`);
+}
+
+
+function eliminarComision(comisionId, locationText) {
+  console.log(comisionId);
+  // Crear modal de confirmación
+  if (document.getElementById('deleteModal')) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'deleteModal';
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-icon" style="background:var(--red-bg)">
+        <i class="ti ti-trash" style="color:var(--red-tx)"></i>
+      </div>
+      <h3>Eliminar comisión</h3>
+      <p>¿Seguro que quieres eliminar <strong>${locationText}</strong>?
+         Esta acción no se puede deshacer y eliminará también a todos sus participantes.</p>
+      <div class="modal-btns">
+        <button class="mbtn" onclick="closeDeleteModal()">Cancelar</button>
+        <button class="mbtn mbtn-danger" id="confirmDeleteBtn" onclick="doEliminar('${comisionId}')">
+          Eliminar
+        </button>
+      </div>
+    </div>`;
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeDeleteModal(); });
+  document.body.appendChild(overlay);
+}
+
+function closeDeleteModal() {
+  const m = document.getElementById('deleteModal');
+  if (m) m.remove();
+}
+
+async function doEliminar(comisionId) {
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true;
+  btn.textContent = 'Eliminando…';
+
   try {
-    const r = await fetch(`/api/comisiones/${comisionId}/verificar`, {
-      method: 'PATCH',
+    const r = await fetch(`/api/comisiones/eliminar/${comisionId}`, {
+      method:      'DELETE',
       credentials: 'include',
     });
     const j = await r.json();
-    if (!j.success) { toast(j.message); return; }
+
+    closeDeleteModal();
+
+    if (!j.success) {
+      toast(j.message);
+      return;
+    }
+
+    // Quitar la card del DOM sin recargar toda la lista
+    rows = rows.filter(r => r.comision_id?.toString() !== comisionId &&
+                            r._id?.toString()       !== comisionId);
+    renderRows();
+    toast('Comisión eliminada correctamente');
+
+  } catch(e) {
+    closeDeleteModal();
+    toast('Error al eliminar la comisión');
+  }
+}
+
+// ── Acciones comisiones ───────────────────────────────────────────────────────
+async function verificar(comisionId) {
+  try {
+    const r = await fetch(`/api/comisiones/${comisionId}/verificar`, { method:'PATCH', credentials:'include' });
+    const j = await r.json();
     toast(j.message);
-    await reloadComision(comisionId);
+    if (j.success) await reloadComision(comisionId);
   } catch(e) { toast('Error al verificar'); }
 }
 
 async function aprobar(comisionId, accion, correction_comments = null) {
   const body = { accion };
   if (correction_comments) body.correction_comments = correction_comments;
-
   try {
     const r = await fetch(`/api/comisiones/${comisionId}/aprobar`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method:'PATCH', credentials:'include',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify(body),
     });
     const j = await r.json();
-    if (!j.success) { toast(j.message); return; }
     toast(j.message);
-    await reloadComision(comisionId);
+    if (j.success) await reloadComision(comisionId);
   } catch(e) { toast('Error al procesar'); }
 }
 
 async function pagar(comisionId) {
   try {
-    const r = await fetch(`/api/comisiones/${comisionId}/pagar`, {
-      method: 'PATCH',
-      credentials: 'include',
-    });
+    const r = await fetch(`/api/comisiones/${comisionId}/pagar`, { method:'PATCH', credentials:'include' });
     const j = await r.json();
-    if (!j.success) { toast(j.message); return; }
     toast(j.message);
-    await reloadComision(comisionId);
+    if (j.success) await reloadComision(comisionId);
   } catch(e) { toast('Error al marcar como pagada'); }
 }
 
 function pedirCorreccion(comisionId) {
   const comentario = prompt('Indica el motivo de la corrección:');
   if (!comentario) return;
-
-  // Directora usa /aprobar con accion=correccion
-  // Administradora también puede usar el mismo endpoint o uno propio
   aprobar(comisionId, 'correccion', comentario);
 }
 
-// ── Recarga una sola comisión sin recargar toda la lista ──────────────────────
-async function reloadComision(comisionId) {
-  // Recargamos todo el listado para mantener consistencia
+async function reloadComision() {
   const isLimitado = ['Asesor', 'Gerente'].includes(USER.roleName);
   await loadComisiones(isLimitado);
 }
 
-// ── Error global ──────────────────────────────────────────────────────────────
 function showError(msg) {
   $('list').innerHTML = `<div class="state-msg"><i class="ti ti-alert-circle"></i>${msg}</div>`;
 }
 
-// ── Arrancar ──────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
