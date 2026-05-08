@@ -10,6 +10,25 @@ const {
 
 const DB_NAME = 'roles_usuarios';
 
+// ── Helpers de notificaciones ─────────────────────────────────────────────────
+async function notify(db, userIds, message, now = new Date()) {
+  const ids = (Array.isArray(userIds) ? userIds : [userIds]).filter(Boolean);
+  if (!ids.length) return;
+  await db.collection('notificaciones').insertMany(
+    ids.map(uid => ({ user_id: uid, message, read: false, created_at: now }))
+  );
+}
+
+async function getUserIdsByRole(db, roleName) {
+  const users = await db.collection('usuarios').aggregate([
+    { $lookup: { from: 'roles', localField: 'role', foreignField: '_id', as: 'r' } },
+    { $unwind: '$r' },
+    { $match: { 'r.name': roleName, active: true } },
+    { $project: { _id: 1 } },
+  ]).toArray();
+  return users.map(u => u._id);
+}
+
 // GET /api/comisiones/mis-comisiones
 router.get('/mis-comisiones', authenticate, async (req, res) => {
   const client = req.app.locals.mongoClient;
@@ -182,6 +201,13 @@ router.patch('/:id/verificar', authenticate, async (req, res) => {
     const userId     = new ObjectId(req.user.id);
     const now        = new Date();
 
+    // ── Datos de la comisión (location + was_corrected) ───────────────────────
+    const comision = await db
+      .collection('comisiones-ubicaciones')
+      .findOne({ _id: comisionId }, { projection: { location: 1, was_corrected: 1 } });
+
+    const locationText = comision?.location?.text || 'Sin ubicación';
+
     // ── Verificar que el usuario es participante ──────────────────────────────
     const participante = await db
       .collection('comisiones-participantes')
@@ -217,6 +243,17 @@ router.patch('/:id/verificar', authenticate, async (req, res) => {
       .countDocuments({ comision_id: comisionId, verification: false });
 
     if (pendientes > 0) {
+      // Notificar a los demás participantes que alguien ya verificó
+      const otrosParticipantes = await db
+        .collection('comisiones-participantes')
+        .find({ comision_id: comisionId, user: { $ne: userId } })
+        .project({ user: 1 })
+        .toArray();
+
+      await notify(db, otrosParticipantes.map(p => p.user),
+        `${req.user.name} verificó su parte de la comisión de ${locationText}. Faltan ${pendientes} verificaciones.`,
+        now);
+
       return res.status(200).json({
         success: true,
         data:    { todos_verificaron: false },
@@ -225,13 +262,12 @@ router.patch('/:id/verificar', authenticate, async (req, res) => {
       });
     }
 
-    // ── Todos verificaron → subir a Verificada y luego a Pendiente Aprobacion ─
+    // ── Todos verificaron → subir a Pendiente Aprobación ─────────────────────
     const [statusVerificada, statusPendienteAprobacion] = await Promise.all([
       db.collection('estatus').findOne({ order: 2 }),
       db.collection('estatus').findOne({ order: 3 }),
     ]);
 
-    // Actualizar comisión y participantes a Pendiente Aprobacion directamente
     await Promise.all([
       db.collection('comisiones-ubicaciones').updateOne(
         { _id: comisionId },
@@ -243,26 +279,23 @@ router.patch('/:id/verificar', authenticate, async (req, res) => {
       ),
     ]);
 
-    // ── Notificación a la Directora ───────────────────────────────────────────
-    const directora = await db
-      .collection('usuarios')
-      .aggregate([
-        { $lookup: { from: 'roles', localField: 'role', foreignField: '_id', as: 'role_info' } },
-        { $unwind: '$role_info' },
-        { $match: { 'role_info.name': 'Directora', active: true } },
-        { $project: { _id: 1 } },
-      ])
+    // ── Notificar a todos los participantes ───────────────────────────────────
+    const todosParticipantes = await db
+      .collection('comisiones-participantes')
+      .find({ comision_id: comisionId })
+      .project({ user: 1 })
       .toArray();
 
-    if (directora.length) {
-      await db.collection('notificaciones').insertMany(
-        directora.map(d => ({
-          usuario_id:  d._id,
-          titulo:      'Comisión lista para aprobación',
-          descripcion: `La comisión ${comisionId} ha sido verificada por todos los participantes.`,
-          fecha:       now,
-        }))
-      );
+    await notify(db, todosParticipantes.map(p => p.user),
+      `Todos verificaron la comisión de ${locationText}. Ahora está en Pendiente de Aprobación.`,
+      now);
+
+    // ── Notificar a Directora solo si la comisión fue corregida ──────────────
+    if (comision?.was_corrected) {
+      const directoraIds = await getUserIdsByRole(db, 'Directora');
+      await notify(db, directoraIds,
+        `La comisión corregida de ${locationText} fue re-verificada y está lista para aprobación.`,
+        now);
     }
 
     return res.status(200).json({
@@ -345,16 +378,20 @@ router.patch('/:id/aprobar', authenticate, async (req, res) => {
     const targetOrder  = accion === 'aprobar' ? 5 : 7; // Pendiente Pago | Correccion
     const statusDestino = await db.collection('estatus').findOne({ order: targetOrder });
 
+    const comisionLocation = comision?.location?.text || 'Sin ubicación';
+    const eraCorreccion    = comision?.was_corrected || false;
+
+    const updateFields = {
+      status:              statusDestino._id,
+      correction_comments: accion === 'correccion' ? correction_comments : null,
+      updated_at:          now,
+    };
+    if (accion === 'correccion') updateFields.was_corrected = true;
+
     await Promise.all([
       db.collection('comisiones-ubicaciones').updateOne(
         { _id: comisionId },
-        {
-          $set: {
-            status:              statusDestino._id,
-            correction_comments: accion === 'correccion' ? correction_comments : null,
-            updated_at:          now,
-          },
-        }
+        { $set: updateFields }
       ),
       db.collection('comisiones-participantes').updateMany(
         { comision_id: comisionId },
@@ -368,28 +405,26 @@ router.patch('/:id/aprobar', authenticate, async (req, res) => {
       ),
     ]);
 
-    // ── Notificación a los participantes ──────────────────────────────────────
+    // ── Notificar a los participantes ─────────────────────────────────────────
     const participantes = await db
       .collection('comisiones-participantes')
       .find({ comision_id: comisionId })
       .project({ user: 1 })
       .toArray();
 
-    const titulo     = accion === 'aprobar'
-      ? 'Comisión aprobada y en espera de pago'
-      : 'Comisión requiere corrección';
-    const descripcion = accion === 'aprobar'
-      ? `Tu comisión ha sido aprobada y está pendiente de pago.`
-      : `Tu comisión requiere corrección: ${correction_comments}`;
+    const msgParticipantes = accion === 'aprobar'
+      ? `Tu comisión de ${comisionLocation} fue aprobada y está en Pendiente de Pago.`
+      : `Tu comisión de ${comisionLocation} fue enviada a corrección: ${correction_comments}`;
 
-    await db.collection('notificaciones').insertMany(
-      participantes.map(p => ({
-        usuario_id:  p.user,
-        titulo,
-        descripcion,
-        fecha:       now,
-      }))
-    );
+    await notify(db, participantes.map(p => p.user), msgParticipantes, now);
+
+    // ── Notificar a Administradora solo si la comisión fue corregida ──────────
+    if (accion === 'aprobar' && eraCorreccion) {
+      const adminIds = await getUserIdsByRole(db, 'Administradora');
+      await notify(db, adminIds,
+        `La comisión corregida de ${comisionLocation} fue aprobada y está lista para pago.`,
+        now);
+    }
 
     return res.status(200).json({
       success: true,
@@ -463,21 +498,16 @@ router.patch('/:id/pagar', authenticate, async (req, res) => {
       ),
     ]);
 
-    // ── Notificación a los participantes ──────────────────────────────────────
+    // ── Notificar a los participantes ─────────────────────────────────────────
     const participantes = await db
       .collection('comisiones-participantes')
       .find({ comision_id: comisionId })
       .project({ user: 1 })
       .toArray();
 
-    await db.collection('notificaciones').insertMany(
-      participantes.map(p => ({
-        usuario_id:  p.user,
-        titulo:      '¡Comisión pagada!',
-        descripcion: 'Tu comisión ha sido marcada como pagada por la Administradora.',
-        fecha:       now,
-      }))
-    );
+    const locationPago = comision?.location?.text || 'Sin ubicación';
+    await notify(db, participantes.map(p => p.user),
+      `¡Tu comisión de ${locationPago} ha sido pagada!`, now);
 
     return res.status(200).json({
       success: true,
@@ -661,15 +691,9 @@ router.post('/', authenticate, async (req, res) => {
       .collection('comisiones-participantes')
       .insertMany(participantesConId);
 
-    // ── 7. Notificaciones para cada participante ──────────────────────────────
-    await db.collection('notificaciones').insertMany(
-      participantesConId.map((p) => ({
-        usuario_id:  p.user,
-        titulo:      'Nueva comisión registrada',
-        descripcion: `Se registró una nueva comisión para ${location.text}.`,
-        fecha:       now,
-      }))
-    );
+    // ── 7. Notificar a cada participante ──────────────────────────────────────
+    await notify(db, participantesConId.map(p => p.user),
+      `Fuiste incluido en una nueva comisión de ${location.text}.`, now);
 
     // ── 8. Respuesta ──────────────────────────────────────────────────────────
     return res.status(201).json({
@@ -919,14 +943,8 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
       .insertMany(participanteDocs);
 
     // ── 6. Notificar a cada participante ──────────────────────────────────────
-    await db.collection('notificaciones').insertMany(
-      participanteDocs.map(p => ({
-        usuario_id:  p.user,
-        titulo:      'Comisión actualizada',
-        descripcion: `La comisión de ${location.text} fue editada y requiere nueva verificación.`,
-        fecha:       now,
-      }))
-    );
+    await notify(db, participanteDocs.map(p => p.user),
+      `La comisión de ${location.text} fue editada y requiere nueva verificación.`, now);
 
     return res.status(200).json({
       success: true,
