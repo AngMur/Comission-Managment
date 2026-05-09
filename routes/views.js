@@ -49,6 +49,10 @@ router.get('/comisiones', (req, res) => {
   res.render('comisiones', { title: 'Comisiones', currentPage: 'comisiones' });
 });
 
+router.get('/historial-comisiones', (req, res) => {
+  res.render('historial-comisiones', { title: 'Historial de Comisiones', currentPage: 'historial' });
+});
+
 router.post('/logout', (req, res) => {
   clearAuthCookie(res);
   res.redirect('/');

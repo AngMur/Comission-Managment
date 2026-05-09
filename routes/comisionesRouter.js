@@ -190,6 +190,199 @@ router.get('/mis-comisiones', authenticate, async (req, res) => {
 });
 
 
+// ── GET /api/comisiones/historial ─────────────────────────────────────────────
+// Comisiones pagadas agrupadas por ubicación (contrato + escritura ambas pagadas)
+router.get('/historial', authenticate, async (req, res) => {
+  const db = req.app.locals.mongoClient.db(DB_NAME);
+  const isLimitado = ['Asesor', 'Gerente'].includes(req.user.roleName);
+  const userId = new ObjectId(req.user.id);
+
+  try {
+    const statusPagada = await db.collection('estatus').findOne({ order: 6 });
+    if (!statusPagada) return res.json({ success: true, data: [] });
+
+    let matchBase = { status: statusPagada._id };
+    if (isLimitado) {
+      const participaciones = await db
+        .collection('comisiones-participantes')
+        .find({ user: userId }, { projection: { comision_id: 1 } })
+        .toArray();
+      matchBase._id = { $in: participaciones.map(p => p.comision_id) };
+    }
+
+    const comisiones = await db.collection('comisiones-ubicaciones').aggregate([
+      { $match: matchBase },
+      {
+        $lookup: {
+          from: 'comisiones-participantes',
+          localField: '_id',
+          foreignField: 'comision_id',
+          as: 'participantes',
+        },
+      },
+      {
+        $lookup: {
+          from: 'usuarios',
+          localField: 'participantes.user',
+          foreignField: '_id',
+          as: 'usuarios_info',
+        },
+      },
+      {
+        $addFields: {
+          participantes: {
+            $map: {
+              input: '$participantes',
+              as: 'p',
+              in: {
+                role_in_comision: '$$p.role_in_comision',
+                percentage: '$$p.percentage',
+                commission_amount: '$$p.commission_amount',
+                usuario: {
+                  $arrayElemAt: [
+                    { $filter: { input: '$usuarios_info', as: 'u', cond: { $eq: ['$$u._id', '$$p.user'] } } },
+                    0,
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          company: 1, development: 1, location: 1, concept: 1,
+          sale_price: 1, total_commission: 1, operation_date: 1,
+          'participantes.role_in_comision': 1,
+          'participantes.percentage': 1,
+          'participantes.commission_amount': 1,
+          'participantes.usuario.name': 1,
+        },
+      },
+      { $sort: { operation_date: -1 } },
+    ]).toArray();
+
+    // Normalizar campo que puede ser string u objeto { id, text }
+    const txt = v => {
+      if (!v) return '';
+      if (typeof v !== 'object') return String(v);
+      const inner = v.text ?? v.nombre ?? v.name ?? v.value ?? '';
+      return typeof inner === 'object' ? String(inner.text ?? inner.nombre ?? '') : String(inner);
+    };
+
+    // Agrupar por desarrollo + ubicación
+    const groups = new Map();
+    for (const c of comisiones) {
+      const devText = txt(c.development);
+      const locText = txt(c.location);
+      const key = `${devText}||${locText}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          id:          c._id.toString(),
+          company:     txt(c.company),
+          development: devText,
+          locationText: locText,
+          contrato:    null,
+          escritura:   null,
+        });
+      }
+      const g = groups.get(key);
+      const fase = { operation_date: c.operation_date, sale_price: c.sale_price, total_commission: c.total_commission, participantes: c.participantes };
+      const concept = String(c.concept?.text ?? c.concept ?? '').toLowerCase();
+      if (concept.includes('escritura')) { if (!g.escritura) g.escritura = fase; }
+      else                               { if (!g.contrato) g.contrato = fase; }
+    }
+
+    // Solo grupos con AMBAS fases pagadas
+    const result = [...groups.values()].filter(g => g.contrato && g.escritura);
+    return res.json({ success: true, data: result });
+
+  } catch (error) {
+    console.error('[GET /api/comisiones/historial]', error);
+    return res.status(500).json({ success: false, data: null, message: 'Error', error: error.message });
+  }
+});
+
+
+// ── GET /api/comisiones/export/pendientes-pago.csv ────────────────────────────
+router.get('/export/pendientes-pago.csv', authenticate, async (req, res) => {
+  if (!['Directora', 'Administradora'].includes(req.user.roleName)) {
+    return res.status(403).json({ success: false, message: 'Acceso denegado' });
+  }
+  const db = req.app.locals.mongoClient.db(DB_NAME);
+
+  try {
+    const statusPP = await db.collection('estatus').findOne({ order: 5 });
+    if (!statusPP) return res.status(500).send('Estatus no encontrado');
+
+    const rows = await db.collection('comisiones-participantes').aggregate([
+      {
+        $lookup: {
+          from: 'comisiones-ubicaciones',
+          localField: 'comision_id',
+          foreignField: '_id',
+          as: 'comision',
+        },
+      },
+      { $unwind: '$comision' },
+      { $match: { 'comision.status': statusPP._id } },
+      {
+        $lookup: {
+          from: 'usuarios',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'usuario',
+          pipeline: [{ $project: { name: 1 } }],
+        },
+      },
+      { $unwind: { path: '$usuario', preserveNullAndEmptyArrays: true } },
+      { $sort: { 'comision.register_date': -1, role_in_comision: 1 } },
+    ]).toArray();
+
+    const escape = v => {
+      const s = String(v ?? '');
+      return (s.includes(',') || s.includes('"') || s.includes('\n'))
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const headers = [
+      'Ubicación','Compañía','Desarrollo','Concepto','Tipo',
+      'Fecha Operación','Precio Venta','Comisión Total',
+      'Participante','Rol','Porcentaje','Monto Comisión','Verificado',
+    ];
+
+    const lines = [headers.map(escape).join(',')];
+    for (const r of rows) {
+      const c = r.comision;
+      lines.push([
+        escape(c.location?.text || ''),
+        escape(c.company || ''),
+        escape(c.development || ''),
+        escape(c.concept || ''),
+        escape(c.commission_type?.text ?? c.commission_type ?? ''),
+        escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
+        escape(c.sale_price ?? ''),
+        escape(c.total_commission ?? ''),
+        escape(r.usuario?.name || ''),
+        escape(r.role_in_comision || ''),
+        escape(r.percentage != null ? (r.percentage * 100).toFixed(1) + '%' : ''),
+        escape(r.commission_amount ?? ''),
+        escape(r.verification ? 'Sí' : 'No'),
+      ].join(','));
+    }
+
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="pendientes-pago-${date}.csv"`);
+    res.send('﻿' + lines.join('\r\n'));
+
+  } catch (error) {
+    console.error('[GET /export/pendientes-pago.csv]', error);
+    res.status(500).send('Error al generar el CSV');
+  }
+});
+
+
 // ── 1. PATCH /api/comisiones/:id/verificar ────────────────────────────────────
 // El participante marca su verificación; si todos verificaron → sube estatus
 router.patch('/:id/verificar', authenticate, async (req, res) => {
