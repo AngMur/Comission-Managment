@@ -491,11 +491,15 @@
 
         function closePayloadModal() { document.getElementById('payloadModal').classList.remove('active'); pendingPayload = null; }
 
-        // document.getElementById('confirmSaveBtn').addEventListener('click', async () => {
-        //     if (!pendingPayload) return;
-        //     await sendCommission(pendingPayload);
-        //     closePayloadModal();
-        // });
+        document.getElementById('confirmSaveBtn').addEventListener('click', async () => {
+            if (!pendingPayload) return;
+            if (isEditMode) {
+                await updateCommission(editId, pendingPayload);
+            } else{
+                await sendCommission(pendingPayload);
+            }
+            closePayloadModal();
+        });
 
         async function sendCommission(data) {
             try {
@@ -1126,14 +1130,14 @@ document.getElementById('commissionForm').addEventListener('submit', async (e) =
   const data = await buildPayLoad();
   if (!data) return;
 
-  if (isEditMode) {
-    // En modo edición mostramos el mismo modal de confirmación
-    // pero el botón "Confirmar y guardar" llama a PATCH en vez de POST
-    document.getElementById('confirmSaveBtn').onclick = async () => {
-      await updateCommission(editId, data);
-      closePayloadModal();
-    };
-  } 
+//   if (isEditMode) {
+//     // En modo edición mostramos el mismo modal de confirmación
+//     // pero el botón "Confirmar y guardar" llama a PATCH en vez de POST
+//     document.getElementById('confirmSaveBtn').onclick = async () => {
+//       await updateCommission(editId, data);
+//       closePayloadModal();
+//     };
+//   } 
     showPayloadModal(data);
   
 
