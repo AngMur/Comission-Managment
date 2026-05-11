@@ -1,19 +1,21 @@
 const sql = require('mssql');
+require('dotenv').config();
 
 const express = require('express');
 const router = express.Router();
 
 // Config conexión
+const port = parseInt(process.env.EK_PORT, 10);
 const config = {
-  user: 'EKAppUser',
-  password: 'Enkontrol$app.user002',
-  server: '10.0.0.3',
-  database: 'EKCloud',
+  user: process.env.EK_USER,
+  password: process.env.EK_PASS,
+  server: process.env.EK_SERVER,
+  database: process.env.EK_DATABASE,
   options: {
     encrypt: false,
     trustServerCertificate: true
   },
-  port: 3470
+  port: port
 };
 
 let pool;

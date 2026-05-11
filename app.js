@@ -31,7 +31,8 @@ app.use(injectUserLocals);
 // ── Base de datos ─────────────────────────────────────────────────────────────
 async function connectDatabase() {
   try {
-    const mongoClient = new MongoClient("mongodb://localhost:27017/roles_usuarios", {retryWrites: false});
+    const uri = process.env.MONGO_URI;
+    const mongoClient = new MongoClient(uri);
     await mongoClient.connect();
     console.log('✅ MongoDB conectado');
     app.locals.mongoClient = mongoClient;
