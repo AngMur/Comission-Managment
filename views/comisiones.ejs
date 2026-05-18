@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Comisiones</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/styles/layout.css">
@@ -13,39 +13,42 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #f5f4f0;
-      --surface:  #ffffff;
-      --border:   #e2e0d8;
-      --border-md:#c8c5bc;
-      --text-1:   #1a1917;
-      --text-2:   #6b6860;
-      --text-3:   #9c9a94;
-      --accent:   #1a1917;
-      --green-bg: #eaf3de;
-      --green-tx: #3b6d11;
-      --green-br: #c0dd97;
-      --amber-bg: #faeeda;
-      --amber-tx: #854f0b;
-      --amber-br: #fac775;
-      --red-bg:   #fcebeb;
-      --red-tx:   #a32d2d;
-      --red-br:   #f7c1c1;
-      --blue-bg:  #e6f1fb;
-      --blue-tx:  #185fa5;
-      --blue-br:  #b5d4f4;
-      --gray-bg:  #f1efe8;
-      --gray-tx:  #5f5e5a;
-      --gray-br:  #d3d1c7;
+      --bg:       #0f1e1e;
+      --surface:  #162828;
+      --border:   rgba(96,166,30,0.15);
+      --border-md:rgba(96,166,30,0.3);
+      --text-1:   #ffffff;
+      --text-2:   #8fada0;
+      --text-3:   rgba(143,173,160,0.55);
+      --accent:   #7bc42a;
+      --green-bg: rgba(96,166,30,0.15);
+      --green-tx: #7bc42a;
+      --green-br: rgba(96,166,30,0.35);
+      --amber-bg: rgba(240,165,0,0.12);
+      --amber-tx: #f0a500;
+      --amber-br: rgba(240,165,0,0.3);
+      --red-bg:   rgba(231,76,60,0.12);
+      --red-tx:   #e74c3c;
+      --red-br:   rgba(231,76,60,0.3);
+      --blue-bg:  rgba(56,197,245,0.12);
+      --blue-tx:  #38c5f5;
+      --blue-br:  rgba(56,197,245,0.3);
+      --gray-bg:  rgba(143,173,160,0.08);
+      --gray-tx:  #8fada0;
+      --gray-br:  rgba(143,173,160,0.25);
       --radius:   10px;
       --radius-sm:6px;
     }
 
     body {
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Nunito', sans-serif;
       background: var(--bg);
       color: var(--text-1);
       min-height: 100vh;
     }
+
+    .main-area { background: var(--bg); }
+    .app-header { background: rgba(15,30,30,0.98); }
 
     /* ── Botón nueva comisión ── */
     .btn-new, .btn-export {
@@ -54,7 +57,7 @@
       padding: 5px 12px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Nunito', sans-serif;
       transition: opacity .15s;
       white-space: nowrap;
       text-decoration: none;
@@ -115,7 +118,7 @@
       background: transparent;
       color: var(--text-1);
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Nunito', sans-serif;
       transition: background .12s;
     }
     .mbtn:hover { background: var(--bg); }
@@ -124,7 +127,7 @@
       color: #fff;
       border-color: var(--text-1);
     }
-    .mbtn-danger:hover { background: #333; }
+    .mbtn-danger:hover { background: #1c3030; }
     .mbtn-danger:disabled { opacity: .5; cursor: not-allowed; }
     .mbtn-danger .spinner-sm {
       width: 13px; height: 13px;
@@ -177,7 +180,7 @@
       gap: 12px;
       border-bottom: 1px solid var(--border);
     }
-    .card-loc { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+    .card-loc { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 500; }
     .card-dev { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 
     /* head right: badge + gerente actions */
@@ -262,7 +265,7 @@
     .p-name { font-size: 13px; font-weight: 500; }
     .p-role { font-size: 11px; color: var(--text-2); }
     .p-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .p-amount { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-2); }
+    .p-amount { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-2); }
 
     .btn-verify {
       display: flex; align-items: center; gap: 5px;
@@ -305,7 +308,7 @@
       background: transparent;
       cursor: pointer; color: var(--text-1);
       transition: background .15s, border-color .15s;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Nunito', sans-serif;
     }
     .btn:hover { background: var(--bg); }
     .btn i { font-size: 15px; }
@@ -331,7 +334,7 @@
     .filter-search-wrap input {
       width: 100%; padding: 7px 10px 7px 28px;
       border: 1px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-family: 'Nunito', sans-serif;
       color: var(--text-1); background: var(--bg); outline: none;
       transition: border-color .15s;
     }
@@ -339,7 +342,7 @@
     .filter-select {
       padding: 7px 10px; border: 1px solid var(--border);
       border-radius: var(--radius-sm); font-size: 13px;
-      font-family: 'DM Sans', sans-serif; color: var(--text-1);
+      font-family: 'Nunito', sans-serif; color: var(--text-1);
       background: var(--bg); outline: none; cursor: pointer;
       transition: border-color .15s; min-width: 145px;
     }
@@ -349,7 +352,7 @@
       font-size: 12px; font-weight: 500; padding: 7px 12px;
       border-radius: var(--radius-sm); border: 1px solid var(--red-br);
       background: var(--red-bg); color: var(--red-tx);
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
       transition: opacity .15s; white-space: nowrap;
     }
     .filter-clear:hover { opacity: .8; }
@@ -370,7 +373,8 @@
     #toast {
       position: fixed;
       bottom: 1.5rem; right: 1.5rem;
-      background: var(--text-1); color: #fff;
+      background: #1c3030; color: #fff;
+      border: 1px solid rgba(96,166,30,0.3);
       font-size: 13px;
       padding: 10px 16px;
       border-radius: var(--radius-sm);
