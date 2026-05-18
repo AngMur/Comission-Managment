@@ -31,7 +31,7 @@ app.use(injectUserLocals);
 // ── Base de datos ─────────────────────────────────────────────────────────────
 async function connectDatabase() {
   try {
-    const uri = process.env.MONGO_URI;
+    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/nova_db';
     const mongoClient = new MongoClient(uri);
     await mongoClient.connect();
     console.log('✅ MongoDB conectado');
