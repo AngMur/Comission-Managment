@@ -19,7 +19,6 @@
         .star  { position: absolute; border-radius: 50%; animation: twinkle var(--dur) ease-in-out infinite alternate; }
         @keyframes twinkle { from { opacity: 0.2; transform: scale(1); } to { opacity: 1; transform: scale(1.4); } }
         .beam  { position: fixed; top: 0; right: 15%; width: 260px; height: 100vh; background: linear-gradient(180deg, rgba(96,230,26,0.07) 0%, transparent 70%); transform: skewX(-8deg); pointer-events: none; z-index: 0; }
-        .dot   { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
         #novu-header { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 2rem 4rem 1.4rem; border-bottom: 1px solid rgba(96,230,26,0.15); margin-bottom: 0; }
         #novu-logo { font-family: 'Space Mono', monospace; font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 700; line-height: 1; letter-spacing: -3px; color: #ffffff; text-shadow: 0 0 60px rgba(96,230,26,0.3); display: inline-block; cursor: pointer; transition: color 0.2s, text-shadow 0.2s; position: relative; text-decoration: none; }
         #novu-logo::after { content: ''; position: absolute; bottom: 3px; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #60e61a, #7af028); border-radius: 2px; transform: scaleX(0); transform-origin: left; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
@@ -436,14 +435,6 @@
                 const size = Math.random() * 3 + 1;
                 s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;opacity:${Math.random()*0.6+0.2};`;
                 starsEl.appendChild(s);
-            }
-            const dotColors = ['#60e61a','#7af028','#3a9010','#c8e88a','#a8d870'];
-            for (let i = 0; i < 18; i++) {
-                const d = document.createElement('div');
-                d.className = 'dot';
-                const sz = Math.random()*10 + 4;
-                d.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${dotColors[Math.floor(Math.random()*dotColors.length)]};opacity:${Math.random()*0.5+0.3};`;
-                document.body.appendChild(d);
             }
         })();
     </script>
