@@ -64,7 +64,7 @@ function setupFormValidation() {
         input.addEventListener('blur', function () {
             this.style.borderColor = this.value.trim() === '' ? 'rgba(220,53,69,0.5)' : 'rgba(255,255,255,0.1)';
         });
-        input.addEventListener('focus', function () { this.style.borderColor = '#60a61e'; });
+        input.addEventListener('focus', function () { this.style.borderColor = '#60e61a'; });
     });
 }
 
