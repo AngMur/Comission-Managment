@@ -167,6 +167,7 @@
     @keyframes spin{to{transform:rotate(360deg);}}
     .no-results{text-align:center;padding:4rem;color:var(--muted);opacity:0.6;}
     .no-results i{font-size:2.2rem;margin-bottom:0.8rem;display:block;}
+    .dot{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
 
     @media(max-width:680px){
       .phases-grid{grid-template-columns:1fr;}
@@ -569,6 +570,18 @@ document.getElementById('searchInput').addEventListener('input', function() {
     const sz = Math.random() * 2 + 0.4;
     s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;`;
     el.appendChild(s);
+  }
+})();
+
+// ── Dots ──────────────────────────────────────────────────────────────────────
+(function() {
+  const dotColors = ['#60e61a','#7af028','#3a9010','#c8e88a','#a8d870'];
+  for (let i = 0; i < 18; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    const sz = Math.random()*10 + 4;
+    d.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;background:${dotColors[Math.floor(Math.random()*dotColors.length)]};opacity:${Math.random()*0.5+0.3};`;
+    document.body.appendChild(d);
   }
 })();
 
