@@ -48,13 +48,13 @@
         .form-group { display: flex; flex-direction: column; position: relative; }
         label { font-size: 0.9rem; font-weight: 600; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
         label i { color: #60a61e; font-size: 0.85rem; }
-        .req { color: #f05555; font-size: 0.85rem; line-height: 1; }
-        .field-error { font-size: 0.78rem; color: #f05555; margin-top: 6px; display: none; align-items: center; gap: 5px; animation: errorFadeIn 0.25s ease; }
+        .req { color: #e74c3c; font-size: 0.85rem; line-height: 1; }
+        .field-error { font-size: 0.78rem; color: #e74c3c; margin-top: 6px; display: none; align-items: center; gap: 5px; animation: errorFadeIn 0.25s ease; }
         .field-error.visible { display: flex; }
         @keyframes errorFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         .field-error i { font-size: 0.72rem; flex-shrink: 0; }
-        .custom-select.has-error .select-display { border-color: rgba(240, 85, 85, 0.7) !important; box-shadow: 0 0 0 3px rgba(240, 85, 85, 0.12) !important; }
-        input.has-error { border-color: rgba(240, 85, 85, 0.7) !important; box-shadow: 0 0 0 3px rgba(240, 85, 85, 0.12) !important; }
+        .custom-select.has-error .select-display { border-color: rgba(231, 76, 60, 0.7) !important; box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12) !important; }
+        input.has-error { border-color: rgba(231, 76, 60, 0.7) !important; box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12) !important; }
         .custom-select.valid .select-display { border-color: rgba(96, 166, 30, 0.5) !important; }
         input.valid { border-color: rgba(96, 166, 30, 0.5) !important; }
         .custom-select { position: relative; }
@@ -104,9 +104,9 @@
         .row-buttons { display: flex; justify-content: space-between; }
         .row-btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 15px; }
         .add-row-btn { color: #60a61e; background: rgba(96, 166, 30, 0.15); border: 1px solid rgba(96, 166, 30, 0.3); }
-        .delete-row-btn { color: #a62e1e; background: rgba(166, 30, 30, 0.15); border: 1px solid rgba(166, 30, 30, 0.3); }
+        .delete-row-btn { color: #e74c3c; background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.3); }
         .add-row-btn:hover { border-color: #60a61e; background: rgba(96, 166, 30, 0.25); }
-        .delete-row-btn:hover { border-color: #a61e1e; background: rgba(166, 30, 30, 0.25); }
+        .delete-row-btn:hover { border-color: #e74c3c; background: rgba(231, 76, 60, 0.2); }
         .row-btn:hover { transform: translateY(-2px); }
         .row-btn i { font-size: 0.9rem; }
         .actions { display: flex; gap: 20px; justify-content: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
@@ -141,8 +141,8 @@
         .novu-modal-header { padding: 28px 32px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: flex-start; gap: 16px; }
         .novu-modal-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
         .novu-modal-icon.success { background: rgba(96,166,30,0.15); color: #60a61e; border: 1px solid rgba(96,166,30,0.3); }
-        .novu-modal-icon.error { background: rgba(220,50,50,0.15); color: #f05555; border: 1px solid rgba(220,50,50,0.3); }
-        .novu-modal-icon.warning { background: rgba(240,160,30,0.15); color: #f0a820; border: 1px solid rgba(240,160,30,0.3); }
+        .novu-modal-icon.error { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+        .novu-modal-icon.warning { background: rgba(240,165,0,0.15); color: #f0a500; border: 1px solid rgba(240,165,0,0.3); }
         .novu-modal-icon.info { background: rgba(96,166,30,0.15); color: #60a61e; border: 1px solid rgba(96,166,30,0.3); }
         .novu-modal-titles { flex: 1; }
         .novu-modal-titles h2 { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 4px; }

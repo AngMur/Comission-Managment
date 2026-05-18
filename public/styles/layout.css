@@ -146,9 +146,9 @@
   font-family: inherit;
 }
 .btn-logout:hover {
-  background: rgba(220,50,50,0.12);
-  border-color: rgba(220,50,50,0.3);
-  color: #f05555;
+  background: rgba(231,76,60,0.12);
+  border-color: rgba(231,76,60,0.3);
+  color: #e74c3c;
 }
 .btn-logout i { font-size: 11px; }
 
@@ -179,7 +179,7 @@
   position: absolute;
   top: -4px; right: -4px;
   min-width: 16px; height: 16px;
-  background: #e53e3e;
+  background: #e74c3c;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -202,7 +202,7 @@
   top: calc(100% + 10px);
   right: 0;
   width: 320px;
-  background: #111f1f;
+  background: #162828;
   border: 1px solid rgba(96,166,30,0.15);
   border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.5);
