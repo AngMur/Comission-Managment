@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient, ObjectId, Decimal128 } = require('mongodb');
 const router  = express.Router();
 const {
   setAuthCookie,
@@ -46,17 +46,31 @@ router.get('/mis-comisiones', authenticate, async (req, res) => {
 
     const comisionIdsComoParticipante = participaciones.map(p => p.comision_id);
 
+    const { from, to } = req.query;
+    const matchStage = {
+      $or: [
+        { created_by: userId },
+        { _id: { $in: comisionIdsComoParticipante } },
+      ],
+    };
+
+    if (from && to) {
+      matchStage.register_date = {
+        $gte: new Date(from),
+        $lte: new Date(to)
+      };
+    } else if (from) {
+      matchStage.register_date = { $gte: new Date(from) };
+    } else if (to) {
+      matchStage.register_date = { $lte: new Date(to) };
+    }
+
     // ── 2. Buscar comisiones donde es creador O participante ─────────────────
     const comisiones = await db
       .collection('comisiones-ubicaciones')
       .aggregate([
         {
-          $match: {
-            $or: [
-              { created_by: userId },
-              { _id: { $in: comisionIdsComoParticipante } },
-            ],
-          },
+          $match: matchStage,
         },
 
         // ── Join estatus de la comisión ──────────────────────────────────────
@@ -167,7 +181,7 @@ router.get('/mis-comisiones', authenticate, async (req, res) => {
           },
         },
 
-        { $sort: { register_date: -1 } },
+        { $sort: { created_at: -1 } },
       ])
       .toArray();
 
@@ -293,92 +307,13 @@ router.get('/historial', authenticate, async (req, res) => {
       else                               { if (!g.contrato) g.contrato = fase; }
     }
 
-    // Solo grupos con AMBAS fases pagadas
-    const result = [...groups.values()].filter(g => g.contrato && g.escritura);
+    // Grupos con al menos una fase pagada
+    const result = [...groups.values()].filter(g => g.contrato || g.escritura);
     return res.json({ success: true, data: result });
 
   } catch (error) {
     console.error('[GET /api/comisiones/historial]', error);
     return res.status(500).json({ success: false, data: null, message: 'Error', error: error.message });
-  }
-});
-
-
-// ── GET /api/comisiones/export/pendientes-pago.csv ────────────────────────────
-router.get('/export/pendientes-pago.csv', authenticate, async (req, res) => {
-  if (!['Directora', 'Administradora'].includes(req.user.roleName)) {
-    return res.status(403).json({ success: false, message: 'Acceso denegado' });
-  }
-  const db = req.app.locals.mongoClient.db(DB_NAME);
-
-  try {
-    const statusPP = await db.collection('estatus').findOne({ order: 5 });
-    if (!statusPP) return res.status(500).send('Estatus no encontrado');
-
-    const rows = await db.collection('comisiones-participantes').aggregate([
-      {
-        $lookup: {
-          from: 'comisiones-ubicaciones',
-          localField: 'comision_id',
-          foreignField: '_id',
-          as: 'comision',
-        },
-      },
-      { $unwind: '$comision' },
-      { $match: { 'comision.status': statusPP._id } },
-      {
-        $lookup: {
-          from: 'usuarios',
-          localField: 'user',
-          foreignField: '_id',
-          as: 'usuario',
-          pipeline: [{ $project: { name: 1 } }],
-        },
-      },
-      { $unwind: { path: '$usuario', preserveNullAndEmptyArrays: true } },
-      { $sort: { 'comision.register_date': -1, role_in_comision: 1 } },
-    ]).toArray();
-
-    const escape = v => {
-      const s = String(v ?? '');
-      return (s.includes(',') || s.includes('"') || s.includes('\n'))
-        ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-
-    const headers = [
-      'Ubicación','Compañía','Desarrollo','Concepto','Tipo',
-      'Fecha Operación','Precio Venta','Comisión Total',
-      'Participante','Rol','Porcentaje','Monto Comisión','Verificado',
-    ];
-
-    const lines = [headers.map(escape).join(',')];
-    for (const r of rows) {
-      const c = r.comision;
-      lines.push([
-        escape(c.location?.text || ''),
-        escape(c.company || ''),
-        escape(c.development || ''),
-        escape(c.concept || ''),
-        escape(c.commission_type?.text ?? c.commission_type ?? ''),
-        escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
-        escape(c.sale_price ?? ''),
-        escape(c.total_commission ?? ''),
-        escape(r.usuario?.name || ''),
-        escape(r.role_in_comision || ''),
-        escape(r.percentage != null ? (r.percentage * 100).toFixed(1) + '%' : ''),
-        escape(r.commission_amount ?? ''),
-        escape(r.verification ? 'Sí' : 'No'),
-      ].join(','));
-    }
-
-    const date = new Date().toISOString().slice(0, 10);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="pendientes-pago-${date}.csv"`);
-    res.send('﻿' + lines.join('\r\n'));
-
-  } catch (error) {
-    console.error('[GET /export/pendientes-pago.csv]', error);
-    res.status(500).send('Error al generar el CSV');
   }
 });
 
@@ -483,13 +418,14 @@ router.patch('/:id/verificar', authenticate, async (req, res) => {
       `Todos verificaron la comisión de ${locationText}. Ahora está en Pendiente de Aprobación.`,
       now);
 
-    // ── Notificar a Directora solo si la comisión fue corregida ──────────────
-    if (comision?.was_corrected) {
-      const directoraIds = await getUserIdsByRole(db, 'Directora');
-      await notify(db, directoraIds,
-        `La comisión corregida de ${locationText} fue re-verificada y está lista para aprobación.`,
+    // ── Notificar a Director ───────────────────────────────────────────────
+    const directorIds = await getUserIdsByRole(db, 'Director');
+    if (directorIds.length > 0) {
+      await notify(db, directorIds,
+        `La comisión de ${locationText} fue verificada y está lista para aprobación.`,
         now);
     }
+
 
     return res.status(200).json({
       success: true,
@@ -511,7 +447,7 @@ router.patch('/:id/verificar', authenticate, async (req, res) => {
 
 
 // ── 2. PATCH /api/comisiones/:id/aprobar ─────────────────────────────────────
-// La Directora aprueba o manda a corrección
+// La Director aprueba o manda a corrección
 router.patch('/:id/aprobar', authenticate, async (req, res) => {
   const client = req.app.locals.mongoClient;
   const db     = client.db(DB_NAME);
@@ -602,7 +538,7 @@ router.patch('/:id/aprobar', authenticate, async (req, res) => {
     const participantes = await db
       .collection('comisiones-participantes')
       .find({ comision_id: comisionId })
-      .project({ user: 1 })
+      .project({ user: 1, commission_amount: 1, adjusted_commission: 1 })
       .toArray();
 
     const msgParticipantes = accion === 'aprobar'
@@ -611,11 +547,34 @@ router.patch('/:id/aprobar', authenticate, async (req, res) => {
 
     await notify(db, participantes.map(p => p.user), msgParticipantes, now);
 
-    // ── Notificar a Administradora solo si la comisión fue corregida ──────────
-    if (accion === 'aprobar' && eraCorreccion) {
-      const adminIds = await getUserIdsByRole(db, 'Administradora');
+    // ── Insertar crédito en wallet si se aprueba ──────────────────────────────
+    if (accion === 'aprobar') {
+      const txs = participantes.map(p => {
+        const monto = parseFloat((p.adjusted_commission ?? p.commission_amount ?? 0).toString());
+        return {
+          user_id: p.user,
+          type: 'credit',
+          amount: Decimal128.fromString(monto.toString()),
+          concept: 'commission',
+          description: `Comisión aprobada - ${comisionLocation}`,
+          debt_id: null,
+          comision_id: comisionId,
+          reference_date: now,
+          created_by: new ObjectId(req.user.id),
+          created_at: now
+        };
+      }).filter(t => parseFloat(t.amount.toString()) > 0);
+      
+      if (txs.length > 0) {
+        await db.collection('walletTransactions').insertMany(txs);
+      }
+    }
+
+    // ── Notificar a Administrador ─────────────────────────────────────────────
+    if (accion === 'aprobar') {
+      const adminIds = await getUserIdsByRole(db, 'Administrador');
       await notify(db, adminIds,
-        `La comisión corregida de ${comisionLocation} fue aprobada y está lista para pago.`,
+        `La comisión de ${comisionLocation} fue aprobada y está lista para pago.`,
         now);
     }
 
@@ -641,7 +600,7 @@ router.patch('/:id/aprobar', authenticate, async (req, res) => {
 
 
 // ── 3. PATCH /api/comisiones/:id/pagar ───────────────────────────────────────
-// La Administradora marca la comisión como pagada
+// La Administrador marca la comisión como pagada
 router.patch('/:id/pagar', authenticate, async (req, res) => {
   const client = req.app.locals.mongoClient;
   const db     = client.db(DB_NAME);
@@ -691,16 +650,41 @@ router.patch('/:id/pagar', authenticate, async (req, res) => {
       ),
     ]);
 
-    // ── Notificar a los participantes ─────────────────────────────────────────
+    // ── Notificar a los participantes y Director ──────────────────────────────
     const participantes = await db
       .collection('comisiones-participantes')
       .find({ comision_id: comisionId })
-      .project({ user: 1 })
+      .project({ user: 1, commission_amount: 1, adjusted_commission: 1 })
       .toArray();
 
     const locationPago = comision?.location?.text || 'Sin ubicación';
-    await notify(db, participantes.map(p => p.user),
+    
+    const directorIds = await getUserIdsByRole(db, 'Director');
+    const usersToNotify = [...new Set([...participantes.map(p => p.user.toString()), ...directorIds.map(id => id.toString())])];
+
+    await notify(db, usersToNotify.map(id => new ObjectId(id)),
       `¡Tu comisión de ${locationPago} ha sido pagada!`, now);
+
+    // ── Insertar débito en wallet al pagar la comisión ────────────────────────
+    const txs = participantes.map(p => {
+      const monto = parseFloat((p.adjusted_commission ?? p.commission_amount ?? 0).toString());
+      return {
+        user_id: p.user,
+        type: 'debit',
+        amount: Decimal128.fromString(monto.toString()),
+        concept: 'payment', // Retiro de la comisión de la wallet
+        description: `Retiro por comisión pagada - ${locationPago}`,
+        debt_id: null,
+        comision_id: comisionId,
+        reference_date: now,
+        created_by: new ObjectId(req.user.id),
+        created_at: now
+      };
+    }).filter(t => parseFloat(t.amount.toString()) > 0);
+    
+    if (txs.length > 0) {
+      await db.collection('walletTransactions').insertMany(txs);
+    }
 
     return res.status(200).json({
       success: true,
@@ -917,10 +901,27 @@ router.get('/', authenticate, async (req, res) => {
   const db     = client.db(DB_NAME);
 
   try {
-    const comisiones = await db
-      .collection('comisiones-ubicaciones')
-      .aggregate([
+    const { from, to } = req.query;
+    const matchStage = {};
 
+    if (from && to) {
+      matchStage.register_date = {
+        $gte: new Date(from),
+        $lte: new Date(to)
+      };
+    } else if (from) {
+      matchStage.register_date = { $gte: new Date(from) };
+    } else if (to) {
+      matchStage.register_date = { $lte: new Date(to) };
+    }
+
+    const aggregatePipeline = [];
+    
+    if (Object.keys(matchStage).length > 0) {
+      aggregatePipeline.push({ $match: matchStage });
+    }
+
+    aggregatePipeline.push(
         // ── 1. Join estatus de la comisión ────────────────────────────────────
         {
           $lookup: {
@@ -987,8 +988,12 @@ router.get('/', authenticate, async (req, res) => {
 
 
 
-        { $sort: { register_date: -1 } },
-      ])
+        { $sort: { created_at: -1 } }
+    );
+
+    const comisiones = await db
+      .collection('comisiones-ubicaciones')
+      .aggregate(aggregatePipeline)
       .toArray();
 
     return res.status(200).json({
@@ -1719,8 +1724,8 @@ router.delete('/eliminar/:id', authenticate, async (req, res) => {
 //       .findOne({ _id: participante.status });
 
 //     const transicionesPermitidas = {
-//       Directora:       { desde: [1, 2], hacia: [2, 4] },  // Verifica y Aprueba
-//       Administradora:  { desde: [5],    hacia: [6] },      // Marca pagada
+//       Director:       { desde: [1, 2], hacia: [2, 4] },  // Verifica y Aprueba
+//       Administrador:  { desde: [5],    hacia: [6] },      // Marca pagada
 //     };
 
 //     const roleName = req.user.roleName;

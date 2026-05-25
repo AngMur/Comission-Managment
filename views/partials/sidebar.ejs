@@ -8,16 +8,37 @@
         <span>Comisiones</span>
       </a>
     </li>
+
+    <% if (typeof user !== 'undefined' && user && user.roleName !== 'Asesor') { %>
     <li>
       <a href="/registrar-comision" class="<%= (typeof currentPage !== 'undefined' && currentPage === 'registrar-comision') ? 'active' : '' %>">
         <i class="fas fa-file-circle-plus"></i>
         <span>Nueva Comisión</span>
       </a>
     </li>
+    <% } %>
+
     <li>
       <a href="/historial-comisiones" class="<%= (typeof currentPage !== 'undefined' && currentPage === 'historial') ? 'active' : '' %>">
         <i class="fas fa-history"></i>
         <span>Historial</span>
+      </a>
+    </li>
+
+    <% if (typeof user !== 'undefined' && user && user.roleName !== 'Asesor') { %>
+    <li>
+      <a href="/cartera-deudores" class="<%= (typeof currentPage !== 'undefined' && currentPage === 'cartera-deudores') ? 'active' : '' %>">
+        <i class="fas fa-wallet"></i>
+        <span>Cartera de Deudores</span>
+      </a>
+    </li>
+    <% } %>
+
+    <% if (typeof user !== 'undefined' && user && user.roleName === 'Administrador') { %>
+    <li>
+      <a href="/usuarios" class="<%= (typeof currentPage !== 'undefined' && currentPage === 'usuarios') ? 'active' : '' %>">
+        <i class="fas fa-users-cog"></i>
+        <span>Gestión de Usuarios</span>
       </a>
     </li>
     <li>
@@ -26,5 +47,6 @@
         <span>Registrar Usuario</span>
       </a>
     </li>
+    <% } %>
   </ul>
 </nav>

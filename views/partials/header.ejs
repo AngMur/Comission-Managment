@@ -66,7 +66,8 @@
     }
 
     list.innerHTML = notifs.map(function(n) {
-      return '<div class="notif-item' + (n.read ? ' read' : '') + '" data-id="' + n._id + '" onclick="handleNotifClick(this)">' +
+      const link = n.link || '/comisiones';
+      return '<div class="notif-item' + (n.read ? ' read' : '') + '" data-id="' + n._id + '" data-link="' + link + '" onclick="handleNotifClick(this)">' +
         '<span class="notif-dot"></span>' +
         '<div class="notif-body">' +
           '<p class="notif-msg">' + n.message + '</p>' +
@@ -103,16 +104,23 @@
   });
 
   // ── Marcar una como leída ────────────────────────────────────────
-  window.handleNotifClick = function(el) {
-    if (el.classList.contains('read')) return;
-    el.classList.add('read');
-    var badge = document.getElementById('notifBadge');
-    var unread = document.querySelectorAll('.notif-item:not(.read)').length;
-    badge.textContent = unread > 9 ? '9+' : (unread || '');
-    badge.classList.toggle('visible', unread > 0);
-    fetch('/api/notificaciones/' + el.dataset.id + '/read', {
-      method: 'PATCH', credentials: 'include'
-    });
+  window.handleNotifClick = async function(el) {
+    if (!el.classList.contains('read')) {
+      el.classList.add('read');
+      var badge = document.getElementById('notifBadge');
+      var unread = document.querySelectorAll('.notif-item:not(.read)').length;
+      badge.textContent = unread > 9 ? '9+' : (unread || '');
+      badge.classList.toggle('visible', unread > 0);
+      try {
+        await fetch('/api/notificaciones/' + el.dataset.id + '/read', {
+          method: 'PATCH', credentials: 'include'
+        });
+      } catch(e) {}
+    }
+    
+    if (el.dataset.link) {
+      window.location.href = el.dataset.link;
+    }
   };
 
   // ── Marcar todas como leídas ─────────────────────────────────────

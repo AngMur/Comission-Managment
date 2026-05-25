@@ -377,6 +377,7 @@ function buildParticipants(participantes) {
 }
 
 function buildPhaseCol(fase, tipo) {
+  if (!fase) fase = {};
   const isC   = tipo === 'contrato';
   const cls   = isC ? 'contrato-col' : 'escritura-col';
   const label = isC ? 'Contrato' : 'Escritura';

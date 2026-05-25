@@ -53,11 +53,10 @@ const netBalance = async (db, userId) => {
 router.post('/debts', authenticate, async (req, res) => {
     const client = req.app.locals.mongoClient;
     const db = client.db(DB_NAME);
-    const session = client.startSession();
 
     try {
         const { user_id, type, description, total_amount } = req.body;
-        const created_by = req.user._id;
+        const created_by = req.user.id;
 
         // ── Validaciones ────────────────────────────────────────────────────────
         if (!user_id || !type || !description || !total_amount) {
@@ -100,38 +99,34 @@ router.post('/debts', authenticate, async (req, res) => {
         let debtId;
         const now = new Date();
 
-        await session.withTransaction(async () => {
+        // 1. Insertar deuda
+        const debtDoc = {
+            user_id: new ObjectId(user_id),
+            type,
+            description,
+            total_amount: toDecimal(total_amount),
+            remaining_balance: toDecimal(total_amount),
+            status: 'active',
+            created_by: new ObjectId(created_by),
+            created_at: now,
+            updated_at: now,
+        };
 
-            // 1. Insertar deuda
-            const debtDoc = {
-                user_id: new ObjectId(user_id),
-                type,
-                description,
-                total_amount: toDecimal(total_amount),
-                remaining_balance: toDecimal(total_amount),
-                status: 'active',
-                created_by: new ObjectId(created_by),
-                created_at: now,
-                updated_at: now,
-            };
+        const { insertedId } = await db.collection('debts').insertOne(debtDoc);
+        debtId = insertedId;
 
-            const { insertedId } = await db.collection('debts').insertOne(debtDoc, { session });
-            debtId = insertedId;
-
-            // 2. Registrar transacción de origen
-            await db.collection('walletTransactions').insertOne({
-                user_id: new ObjectId(user_id),
-                type: 'debit',
-                amount: toDecimal(total_amount),
-                concept: type === 'loan' ? 'loan' : 'penalty',
-                description,
-                debt_id: debtId,
-                comision_id: null,
-                reference_date: now,
-                created_by: new ObjectId(created_by),
-                created_at: now,
-            }, { session });
-
+        // 2. Registrar transacción de origen
+        await db.collection('walletTransactions').insertOne({
+            user_id: new ObjectId(user_id),
+            type: 'debit',
+            amount: toDecimal(total_amount),
+            concept: type === 'loan' ? 'loan' : 'penalty',
+            description,
+            debt_id: debtId,
+            comision_id: null,
+            reference_date: now,
+            created_by: new ObjectId(created_by),
+            created_at: now,
         });
 
         return res.status(201).json({
@@ -149,8 +144,6 @@ router.post('/debts', authenticate, async (req, res) => {
             data: null,
             error: error.message,
         });
-    } finally {
-        await session.endSession();
     }
 });
 
@@ -223,12 +216,11 @@ router.get('/debts/:user_id', authenticate, async (req, res) => {
 router.post('/debts/:debt_id/payment', authenticate, async (req, res) => {
     const client = req.app.locals.mongoClient;
     const db = client.db(DB_NAME);
-    const session = client.startSession();
 
     try {
         const { debt_id } = req.params;
         const { amount, description } = req.body;
-        const created_by = req.user._id;
+        const created_by = req.user.id;
 
         // ── Validaciones ────────────────────────────────────────────────────────
         if (!ObjectId.isValid(debt_id)) {
@@ -284,35 +276,30 @@ router.post('/debts/:debt_id/payment', authenticate, async (req, res) => {
         const newStatus = newBalance === 0 ? 'paid' : 'active';
         const now = new Date();
 
-        await session.withTransaction(async () => {
-
-            // 1. Actualizar deuda
-            await db.collection('debts').updateOne(
-                { _id: new ObjectId(debt_id) },
-                {
-                    $set: {
-                        remaining_balance: toDecimal(newBalance),
-                        status: newStatus,
-                        updated_at: now,
-                    },
+        // 1. Actualizar deuda
+        await db.collection('debts').updateOne(
+            { _id: new ObjectId(debt_id) },
+            {
+                $set: {
+                    remaining_balance: toDecimal(newBalance),
+                    status: newStatus,
+                    updated_at: now,
                 },
-                { session }
-            );
+            }
+        );
 
-            // 2. Registrar transacción de pago
-            await db.collection('walletTransactions').insertOne({
-                user_id: debt.user_id,
-                type: 'debit',
-                amount: toDecimal(amount),
-                concept: 'payment',
-                description: description ?? `Pago a deuda — ${debt.description}`,
-                debt_id: new ObjectId(debt_id),
-                comision_id: null,
-                reference_date: now,
-                created_by: new ObjectId(created_by),
-                created_at: now,
-            }, { session });
-
+        // 2. Registrar transacción de pago
+        await db.collection('walletTransactions').insertOne({
+            user_id: debt.user_id,
+            type: 'debit',
+            amount: toDecimal(amount),
+            concept: 'payment',
+            description: description ?? `Pago a deuda — ${debt.description}`,
+            debt_id: new ObjectId(debt_id),
+            comision_id: null,
+            reference_date: now,
+            created_by: new ObjectId(created_by),
+            created_at: now,
         });
 
         return res.status(200).json({
@@ -337,8 +324,6 @@ router.post('/debts/:debt_id/payment', authenticate, async (req, res) => {
             data: null,
             error: error.message,
         });
-    } finally {
-        await session.endSession();
     }
 });
 
@@ -582,6 +567,140 @@ router.post('/:user_id/transactions/credit', authenticate, async (req, res) => {
             data: null,
             error: error.message,
         });
+    }
+});
+
+// =============================================================================
+// CARTERA AGGREGATION
+// =============================================================================
+
+/**
+ * GET /api/wallet/cartera
+ * Devuelve el resumen agregado para todos los asesores y gerentes.
+ */
+router.get('/cartera', authenticate, async (req, res) => {
+    try {
+        const db = req.app.locals.mongoClient.db(DB_NAME);
+
+        const cartera = await db.collection('usuarios').aggregate([
+            { $match: { active: true } },
+            {
+                $lookup: {
+                    from: 'roles',
+                    localField: 'role',
+                    foreignField: '_id',
+                    as: 'roleInfo',
+                }
+            },
+            { $unwind: { path: '$roleInfo', preserveNullAndEmptyArrays: true } },
+            {
+                $match: {
+                    'roleInfo.name': { $regex: /Asesor|Gerent/i }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'debts',
+                    let: { userId: '$_id' },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ['$user_id', '$$userId'] }, status: 'active' } }
+                    ],
+                    as: 'active_debts'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'walletTransactions',
+                    let: { userId: '$_id' },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ['$user_id', '$$userId'] } } },
+                        { $sort: { created_at: -1 } }
+                    ],
+                    as: 'transactions'
+                }
+            }
+        ]).toArray();
+
+        const formatted = cartera.map(user => {
+            let deuda = 0;
+            let comision = 0;
+            let saldo = 0;
+
+            user.active_debts.forEach(d => {
+                deuda += parseFloat(d.remaining_balance?.toString() || 0);
+            });
+
+            let totalDebits = 0;
+            user.transactions.forEach(t => {
+                const amount = parseFloat(t.amount?.toString() || 0);
+                if (t.type === 'credit') {
+                    if (t.concept === 'commission') comision += amount;
+                    else saldo += amount;
+                } else if (t.type === 'debit') {
+                    totalDebits += amount;
+                }
+            });
+
+            let remainingDebits = totalDebits;
+            if (remainingDebits > 0) {
+                if (comision >= remainingDebits) {
+                    comision -= remainingDebits;
+                    remainingDebits = 0;
+                } else {
+                    remainingDebits -= comision;
+                    comision = 0;
+                }
+            }
+            if (remainingDebits > 0) {
+                if (saldo >= remainingDebits) {
+                    saldo -= remainingDebits;
+                    remainingDebits = 0;
+                } else {
+                    saldo = 0;
+                }
+            }
+
+            const log = user.transactions.slice(0, 10).map(t => {
+                let tipo = t.type === 'debit' ? 'deu' : (t.concept === 'commission' ? 'com' : 'sal');
+                return {
+                    id: t._id,
+                    t: t.description || t.concept,
+                    tipo: tipo,
+                    monto: parseFloat(t.amount?.toString() || 0),
+                    fecha: new Date(t.created_at).toISOString().slice(0, 10),
+                };
+            });
+
+            const av = (user.name || '').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+            return {
+                id: user._id,
+                name: user.name,
+                role: user.roleInfo?.name || 'Asesor',
+                av: av,
+                avc: 'av-a',
+                deuda,
+                comision,
+                saldo,
+                active_debts: user.active_debts.map(d => ({ id: d._id, balance: parseFloat(d.remaining_balance?.toString() || 0) })),
+                log
+            };
+        });
+
+        // Ordenar por nombre
+        formatted.sort((a, b) => a.name.localeCompare(b.name));
+
+        const colors = ['av-a', 'av-b', 'av-c', 'av-d', 'av-e'];
+        formatted.forEach((f, i) => { f.avc = colors[i % colors.length]; });
+
+        return res.status(200).json({
+            success: true,
+            data: formatted
+        });
+
+    } catch (error) {
+        console.error('[GET /api/wallet/cartera]', error);
+        return res.status(500).json({ success: false, message: 'Error interno' });
     }
 });
 

@@ -408,10 +408,10 @@
       <i class="ti ti-plus"></i>
       Nueva comisión
     </a>
-    <a href="/api/comisiones/export/pendientes-pago.csv" class="btn-export" id="btnExport" style="display:none" download>
+    <button class="btn-export" id="btnExport" style="display:none" onclick="exportCSV()">
       <i class="ti ti-download"></i>
       Exportar CSV
-    </a>
+    </button>
     <span class="page-count" id="page-count"></span>
     
   </div>
@@ -427,12 +427,22 @@
       <option value="Pendiente Verificacion">Pendiente verificación</option>
       <option value="Verificada">Verificada</option>
       <option value="Pendiente Aprobacion">Pendiente aprobación</option>
+      <option value="Aprobada">Aprobada</option>
       <option value="Pendiente Pago">Pendiente pago</option>
       <option value="Pagada">Pagada</option>
       <option value="Correccion">Corrección</option>
     </select>
     <select class="filter-select" id="filterCompany"><option value="">Todas las empresas</option></select>
     <select class="filter-select" id="filterDev"><option value="">Todos los desarrollos</option></select>
+    
+    <div style="display: flex; gap: 8px; align-items: center; background: var(--surface); padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <span style="font-size: 12px; color: var(--text-2);">Desde:</span>
+      <input type="date" class="filter-select" id="filterFrom" style="border: none; background: transparent; padding: 5px 0;">
+      <span style="font-size: 12px; color: var(--text-2);">Hasta:</span>
+      <input type="date" class="filter-select" id="filterTo" style="border: none; background: transparent; padding: 5px 0;">
+      <button class="mbtn" id="btnFilterDate" style="padding: 4px 8px; font-size: 11px;">Buscar</button>
+    </div>
+
     <button class="filter-clear hidden" id="filterClear"><i class="fas fa-times"></i> Limpiar</button>
   </div>
 
@@ -471,7 +481,11 @@ const FILTERS = { search: '', status: '', company: '', dev: '' };
 
 function getFiltered() {
   return DATA.filter(c => {
-    if (FILTERS.status  && c.status?.name             !== FILTERS.status)  return false;
+    if (FILTERS.status) {
+      const sName = (c.status?.name || '').trim().toLowerCase();
+      const fName = FILTERS.status.trim().toLowerCase();
+      if (sName !== fName) return false;
+    }
     if (FILTERS.company && (c.company?.text    || '') !== FILTERS.company) return false;
     if (FILTERS.dev     && (c.development?.text || '') !== FILTERS.dev)    return false;
     if (FILTERS.search) {
@@ -486,7 +500,7 @@ function getFiltered() {
 }
 
 function updateFilterClear() {
-  const active = FILTERS.search || FILTERS.status || FILTERS.company || FILTERS.dev;
+  const active = FILTERS.search || FILTERS.status || FILTERS.company || FILTERS.dev || $('filterFrom').value || $('filterTo').value;
   $('filterClear').classList.toggle('hidden', !active);
 }
 
@@ -513,13 +527,13 @@ async function init() {
   }
 
 
-  // Mostrar "Nueva comisión" para Gerente, Directora y Administradora
-  const rolesConAcceso = ['Gerente', 'Directora', 'Administradora'];
+  // Mostrar "Nueva comisión" para Gerente, Director y Administrador
+  const rolesConAcceso = ['Gerente', 'Director', 'Administrador'];
   if (rolesConAcceso.includes(USER.roleName)) {
     $('btnNew').style.display = 'flex';
   }
 
-  if (['Directora', 'Administradora'].includes(USER.roleName)) {
+  if (['Director', 'Administrador'].includes(USER.roleName)) {
     $('btnExport').style.display = 'flex';
   }
 
@@ -578,7 +592,16 @@ async function doLogout() {
 // ── Comisiones ────────────────────────────────────────────────────────────────
 async function loadComisiones(misComisiones) {
   $('list').innerHTML = `<div class="state-msg"><div class="spinner"></div>Cargando comisiones…</div>`;
-  const url = misComisiones ? '/api/comisiones/mis-comisiones' : '/api/comisiones';
+  let url = misComisiones ? '/api/comisiones/mis-comisiones' : '/api/comisiones';
+  
+  const fromDate = $('filterFrom') ? $('filterFrom').value : '';
+  const toDate = $('filterTo') ? $('filterTo').value : '';
+  if (fromDate || toDate) {
+    const params = new URLSearchParams();
+    if (fromDate) params.append('from', fromDate);
+    if (toDate) params.append('to', toDate);
+    url += '?' + params.toString();
+  }
   try {
     const r = await fetch(url, { credentials: 'include' });
     const j = await r.json();
@@ -673,12 +696,12 @@ function cardHTML(c) {
 
   let actions = '';
   const sName = c.status?.name;
-  if (USER.roleName === 'Directora' && sName === 'Pendiente Aprobacion') {
+  if (USER.roleName === 'Director' && sName === 'Pendiente Aprobacion') {
     actions = `
       <button class="btn btn-green" onclick="aprobar('${c._id}','aprobar')"><i class="ti ti-circle-check"></i>Aprobar</button>
       <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')"><i class="ti ti-alert-circle"></i>Corregir</button>`;
   }
-  if (USER.roleName === 'Administradora' && sName === 'Pendiente Pago') {
+  if (USER.roleName === 'Administrador' && sName === 'Pendiente Pago') {
     actions = `
       <button class="btn btn-green" onclick="pagar('${c._id}')"><i class="ti ti-cash"></i>Marcar como pagada</button>
       <button class="btn btn-amber" onclick="pedirCorreccion('${c._id}')"><i class="ti ti-alert-circle"></i>Corregir</button>`;
@@ -836,6 +859,70 @@ function showError(msg) {
   $('list').innerHTML = `<div class="state-msg"><i class="ti ti-alert-circle"></i>${msg}</div>`;
 }
 
+// ── Exportar CSV ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  const filtered = getFiltered();
+  const escape = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n'))
+      ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const headers = [
+    'Ubicación','Compañía','Desarrollo','Concepto','Tipo',
+    'Fecha Operación','Precio Venta','Comisión Total',
+    'Participante','Rol','Porcentaje','Monto Comisión','Verificado','Estado'
+  ];
+  const lines = [headers.map(escape).join(',')];
+  
+  for (const c of filtered) {
+    if (c.participantes && c.participantes.length > 0) {
+      for (const p of c.participantes) {
+        lines.push([
+          escape(c.location?.text || ''),
+          escape(c.company?.text || c.company || ''),
+          escape(c.development?.text || c.development || ''),
+          escape(c.concept || ''),
+          escape(c.commission_type?.text ?? c.commission_type ?? ''),
+          escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
+          escape(c.sale_price ?? ''),
+          escape(c.total_commission ?? ''),
+          escape(p.usuario?.name || ''),
+          escape(p.role_in_comision || ''),
+          escape(p.percentage != null ? (p.percentage * 100).toFixed(1) + '%' : ''),
+          escape(p.commission_amount ?? ''),
+          escape(p.verification ? 'Sí' : 'No'),
+          escape(c.status?.name || '')
+        ].join(','));
+      }
+    } else {
+      lines.push([
+        escape(c.location?.text || ''),
+        escape(c.company?.text || c.company || ''),
+        escape(c.development?.text || c.development || ''),
+        escape(c.concept || ''),
+        escape(c.commission_type?.text ?? c.commission_type ?? ''),
+        escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
+        escape(c.sale_price ?? ''),
+        escape(c.total_commission ?? ''),
+        '','','','','',
+        escape(c.status?.name || '')
+      ].join(','));
+    }
+  }
+
+  const csvContent = '\uFEFF' + lines.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const date = new Date().toISOString().slice(0, 10);
+  a.download = `comisiones-filtradas-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ── Event listeners filtros ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   $('filterSearch').addEventListener('input', function() {
@@ -860,9 +947,28 @@ document.addEventListener('DOMContentLoaded', () => {
     $('filterStatus').value  = '';
     $('filterCompany').value = '';
     $('filterDev').value     = '';
-    updateFilterClear(); render();
+    
+    // Si habían fechas, recargar del servidor sin fechas
+    const hadDates = $('filterFrom').value || $('filterTo').value;
+    $('filterFrom').value = '';
+    $('filterTo').value   = '';
+    
+    updateFilterClear(); 
+    
+    if (hadDates) {
+      reloadComision();
+    } else {
+      render();
+    }
+  });
+
+  $('btnFilterDate').addEventListener('click', () => {
+    updateFilterClear();
+    reloadComision();
   });
 });
+
+
 
 init();
 

@@ -6,10 +6,23 @@ const {
     authenticate
 } = require('../JWT/authCookies');
 
+// Middleware manual para chequear roles en las vistas
+const checkRole = (allowedRoles) => {
+  return (req, res, next) => {
+    // Si no hay user, se redirige al login
+    if (!res.locals.user) {
+      return res.redirect('/');
+    }
+    // Si hay un arreglo de roles y el rol actual no está, lo redirige
+    if (allowedRoles && !allowedRoles.includes(res.locals.user.roleName)) {
+      return res.redirect('/comisiones');
+    }
+    next();
+  };
+};
+
 // Login — sin layout (no header)
 router.get('/', (req, res) => {
-  // Sobreescribir res.status temporalmente para interceptar el 401
-  // que lanzaría authenticate si no hay sesión válida
   const originalStatus = res.status.bind(res);
   let intercepted = false;
 
@@ -27,46 +40,42 @@ router.get('/', (req, res) => {
   });
 });
 
-
-
 router.get('/login-successfully', (req, res) => {
-  res.render('comisiones', { title: 'Comisiones', currentPage: 'comisiones' });
+  res.redirect('/comisiones');
 });
 
-router.get('/registrar-usuario', (req, res) => {
-  res.render('registrar-usuario', { title: 'Registrar Usuario', currentPage: 'registrar-usuario' });
-});
-
-// router.get('/selector', (req, res) => {
-//   res.render('selector', { title: 'SELECTOR' });
-// });
-
-router.get('/registrar-comision', (req, res) => {
+// Solo Gerente, Director, Administrador
+router.get('/registrar-comision', checkRole(['Gerente', 'Director', 'Administrador']), (req, res) => {
   res.render('registrar-comision', { title: 'Registro de Comisión', currentPage: 'registrar-comision' });
 });
 
-router.get('/comisiones', (req, res) => {
+// Todos pueden ver comisiones e historial
+router.get('/comisiones', checkRole(), (req, res) => {
   res.render('comisiones', { title: 'Comisiones', currentPage: 'comisiones' });
 });
 
-router.get('/historial-comisiones', (req, res) => {
+router.get('/historial-comisiones', checkRole(), (req, res) => {
   res.render('historial-comisiones', { title: 'Historial de Comisiones', currentPage: 'historial' });
+});
+
+// Solo Gerente, Director, Administrador
+router.get('/cartera-deudores', checkRole(['Gerente', 'Director', 'Administrador']), (req, res) => {
+  res.render('cartera-deudores', { title: 'Cartera de Deudores', currentPage: 'cartera-deudores' });
+});
+
+// Solo Administrador
+router.get('/usuarios', checkRole(['Administrador']), (req, res) => {
+  res.render('usuarios', { title: 'Gestión de Usuarios', currentPage: 'usuarios' });
+});
+
+// Solo Administrador
+router.get('/registrar-usuario', checkRole(['Administrador']), (req, res) => {
+  res.render('registrar-usuario', { title: 'Registrar Usuario', currentPage: 'registrar-usuario' });
 });
 
 router.post('/logout', (req, res) => {
   clearAuthCookie(res);
   res.redirect('/');
 });
-
-// router.get('/commission-historic', (req, res) => {
-//   res.render('commission-historic', { title: 'Historial', layout: false });
-// });
-
-
-// router.get('/permissions', (req, res) => {
-//   res.render('permissions', { title: 'Permisos', layout: false });
-// });
-
-
 
 module.exports = router;

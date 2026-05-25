@@ -13,6 +13,10 @@ const DB_NAME = 'roles_usuarios';
  * POST /api/users
  */
 router.post('/', authenticate, async (req, res) => {
+    if (req.user.roleName !== 'Administrador') {
+        return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción' });
+    }
+
     try {
         const db = req.app.locals.mongoClient.db(DB_NAME);
 
@@ -317,6 +321,61 @@ router.get('/by-role/:roleName', authenticate, async (req, res) => {
       error:   err.message,
     });
   }
+});
+router.put('/:id', authenticate, async (req, res) => {
+    if (req.user.roleName !== 'Administrador') {
+        return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción' });
+    }
+    const client = req.app.locals.mongoClient;
+    const db = client.db(DB_NAME);
+    try {
+        const { id } = req.params;
+        if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'ID inválido' });
+
+        const { name, email, role, password, active, phone, blood_type, birth_date, emergency_contact_name, emergency_contact_phone, picture, username } = req.body;
+        const updateData = { updated_at: new Date() };
+
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (phone !== undefined) updateData.phone = phone;
+        if (blood_type !== undefined) updateData.blood_type = blood_type;
+        if (birth_date !== undefined) updateData.birth_date = birth_date ? new Date(birth_date) : null;
+        if (emergency_contact_name !== undefined) updateData.emergency_contact_name = emergency_contact_name;
+        if (emergency_contact_phone !== undefined) updateData.emergency_contact_phone = emergency_contact_phone;
+        if (username !== undefined) updateData.username = username;
+        if (picture !== undefined) updateData.picture = picture;
+        
+        if (role) updateData.role = new ObjectId(role);
+        if (password && password.trim() !== '') updateData.password = password;
+        if (active !== undefined) updateData.active = active;
+
+        const result = await db.collection('usuarios').updateOne({ _id: new ObjectId(id) }, { $set: updateData });
+        if (result.matchedCount === 0) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+        return res.json({ success: true, message: 'Usuario actualizado correctamente' });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: 'Error al actualizar usuario', error: err.message });
+    }
+});
+
+router.delete('/:id', authenticate, async (req, res) => {
+    if (req.user.roleName !== 'Administrador') {
+        return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción' });
+    }
+    const client = req.app.locals.mongoClient;
+    const db = client.db(DB_NAME);
+    try {
+        const { id } = req.params;
+        if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'ID inválido' });
+
+        // Eliminación lógica
+        const result = await db.collection('usuarios').updateOne({ _id: new ObjectId(id) }, { $set: { active: false, updated_at: new Date() } });
+        if (result.matchedCount === 0) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+        return res.json({ success: true, message: 'Usuario desactivado correctamente' });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: 'Error al eliminar usuario', error: err.message });
+    }
 });
 
 module.exports = router;

@@ -5,14 +5,14 @@
   db.roles.insertMany([
     { name: "Asesor", description: "Puede consultar sus comisiones activas", created_at: new Date() },
     { name: "Gerente", description: "Puede registrar y ver comisiones activas", created_at: new Date() },
-    { name: "Directora", description: "Puede aprobar comisiones y ajustar los montos", created_at: new Date() },
-    { name: "Administradora", description: "Recibe las comisiones a pagar e indica cuando ya fueron pagadas", created_at: new Date() }
+    { name: "Director", description: "Puede aprobar comisiones y ajustar los montos", created_at: new Date() },
+    { name: "Administrador", description: "Recibe las comisiones a pagar e indica cuando ya fueron pagadas", created_at: new Date() }
   ]);
 
   const asesorId = db.roles.findOne({ name: "Asesor" })._id;
   const gerenteId = db.roles.findOne({ name: "Gerente" })._id;
-  const directoraId = db.roles.findOne({ name: "Directora" })._id;
-  const administradoraId = db.roles.findOne({ name: "Administradora" })._id;
+  const directorId = db.roles.findOne({ name: "Director" })._id;
+  const administradorId = db.roles.findOne({ name: "Administrador" })._id;
 
   db.createCollection("usuarios");
 
@@ -35,14 +35,14 @@
       name: "Elena Montero Ruiz", email: "elena.montero@gmail.com", phone: "5545678901",
       blood_type: "AB+", birth_date: new Date("1980-12-01"),
       emergency_contact_name: "Javier Montero", emergency_contact_phone: "5545678902",
-      picture: "./static/elena.jpg", role: directoraId,
-      username: "ELENMON", password: "directora123", active: true, created_at: new Date()
+      picture: "./static/elena.jpg", role: directorId,
+      username: "ELENMON", password: "director123", active: true, created_at: new Date()
     },
     {
       name: "Carmen Jimenez Diaz", email: "carmen.jimenez@gmail.com", phone: "5556789012",
       blood_type: "A-", birth_date: new Date("1983-07-19"),
       emergency_contact_name: "Luis Jimenez", emergency_contact_phone: "5556789013",
-      picture: "./static/carmen.jpg", role: administradoraId,
+      picture: "./static/carmen.jpg", role: administradorId,
       username: "CARJIM", password: "admin123", active: true, created_at: new Date()
     }
   ]);
@@ -113,10 +113,10 @@
   db.estatus.insertMany([
     { order: 1, name: "Pendiente Verificacion", description: "La comisión está esperando verificación de los participantes", created_at: new Date() },
     { order: 2, name: "Verificada",             description: "Todos los participantes han verificado la comisión", created_at: new Date() },
-    { order: 3, name: "Pendiente Aprobacion",   description: "La comisión está esperando aprobación de la Directora", created_at: new Date() },
-    { order: 4, name: "Aprobada",               description: "La comisión ha sido aprobada por la Directora", created_at: new Date() },
+    { order: 3, name: "Pendiente Aprobacion",   description: "La comisión está esperando aprobación de la Director", created_at: new Date() },
+    { order: 4, name: "Aprobada",               description: "La comisión ha sido aprobada por la Director", created_at: new Date() },
     { order: 5, name: "Pendiente Pago",         description: "La comisión está aprobada y esperando ser pagada", created_at: new Date() },
-    { order: 6, name: "Pagada",                 description: "La comisión ha sido pagada por la Administradora", created_at: new Date() },
+    { order: 6, name: "Pagada",                 description: "La comisión ha sido pagada por la Administrador", created_at: new Date() },
     { order: 7, name: "Correccion",             description: "Se necesita corregir información", created_at: new Date() }
   ]);
 
