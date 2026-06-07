@@ -9,10 +9,29 @@ const {
 
 const DB_NAME = 'roles_usuarios';
 
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../public/uploads/avatars');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
 /**
  * POST /api/users
  */
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, upload.single('picture'), async (req, res) => {
     if (req.user.roleName !== 'Administrador') {
         return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción' });
     }
@@ -28,15 +47,17 @@ router.post('/', authenticate, async (req, res) => {
             birth_date,
             emergency_contact_name,
             emergency_contact_phone,
-            picture,
             role,
             username,
             password,
             permissions,
+            manager_id,
         } = req.body;
 
+        const picture = req.file ? `/uploads/avatars/${req.file.filename}` : null;
+
         // ── Validaciones requeridas ──────────────────────────────────────────
-        const requiredFields = { name, email, phone, blood_type, birth_date, role, username, password };
+        const requiredFields = { name, email, phone, role, username, password };
         const missing = Object.entries(requiredFields)
             .filter(([_, v]) => !v)
             .map(([k]) => k);
@@ -97,7 +118,7 @@ router.post('/', authenticate, async (req, res) => {
             email,
             phone,
             blood_type,
-            birth_date: new Date(birth_date),
+            birth_date: birth_date ? new Date(birth_date) : null,
             emergency_contact_name: emergency_contact_name ?? null,
             emergency_contact_phone: emergency_contact_phone ?? null,
             picture: picture ?? null,
@@ -108,6 +129,10 @@ router.post('/', authenticate, async (req, res) => {
             active: true,
             created_at: new Date(),
         };
+
+        if (manager_id) {
+            newUser.manager_id = new ObjectId(manager_id);
+        }
 
         const result = await db.collection('usuarios').insertOne(newUser);
 

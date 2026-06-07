@@ -868,9 +868,9 @@ function exportCSV() {
       ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const headers = [
-    'Ubicación','Compañía','Desarrollo','Concepto','Tipo',
-    'Fecha Operación','Precio Venta','Comisión Total',
-    'Participante','Rol','Porcentaje','Monto Comisión','Verificado','Estado'
+    'Desarrollo','Fecha','Concepto','Contrato (Fecha)','Vendedor',
+    'referencia','Cliente','Casa (Ubicación)','Precio (de venta)',
+    '% Comisión','Comisión'
   ];
   const lines = [headers.map(escape).join(',')];
   
@@ -878,34 +878,32 @@ function exportCSV() {
     if (c.participantes && c.participantes.length > 0) {
       for (const p of c.participantes) {
         lines.push([
-          escape(c.location?.text || ''),
-          escape(c.company?.text || c.company || ''),
           escape(c.development?.text || c.development || ''),
-          escape(c.concept || ''),
-          escape(c.commission_type?.text ?? c.commission_type ?? ''),
+          escape(c.register_date ? new Date(c.register_date).toLocaleDateString('es-MX') : ''),
+          escape(c.concept?.text || c.concept || ''),
           escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
-          escape(c.sale_price ?? ''),
-          escape(c.total_commission ?? ''),
           escape(p.usuario?.name || ''),
-          escape(p.role_in_comision || ''),
+          '', // referencia (pendiente)
+          escape(c.client_name || ''),
+          escape(c.location?.text || ''),
+          escape(c.sale_price ?? ''),
           escape(p.percentage != null ? (p.percentage * 100).toFixed(1) + '%' : ''),
-          escape(p.commission_amount ?? ''),
-          escape(p.verification ? 'Sí' : 'No'),
-          escape(c.status?.name || '')
+          escape(p.commission_amount ?? '')
         ].join(','));
       }
     } else {
       lines.push([
-        escape(c.location?.text || ''),
-        escape(c.company?.text || c.company || ''),
-        escape(c.development?.text || c.development || ''),
-        escape(c.concept || ''),
-        escape(c.commission_type?.text ?? c.commission_type ?? ''),
-        escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
-        escape(c.sale_price ?? ''),
-        escape(c.total_commission ?? ''),
-        '','','','','',
-        escape(c.status?.name || '')
+          escape(c.development?.text || c.development || ''),
+          escape(c.register_date ? new Date(c.register_date).toLocaleDateString('es-MX') : ''),
+          escape(c.concept?.text || c.concept || ''),
+          escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
+          '', // Vendedor
+          '', // referencia (pendiente)
+          escape(c.client_name || ''),
+          escape(c.location?.text || ''),
+          escape(c.sale_price ?? ''),
+          '', // % Comisión
+          ''  // Comisión
       ].join(','));
     }
   }

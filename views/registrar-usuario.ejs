@@ -238,10 +238,18 @@
 
                         <div class="form-group">
                             <label class="form-label">Rol <span class="required">*</span></label>
-                            <select class="form-select" id="rol_id" required>
+                            <select class="form-select" id="rol_id" required onchange="handleRoleChange(this.value)">
                                 <option value="">Cargando roles...</option>
                             </select>
                             <span class="error-message" id="rol_idError">Selecciona un rol</span>
+                        </div>
+
+                        <div class="form-group" id="managerGroup" style="display: none;">
+                            <label class="form-label">Gerente Asignado <span class="required">*</span></label>
+                            <select class="form-select" id="manager_id">
+                                <option value="">Seleccionar gerente</option>
+                            </select>
+                            <span class="error-message" id="manager_idError">Selecciona un gerente</span>
                         </div>
 
                         <div class="form-group">
@@ -326,6 +334,8 @@
             // setInterval(updateConnectionStatus, 30000);
         });
 
+        let rolesCache = [];
+
         // ── Cargar roles desde la API ─────────────────────────────────────────
         async function loadRoles() {
             try {
@@ -333,6 +343,7 @@
                 const result = await res.json();
 
                 if (result.success && result.data?.roles) {
+                    rolesCache = result.data.roles;
                     rolSelect.innerHTML = '<option value="">Seleccionar rol</option>';
                     result.data.roles.forEach(rol => {
                         const opt = document.createElement('option');
@@ -346,6 +357,37 @@
             } catch (err) {
                 console.error('Error cargando roles:', err);
                 rolSelect.innerHTML = '<option value="">Error al cargar roles</option>';
+            }
+        }
+
+        async function handleRoleChange(roleId) {
+            const role = rolesCache.find(r => r._id === roleId);
+            const managerGroup = document.getElementById('managerGroup');
+            const managerSelect = document.getElementById('manager_id');
+            if (role && role.name === 'Asesor') {
+                managerGroup.style.display = 'flex';
+                managerSelect.setAttribute('required', 'required');
+                if (managerSelect.options.length <= 1) {
+                    try {
+                        const res = await fetch('/api/users/by-role/Gerente');
+                        const result = await res.json();
+                        if (result.success && result.data) {
+                            managerSelect.innerHTML = '<option value="">Seleccionar gerente</option>';
+                            result.data.forEach(m => {
+                                const opt = document.createElement('option');
+                                opt.value = m._id;
+                                opt.textContent = m.name;
+                                managerSelect.appendChild(opt);
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Error loading managers', err);
+                    }
+                }
+            } else {
+                managerGroup.style.display = 'none';
+                managerSelect.removeAttribute('required');
+                managerSelect.value = '';
             }
         }
 
@@ -367,7 +409,7 @@
                 reader.onload = e => {
                     document.getElementById('avatarImage').src = e.target.result;
                     document.getElementById('avatarPreview').classList.add('has-image');
-                    fotoBase64 = e.target.result;
+                    fotoBase64 = file; // Usar el archivo File para multer
                 };
                 reader.readAsDataURL(file);
             });
@@ -388,25 +430,29 @@
             showLoading(true);
 
             try {
-                const body = {
-                    name:                    document.getElementById('nombres').value.trim(),
-                    email:                   document.getElementById('correo').value.trim(),
-                    phone:                   document.getElementById('telefono').value.trim(),
-                    blood_type:              document.getElementById('tipo_sangre').value || '',
-                    birth_date:              document.getElementById('fecha_nacimiento').value || null,
-                    emergency_contact_name:  document.getElementById('nombre_contacto_emergencia').value.trim(),
-                    emergency_contact_phone: document.getElementById('telefono_contacto_emergencia').value.trim(),
-                    role:                    document.getElementById('rol_id').value,
-                    username:                document.getElementById('usuario').value.trim(),
-                    password:                document.getElementById('contrasena').value,
-                    picture:                 fotoBase64 || ''
-                };
+                const formData = new FormData();
+                formData.append('name', document.getElementById('nombres').value.trim());
+                formData.append('email', document.getElementById('correo').value.trim());
+                formData.append('phone', document.getElementById('telefono').value.trim());
+                formData.append('blood_type', document.getElementById('tipo_sangre').value || '');
+                formData.append('birth_date', document.getElementById('fecha_nacimiento').value || '');
+                formData.append('emergency_contact_name', document.getElementById('nombre_contacto_emergencia').value.trim());
+                formData.append('emergency_contact_phone', document.getElementById('telefono_contacto_emergencia').value.trim());
+                formData.append('role', document.getElementById('rol_id').value);
+                formData.append('username', document.getElementById('usuario').value.trim());
+                formData.append('password', document.getElementById('contrasena').value);
+                
+                const managerId = document.getElementById('manager_id').value;
+                if (managerId) formData.append('manager_id', managerId);
+                
+                if (fotoBase64 instanceof File) {
+                    formData.append('picture', fotoBase64);
+                }
 
                 const response = await fetch('/api/users/', {
                     method:      'POST',
-                    headers:     { 'Content-Type': 'application/json' },
-                    credentials: 'include',   // ← envía la cookie de sesión
-                    body:        JSON.stringify(body)
+                    credentials: 'include',
+                    body:        formData
                 });
 
                 const result = await response.json();  // ← result, no response

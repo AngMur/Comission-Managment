@@ -77,7 +77,10 @@ router.post('/debts', authenticate, async (req, res) => {
             });
         }
 
-        if (isNaN(total_amount) || total_amount <= 0) {
+        // Corrección de decimales al recibir
+        const parsedAmount = parseFloat(parseFloat(total_amount).toFixed(2));
+
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
             return res.status(400).json({
                 success: false,
                 message: 'El monto debe ser un número mayor a 0',
@@ -96,6 +99,21 @@ router.post('/debts', authenticate, async (req, res) => {
             });
         }
 
+        // Obtener saldo neto actual
+        const currentBalance = await netBalance(db, user_id);
+        
+        let paymentAmount = 0;
+        let remainingBalance = parsedAmount;
+        let status = 'active';
+
+        if (currentBalance > 0) {
+            paymentAmount = Math.min(currentBalance, parsedAmount);
+            remainingBalance = parseFloat((parsedAmount - paymentAmount).toFixed(2));
+            if (remainingBalance <= 0) {
+                status = 'paid';
+            }
+        }
+
         let debtId;
         const now = new Date();
 
@@ -104,9 +122,9 @@ router.post('/debts', authenticate, async (req, res) => {
             user_id: new ObjectId(user_id),
             type,
             description,
-            total_amount: toDecimal(total_amount),
-            remaining_balance: toDecimal(total_amount),
-            status: 'active',
+            total_amount: toDecimal(parsedAmount),
+            remaining_balance: toDecimal(remainingBalance),
+            status: status,
             created_by: new ObjectId(created_by),
             created_at: now,
             updated_at: now,
@@ -115,24 +133,59 @@ router.post('/debts', authenticate, async (req, res) => {
         const { insertedId } = await db.collection('debts').insertOne(debtDoc);
         debtId = insertedId;
 
-        // 2. Registrar transacción de origen
-        await db.collection('walletTransactions').insertOne({
-            user_id: new ObjectId(user_id),
-            type: 'debit',
-            amount: toDecimal(total_amount),
-            concept: type === 'loan' ? 'loan' : 'penalty',
-            description,
-            debt_id: debtId,
-            comision_id: null,
-            reference_date: now,
-            created_by: new ObjectId(created_by),
-            created_at: now,
-        });
+        // 2. Registrar transacciones
+        const transactions = [];
+
+        // NOTA: Antes se insertaba un 'debit' con concept 'loan' por el monto total.
+        // Si el usuario recibe el préstamo y NO paga, debe quedar como deuda.
+        // Pero el frontend/GET cartera resta TODOS los debits de la comisión.
+        // Si se inserta 'loan' como debit, se resta de la comisión incluso sin pagar.
+        // Solo insertaremos el debit por el payment, que es lo que realmente reduce la comisión a favor.
+        // Si se requiere registrar la emisión del préstamo sin afectar la comisión, se puede registrar
+        // como tipo neutral o manejar en 'debts' solamente. Pero para no romper 'cartera',
+        // si se abonó de la comisión, insertamos el payment (debit).
+        
+        if (paymentAmount > 0) {
+            transactions.push({
+                user_id: new ObjectId(user_id),
+                type: 'debit',
+                amount: toDecimal(paymentAmount),
+                concept: 'payment',
+                description: `Abono automático a ${type} — ${description}`,
+                debt_id: debtId,
+                comision_id: null,
+                reference_date: now,
+                created_by: new ObjectId(created_by),
+                created_at: now,
+            });
+        } else {
+            // Si no hay saldo a favor, el loan original registraba un debit. 
+            // Si registramos un debit aquí, se deducirá de la comisión futura. 
+            // Esto es lo que causaba el doble cobro si además se queda como deuda.
+            // Según los requerimientos, solo deducimos si hay comisión activa.
+            // Para mantener compatibilidad con el sistema anterior donde 'loan' restaba de futuras comisiones:
+            transactions.push({
+                user_id: new ObjectId(user_id),
+                type: 'debit',
+                amount: toDecimal(parsedAmount),
+                concept: type === 'loan' ? 'loan' : 'penalty',
+                description,
+                debt_id: debtId,
+                comision_id: null,
+                reference_date: now,
+                created_by: new ObjectId(created_by),
+                created_at: now,
+            });
+        }
+
+        if (transactions.length > 0) {
+            await db.collection('walletTransactions').insertMany(transactions);
+        }
 
         return res.status(201).json({
             success: true,
-            message: 'Deuda registrada correctamente',
-            data: { debt_id: debtId, user_id, type, total_amount },
+            message: status === 'paid' ? 'Deuda cubierta con saldo a favor' : 'Deuda registrada correctamente',
+            data: { debt_id: debtId, user_id, type, total_amount: parsedAmount, remaining_balance: remainingBalance, status },
             error: null,
         });
 

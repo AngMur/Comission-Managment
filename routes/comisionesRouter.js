@@ -797,7 +797,7 @@ router.post('/', authenticate, async (req, res) => {
 
     // ── 3. Construir documentos de participantes ──────────────────────────────
     const advisorKeys = ['advisor1', 'advisor2'];
-    const managerKeys = ['manager1', 'manager2'];
+    const managerKeys = ['manager1', 'manager2', 'manager3'];
     const now         = new Date();
 
     const buildParticipante = (userId, percentageKey, roleInComision) => {
@@ -1082,7 +1082,7 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
 
     const now = new Date();
     const advisorKeys = ['advisor1', 'advisor2'];
-    const managerKeys = ['manager1', 'manager2'];
+    const managerKeys = ['manager1', 'manager2', 'manager3'];
 
     // ── 3. Recalcular participantes con porcentajes frescos ───────────────────
     const buildParticipante = (userId, percentageKey, roleInComision) => {

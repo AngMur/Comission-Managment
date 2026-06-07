@@ -279,6 +279,11 @@
                             <input type="text" id="salePrice" class="sale-price-input" placeholder="$0" inputmode="numeric" oninput="formatSalePrice(this)">
                             <div class="field-error" data-for="salePrice"><i class="fas fa-exclamation-circle"></i> Por favor ingresa el precio de venta.</div>
                         </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill-wave"></i> Comisión Total <span class="req">*</span></label>
+                            <input type="text" id="totalCommission" class="sale-price-input" placeholder="$0" inputmode="numeric" oninput="formatTotalCommission(this)">
+                            <div class="field-error" data-for="totalCommission"><i class="fas fa-exclamation-circle"></i> Por favor ingresa la comisión total.</div>
+                        </div>
                     </div>
                 </div>
 
@@ -519,6 +524,8 @@ const params     = new URLSearchParams(window.location.search);
 const editId     = params.get('edit');
 const isEditMode = !!editId;
 
+const CURRENT_USER = <%- JSON.stringify(user || {}) %>;
+
 document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('fechaRegistro').valueAsDate = new Date();
     initializeCustomSelects();
@@ -528,6 +535,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelector('h1').textContent = 'Editar Comisión';
         document.querySelector('.btn-primary').innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
         await loadComisionForEdit(editId); // ← ahora allData ya está lleno
+    } else {
+        if (CURRENT_USER && CURRENT_USER.roleName === 'Gerente') {
+            const manager1 = document.querySelector('.custom-select[data-field="gerente"][data-row="1"]');
+            if (manager1) {
+                const option = manager1.querySelector(`.select-option[data-value="${CURRENT_USER.id}"]`);
+                if (option) selectOptionSilent(manager1, option);
+            }
+        }
     }
 
     document.getElementById('fechaContrato').addEventListener('change', function() {
@@ -535,6 +550,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     document.getElementById('salePrice').addEventListener('input', function() {
         if (this.dataset.raw && parseInt(this.dataset.raw) > 0) { clearFieldError('salePrice'); this.classList.remove('has-error'); this.classList.add('valid'); }
+    });
+    document.getElementById('totalCommission').addEventListener('input', function() {
+        if (this.dataset.raw && parseInt(this.dataset.raw) > 0) { clearFieldError('totalCommission'); this.classList.remove('has-error'); this.classList.add('valid'); }
     });
 });
 
@@ -559,6 +577,13 @@ async function loadComisionForEdit(comisionId) {
     sp.dataset.raw = rawPrice;
     sp.value = rawPrice ? '$' + rawPrice.toLocaleString('es-MX') : '';
     sp.classList.add('valid');
+
+    // ── Comisión Total ─────────────────────────────────────────────────────────
+    const tc = document.getElementById('totalCommission');
+    const rawTotal = Number(c.total_commission) || 0;
+    tc.dataset.raw = rawTotal;
+    tc.value = rawTotal ? '$' + rawTotal.toLocaleString('es-MX') : '';
+    tc.classList.add('valid');
 
     // ── Concepto ──────────────────────────────────────────────────────────────
     setSelectValue('concepto', String(c.concept?.id));
@@ -932,6 +957,14 @@ else if (field === 'ubicacion') {
                 valid = false;
             }
 
+            const totalCommissionEl = document.getElementById('totalCommission');
+            if (!totalCommissionEl.dataset.raw || parseInt(totalCommissionEl.dataset.raw) <= 0) {
+                showFieldError('totalCommission');
+                totalCommissionEl.classList.add('has-error');
+                if (!firstInvalid) firstInvalid = totalCommissionEl;
+                valid = false;
+            }
+
             document.querySelectorAll('.personnel-row').forEach((row, index) => {
                 const rowNum = index + 1;
                 const isFirstRow = rowNum === 1;
@@ -966,13 +999,13 @@ else if (field === 'ubicacion') {
         mpCheckbox.addEventListener('change', function() { if (mpCheckbox.checked && rowCounter == 1) addPersonnelRow(); });
 
         async function addPersonnelRow() {
-            if (rowCounter == 2) return;
+            if (rowCounter == 3) return;
             rowCounter++;
             const container = document.getElementById('personnelRows');
             const newRow = document.createElement('div');
             newRow.className = 'personnel-row';
             newRow.innerHTML = `
-                <div class="row-number"><i class="fas fa-hashtag"></i> Fila ${rowCounter} <span style="font-size:0.75rem;color:#666;font-weight:400;margin-left:6px;">(campos opcionales — llena uno o ambos)</span></div>
+                <div class="row-number"><i class="fas fa-hashtag"></i> Fila ${rowCounter} <span style="font-size:0.75rem;color:#666;font-weight:400;margin-left:6px;">(campos opcionales)</span></div>
                 <div class="form-group">
                     <label><i class="fas fa-user-tie"></i> Gerente <span style="font-size:0.72rem;color:#555;font-weight:500;text-transform:none;letter-spacing:0;">Opcional</span></label>
                     <div class="custom-select" data-field="gerente" data-row="${rowCounter}" data-api="/api/users/by-role/Gerente">
@@ -980,13 +1013,15 @@ else if (field === 'ubicacion') {
                         <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar gerente..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
                     </div>
                 </div>
+                ${rowCounter <= 2 ? `
                 <div class="form-group">
                     <label><i class="fas fa-user"></i> Asesor <span style="font-size:0.72rem;color:#555;font-weight:500;text-transform:none;letter-spacing:0;">Opcional</span></label>
                     <div class="custom-select" data-field="asesor" data-row="${rowCounter}" data-api="/api/users/by-role/Asesor">
                         <div class="select-display placeholder">Seleccionar asesor<i class="fas fa-chevron-down select-arrow"></i></div>
                         <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar asesor..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
                     </div>
-                </div>`;
+                </div>
+                ` : ''}`;
             container.appendChild(newRow);
             initializeCustomSelects();
             const newSelectors = newRow.querySelectorAll('.custom-select[data-api]');
@@ -1025,9 +1060,24 @@ else if (field === 'ubicacion') {
         }
 
         function formatSalePrice(input) {
-            const raw = input.value.replace(/[^0-9]/g, '');
-            input.dataset.raw = raw;
-            input.value = raw ? '$' + parseInt(raw).toLocaleString('es-MX') : '';
+            let val = input.value.replace(/[^0-9]/g, '');
+            input.dataset.raw = val;
+            if (val) {
+                val = parseInt(val).toLocaleString('es-MX');
+                input.value = '$' + val;
+            } else {
+                input.value = '';
+            }
+        }
+        function formatTotalCommission(input) {
+            let val = input.value.replace(/[^0-9]/g, '');
+            input.dataset.raw = val;
+            if (val) {
+                val = parseInt(val).toLocaleString('es-MX');
+                input.value = '$' + val;
+            } else {
+                input.value = '';
+            }
         }
 
         async function fetchPorcentajes() {
@@ -1051,10 +1101,10 @@ else if (field === 'ubicacion') {
             const concepto      = getSelectValue("concepto");
             const fechaContrato = document.getElementById("fechaContrato").value;
             const salePrice     = parseFloat(document.getElementById("salePrice").dataset.raw) || 0;
+            const totalCommission = parseFloat(document.getElementById("totalCommission").dataset.raw) || 0;
             const mp            = document.getElementById('mpCheckbox').checked;
             const commissionTypeES = mp ? 'Multipunto' : (rowCounter === 1 ? 'Tradicional' : 'Compartida');
             const commissionType   = mp ? 'multipoint' : (rowCounter === 1 ? 'traditional' : 'shared');
-            console.log(porcentajes);
             const rates = porcentajes.data[commissionType];
             const managers = [], advisors = [];
             document.querySelectorAll('.personnel-row').forEach((row, index) => {
@@ -1062,13 +1112,13 @@ else if (field === 'ubicacion') {
                 const manager = getSelectValue('gerente', rowNum);
                 const advisor = getSelectValue('asesor', rowNum);
                 const managerKey = `manager${rowNum}`, advisorKey = `advisor${rowNum}`;
-                if (manager && manager.id) managers.push({ user: manager.id, name:manager.text, percentage: rates[managerKey] ?? 0, commission: salePrice * (rates[managerKey] ?? 0) });
-                if (advisor && advisor.id) advisors.push({ user: advisor.id, name:advisor.text, percentage: rates[advisorKey] ?? 0, commission: salePrice * (rates[advisorKey] ?? 0) });
+                if (manager && manager.id) managers.push({ user: manager.id, name:manager.text, percentage: rates[managerKey] ?? 0, commission: totalCommission * (rates[managerKey] ?? 0) });
+                if (advisor && advisor.id) advisors.push({ user: advisor.id, name:advisor.text, percentage: rates[advisorKey] ?? 0, commission: totalCommission * (rates[advisorKey] ?? 0) });
             });
             return {
                 company: compania, development: desarrollo, location: ubicacion,
                 commission_type: commissionTypeES, register_date: fechaRegistro,
-                operation_date: fechaContrato, sale_price: salePrice, concept: concepto,
+                operation_date: fechaContrato, sale_price: salePrice, total_commission: totalCommission, concept: concepto,
                 status: "Pendiente", participants: { managers, advisors },
                 created_at: new Date(), updated_at: new Date()
             };
