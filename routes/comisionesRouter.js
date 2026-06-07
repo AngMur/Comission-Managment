@@ -148,6 +148,7 @@ router.get('/mis-comisiones', authenticate, async (req, res) => {
             sale_price:           1,
             total_commission:     1,
             client_name:          1,
+            expediente_id:        1,
             operation_date:       1,
             register_date:        1,
             correction_comments:  1,
@@ -721,6 +722,7 @@ router.post('/', authenticate, async (req, res) => {
       operation_date,
       register_date,
       client_name,
+      expediente_id,
       participants,
     } = req.body;
 
@@ -842,6 +844,7 @@ router.post('/', authenticate, async (req, res) => {
       commission_type,
       sale_price,
       total_commission,
+      expediente_id:       expediente_id ?? null,
       client_name:         client_name ?? null,
       operation_date:      new Date(operation_date),
       register_date:       new Date(register_date),

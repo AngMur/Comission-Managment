@@ -115,9 +115,26 @@ router.get('/ubicaciones', async (req, res) => {
     });
   }
 });
+router.get('/expedientes', async (req, res) => {
+  try {
+    const result = await pool.request().query("SELECT IdExpediente as id, CONCAT(IdExpediente, ' - ', [Cliente.Nombre]) as nombre, [Cliente.Nombre] as cliente_nombre FROM uvw_SCV_Ventas WHERE IdExpediente IS NOT NULL AND [Cliente.Nombre] IS NOT NULL");
 
+    res.status(200).json({
+      success: true,
+      message: "Expedientes obtenidos correctamente",
+      data: {
+        expedientes: result.recordset
+      }
+    });
 
-
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los expedientes",
+      data: null,
+      error: err.message
+    });
+  }
+});
 
 module.exports = router;
-

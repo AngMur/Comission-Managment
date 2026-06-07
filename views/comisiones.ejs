@@ -63,9 +63,15 @@
       text-decoration: none;
     }
     .btn-new {
-      border: 1px solid var(--text-1);
-      background: var(--text-1);
-      color: #fff;
+      border: 1px solid var(--green-tx);
+      background: var(--green-tx);
+      color: #000;
+      font-weight: 700;
+    }
+    .btn-new:hover { 
+      opacity: .9; 
+      background: var(--green-bg); 
+      color: var(--green-tx); 
     }
     .btn-export {
       border: 1px solid var(--green-br);
@@ -340,13 +346,21 @@
     }
     .filter-search-wrap input:focus { border-color: var(--border-md); }
     .filter-select {
-      padding: 7px 10px; border: 1px solid var(--border);
+      padding: 7px 10px; border: 1px solid var(--blue-br);
       border-radius: var(--radius-sm); font-size: 13px;
-      font-family: 'Nunito', sans-serif; color: var(--text-1);
-      background: var(--bg); outline: none; cursor: pointer;
-      transition: border-color .15s; min-width: 145px;
+      font-family: 'Nunito', sans-serif; color: var(--blue-tx);
+      background: var(--blue-bg); outline: none; cursor: pointer;
+      transition: all .15s; min-width: 145px;
     }
-    .filter-select:focus { border-color: var(--border-md); }
+    .filter-select:hover, .filter-select:focus { 
+      border-color: var(--blue-tx); 
+      background: var(--bg); 
+      color: var(--text-1); 
+    }
+    .filter-select option {
+      background: var(--bg);
+      color: var(--text-1);
+    }
     .filter-clear {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 12px; font-weight: 500; padding: 7px 12px;
@@ -883,12 +897,12 @@ function exportCSV() {
           escape(c.concept?.text || c.concept || ''),
           escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
           escape(p.usuario?.name || ''),
-          '', // referencia (pendiente)
+          escape(c.expediente_id || ''), // referencia
           escape(c.client_name || ''),
           escape(c.location?.text || ''),
           escape(c.sale_price ?? ''),
           escape(p.percentage != null ? (p.percentage * 100).toFixed(1) + '%' : ''),
-          escape(p.commission_amount ?? '')
+          escape(p.commission_amount != null ? Number(p.commission_amount).toFixed(2) : '')
         ].join(','));
       }
     } else {
@@ -898,7 +912,7 @@ function exportCSV() {
           escape(c.concept?.text || c.concept || ''),
           escape(c.operation_date ? new Date(c.operation_date).toLocaleDateString('es-MX') : ''),
           '', // Vendedor
-          '', // referencia (pendiente)
+          escape(c.expediente_id || ''), // referencia
           escape(c.client_name || ''),
           escape(c.location?.text || ''),
           escape(c.sale_price ?? ''),

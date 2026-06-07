@@ -54,9 +54,11 @@
         .form-label { font-size: 0.85rem; font-weight: 600; color: #8fada0; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; }
         .form-label .required { color: #e74c3c; }
         .form-label .optional { color: #666; text-transform: lowercase; font-size: 0.75rem; font-weight: 400; }
-        .form-input, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; color: #ffffff; font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: rgba(96,230,26,0.5); background: rgba(255,255,255,0.08); box-shadow: 0 0 0 3px rgba(96,230,26,0.1); }
-        .form-select { cursor: pointer; }
+        .form-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; color: #ffffff; font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit; }
+        .form-select { background: rgba(56,197,245,0.12); border: 1px solid rgba(56,197,245,0.3); border-radius: 12px; padding: 14px 16px; color: #38c5f5; font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit; cursor: pointer; }
+        .form-input:focus { outline: none; border-color: rgba(96,230,26,0.5); background: rgba(255,255,255,0.08); box-shadow: 0 0 0 3px rgba(96,230,26,0.1); }
+        .form-select:focus, .form-select:hover { outline: none; border-color: #38c5f5; background: #0f1e1e; color: #fff; box-shadow: 0 0 0 3px rgba(56,197,245,0.1); }
+        .form-select option { background: #0f1e1e; color: #ffffff; }
         .input-with-icon { position: relative; }
         .input-with-icon i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #666; pointer-events: none; }
         .input-with-icon input { padding-right: 45px; }

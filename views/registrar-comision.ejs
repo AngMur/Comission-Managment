@@ -248,6 +248,17 @@
                             <div class="field-error" data-for="ubicacion"><i class="fas fa-exclamation-circle"></i> Por favor selecciona una ubicación.</div>
                         </div>
 
+                        <div class="form-group">
+                            <label><i class="fas fa-folder-open"></i> Expediente</label>
+                            <div class="custom-select" data-field="expediente" data-api="/v10/expedientes">
+                                <div class="select-display placeholder">Seleccionar expediente<i class="fas fa-chevron-down select-arrow"></i></div>
+                                <div class="select-dropdown">
+                                    <div class="select-search"><input type="text" placeholder="Buscar expediente o cliente..."><i class="fas fa-search"></i></div>
+                                    <div class="select-options"></div>
+                                </div>
+                            </div>
+                            <div class="field-error" data-for="expediente"><i class="fas fa-exclamation-circle"></i> Opcional</div>
+                        </div>
 
                     </div>
 
@@ -496,7 +507,7 @@
 
     <script>
         const apiCache = {};
-        const allData = { desarrollos: [], ubicaciones: [] };
+        const allData = { desarrollos: [], ubicaciones: [], expedientes: [] };
 
         async function fetchFromAPI(endpoint) {
             if (endpoint == "/v10/conceptos") return [{id:1,nombre:"Contrato"},{id:2,nombre:"Escritura"}];
@@ -511,6 +522,7 @@
                     else if (result.data.companias) { data = result.data.companias; }
                     else if (result.data.ubicaciones) { data = result.data.ubicaciones; allData.ubicaciones = [...data]; }
                     else if (result.data.conceptos) { data = result.data.conceptos; }
+                    else if (result.data.expedientes) { data = result.data.expedientes; allData.expedientes = [...data]; }
                     else if (result.data && endpoint == "/api/users/by-role/Gerente") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
                     else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
                     apiCache[endpoint] = data;
@@ -694,11 +706,19 @@ function setSelectValue(field, value, row = null) {
         function populateSelect(selectorElement, data, autoSelect = null) {
             const optionsContainer = selectorElement.querySelector('.select-options');
             optionsContainer.innerHTML = '';
+            const field = selectorElement.dataset.field;
             if (!data || data.length === 0) { optionsContainer.innerHTML = '<div class="no-results">No hay datos disponibles</div>'; return; }
             data.forEach(item => {
                 const option = document.createElement('div');
                 option.className = 'select-option';
-                option.textContent = item.nombre;
+                
+                if (field === 'expediente') {
+                    option.textContent = item.nombre; // Already formatted as [IdExpediente] - [Cliente.Nombre]
+                    option.dataset.clientName = item.cliente_nombre;
+                } else {
+                    option.textContent = item.nombre;
+                }
+                
                 option.dataset.value = item.id;
                 if (item.compania) option.dataset.compania = item.compania;
                 if (item.desarrollo) option.dataset.desarrollo = item.desarrollo;
@@ -721,6 +741,8 @@ function setSelectValue(field, value, row = null) {
             display.dataset.value = optionElement.dataset.value;
             if (optionElement.dataset.compania) display.dataset.compania = optionElement.dataset.compania;
             if (optionElement.dataset.desarrollo) display.dataset.desarrollo = optionElement.dataset.desarrollo;
+            if (optionElement.dataset.clientName) display.dataset.clientName = optionElement.dataset.clientName;
+            
             if (isAutoSelect) {
                 display.classList.add('auto-selected');
                 const badge = document.createElement('span');
@@ -1103,6 +1125,11 @@ else if (field === 'ubicacion') {
             const salePrice     = parseFloat(document.getElementById("salePrice").dataset.raw) || 0;
             const totalCommission = parseFloat(document.getElementById("totalCommission").dataset.raw) || 0;
             const mp            = document.getElementById('mpCheckbox').checked;
+            
+            const expedienteSelect = document.querySelector('.custom-select[data-field="expediente"] .select-display');
+            const expediente_id = expedienteSelect && expedienteSelect.dataset.value ? expedienteSelect.dataset.value : null;
+            const client_name = expedienteSelect && expedienteSelect.dataset.clientName ? expedienteSelect.dataset.clientName : null;
+
             const commissionTypeES = mp ? 'Multipunto' : (rowCounter === 1 ? 'Tradicional' : 'Compartida');
             const commissionType   = mp ? 'multipoint' : (rowCounter === 1 ? 'traditional' : 'shared');
             const rates = porcentajes.data[commissionType];
@@ -1119,6 +1146,7 @@ else if (field === 'ubicacion') {
                 company: compania, development: desarrollo, location: ubicacion,
                 commission_type: commissionTypeES, register_date: fechaRegistro,
                 operation_date: fechaContrato, sale_price: salePrice, total_commission: totalCommission, concept: concepto,
+                expediente_id: expediente_id, client_name: client_name,
                 status: "Pendiente", participants: { managers, advisors },
                 created_at: new Date(), updated_at: new Date()
             };
