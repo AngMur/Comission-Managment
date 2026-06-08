@@ -290,11 +290,7 @@
                             <input type="text" id="salePrice" class="sale-price-input" placeholder="$0" inputmode="numeric" oninput="formatSalePrice(this)">
                             <div class="field-error" data-for="salePrice"><i class="fas fa-exclamation-circle"></i> Por favor ingresa el precio de venta.</div>
                         </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-money-bill-wave"></i> Comisión Total <span class="req">*</span></label>
-                            <input type="text" id="totalCommission" class="sale-price-input" placeholder="$0" inputmode="numeric" oninput="formatTotalCommission(this)">
-                            <div class="field-error" data-for="totalCommission"><i class="fas fa-exclamation-circle"></i> Por favor ingresa la comisión total.</div>
-                        </div>
+
                     </div>
                 </div>
 
@@ -563,9 +559,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('salePrice').addEventListener('input', function() {
         if (this.dataset.raw && parseInt(this.dataset.raw) > 0) { clearFieldError('salePrice'); this.classList.remove('has-error'); this.classList.add('valid'); }
     });
-    document.getElementById('totalCommission').addEventListener('input', function() {
-        if (this.dataset.raw && parseInt(this.dataset.raw) > 0) { clearFieldError('totalCommission'); this.classList.remove('has-error'); this.classList.add('valid'); }
-    });
+
 });
 
         /// EDIDDIDIT
@@ -589,13 +583,6 @@ async function loadComisionForEdit(comisionId) {
     sp.dataset.raw = rawPrice;
     sp.value = rawPrice ? '$' + rawPrice.toLocaleString('es-MX') : '';
     sp.classList.add('valid');
-
-    // ── Comisión Total ─────────────────────────────────────────────────────────
-    const tc = document.getElementById('totalCommission');
-    const rawTotal = Number(c.total_commission) || 0;
-    tc.dataset.raw = rawTotal;
-    tc.value = rawTotal ? '$' + rawTotal.toLocaleString('es-MX') : '';
-    tc.classList.add('valid');
 
     // ── Concepto ──────────────────────────────────────────────────────────────
     setSelectValue('concepto', String(c.concept?.id));
@@ -979,14 +966,6 @@ else if (field === 'ubicacion') {
                 valid = false;
             }
 
-            const totalCommissionEl = document.getElementById('totalCommission');
-            if (!totalCommissionEl.dataset.raw || parseInt(totalCommissionEl.dataset.raw) <= 0) {
-                showFieldError('totalCommission');
-                totalCommissionEl.classList.add('has-error');
-                if (!firstInvalid) firstInvalid = totalCommissionEl;
-                valid = false;
-            }
-
             document.querySelectorAll('.personnel-row').forEach((row, index) => {
                 const rowNum = index + 1;
                 const isFirstRow = rowNum === 1;
@@ -1091,16 +1070,7 @@ else if (field === 'ubicacion') {
                 input.value = '';
             }
         }
-        function formatTotalCommission(input) {
-            let val = input.value.replace(/[^0-9]/g, '');
-            input.dataset.raw = val;
-            if (val) {
-                val = parseInt(val).toLocaleString('es-MX');
-                input.value = '$' + val;
-            } else {
-                input.value = '';
-            }
-        }
+
 
         async function fetchPorcentajes() {
             try {
@@ -1123,7 +1093,7 @@ else if (field === 'ubicacion') {
             const concepto      = getSelectValue("concepto");
             const fechaContrato = document.getElementById("fechaContrato").value;
             const salePrice     = parseFloat(document.getElementById("salePrice").dataset.raw) || 0;
-            const totalCommission = parseFloat(document.getElementById("totalCommission").dataset.raw) || 0;
+
             const mp            = document.getElementById('mpCheckbox').checked;
             
             const expedienteSelect = document.querySelector('.custom-select[data-field="expediente"] .select-display');
@@ -1139,13 +1109,13 @@ else if (field === 'ubicacion') {
                 const manager = getSelectValue('gerente', rowNum);
                 const advisor = getSelectValue('asesor', rowNum);
                 const managerKey = `manager${rowNum}`, advisorKey = `advisor${rowNum}`;
-                if (manager && manager.id) managers.push({ user: manager.id, name:manager.text, percentage: rates[managerKey] ?? 0, commission: totalCommission * (rates[managerKey] ?? 0) });
-                if (advisor && advisor.id) advisors.push({ user: advisor.id, name:advisor.text, percentage: rates[advisorKey] ?? 0, commission: totalCommission * (rates[advisorKey] ?? 0) });
+                if (manager && manager.id) managers.push({ user: manager.id, name:manager.text, percentage: rates[managerKey] ?? 0, commission: salePrice * (rates[managerKey] ?? 0) });
+                if (advisor && advisor.id) advisors.push({ user: advisor.id, name:advisor.text, percentage: rates[advisorKey] ?? 0, commission: salePrice * (rates[advisorKey] ?? 0) });
             });
             return {
                 company: compania, development: desarrollo, location: ubicacion,
                 commission_type: commissionTypeES, register_date: fechaRegistro,
-                operation_date: fechaContrato, sale_price: salePrice, total_commission: totalCommission, concept: concepto,
+                operation_date: fechaContrato, sale_price: salePrice, concept: concepto,
                 expediente_id: expediente_id, client_name: client_name,
                 status: "Pendiente", participants: { managers, advisors },
                 created_at: new Date(), updated_at: new Date()
