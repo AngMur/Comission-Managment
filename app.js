@@ -55,6 +55,7 @@ app.use('/v10', require('./routes/v10Router'));
 app.use('/api/users', require('./routes/userRouter'));
 app.use('/api/roles', require('./routes/rolesRouter'));
 app.use('/api/wallet', require('./routes/wallet'));
+app.use('/api/kpis', require('./routes/kpiRouter'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -520,7 +520,7 @@
                     else if (result.data.conceptos) { data = result.data.conceptos; }
                     else if (result.data.expedientes) { data = result.data.expedientes; allData.expedientes = [...data]; }
                     else if (result.data && endpoint == "/api/users/by-role/Gerente") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
-                    else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
+                    else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name, manager_id: user.manager_id })); }
                     apiCache[endpoint] = data;
                     return data;
                 } else { throw new Error('Formato de respuesta inválido'); }
@@ -599,6 +599,11 @@ async function loadComisionForEdit(comisionId) {
     const locsFiltradas = allData.ubicaciones.filter(u => u.desarrollo == c.development?.id);
     populateSelect(document.querySelector('.custom-select[data-field="ubicacion"]'), locsFiltradas);
     setSelectValue('ubicacion', String(c.location?.id));
+
+    // ── Expediente ────────────────────────────────────────────────────────────
+    if (c.expediente_id) {
+      setSelectValue('expediente', String(c.expediente_id));
+    }
 
     // ── Tipo de comisión ──────────────────────────────────────────────────────
     if (c.commission_type === 'Multipunto') {
@@ -768,6 +773,8 @@ else if (field === 'ubicacion') {
             salePriceEl.classList.add('valid');
         }
     // }
+} else if (field === 'gerente') {
+    handleGerenteChange(optionElement.dataset.value, selectorElement.dataset.row);
 }
         }
 
@@ -854,6 +861,27 @@ else if (field === 'ubicacion') {
                     }
                 }
             }
+        }
+
+        function handleGerenteChange(gerenteId, row) {
+            const asesorSelector = document.querySelector(`.custom-select[data-field="asesor"][data-row="${row}"]`);
+            if (!asesorSelector) return;
+            const asesoresAll = apiCache['/api/users/by-role/Asesor'] || [];
+            const asesoresFiltrados = asesoresAll.filter(a => a.manager_id == gerenteId);
+            
+            const display = asesorSelector.querySelector('.select-display');
+            const placeholder = asesorSelector.querySelector('.select-search input').placeholder;
+            display.textContent = placeholder.replace('Buscar', 'Seleccionar');
+            display.classList.add('placeholder'); 
+            display.classList.remove('auto-selected');
+            delete display.dataset.value;
+            
+            const arrow = document.createElement('i');
+            arrow.className = 'fas fa-chevron-down select-arrow';
+            display.appendChild(arrow);
+            
+            asesorSelector.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+            populateSelect(asesorSelector, asesoresFiltrados);
         }
 
         function clearSelection(field) {

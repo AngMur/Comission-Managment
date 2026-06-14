@@ -27,6 +27,15 @@
 
     <% if (typeof user !== 'undefined' && user && user.roleName !== 'Asesor') { %>
     <li>
+      <a href="/kpis" class="<%= (typeof currentPage !== 'undefined' && currentPage === 'kpis') ? 'active' : '' %>">
+        <i class="fas fa-chart-pie"></i>
+        <span>Dashboard KPIs</span>
+      </a>
+    </li>
+    <% } %>
+
+    <% if (typeof user !== 'undefined' && user && user.roleName !== 'Asesor') { %>
+    <li>
       <a href="/cartera-deudores" class="<%= (typeof currentPage !== 'undefined' && currentPage === 'cartera-deudores') ? 'active' : '' %>">
         <i class="fas fa-wallet"></i>
         <span>Cartera de Deudores</span>

@@ -901,7 +901,7 @@ function exportCSV() {
           escape(c.client_name || ''),
           escape(c.location?.text || ''),
           escape(c.sale_price ?? ''),
-          escape(p.percentage != null ? (p.percentage * 100).toFixed(1) + '%' : ''),
+          escape(p.percentage != null ? (p.percentage * 100).toFixed(2) + '%' : ''),
           escape(p.commission_amount != null ? Number(p.commission_amount).toFixed(2) : '')
         ].join(','));
       }

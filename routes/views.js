@@ -63,6 +63,11 @@ router.get('/cartera-deudores', checkRole(['Gerente', 'Director', 'Administrador
   res.render('cartera-deudores', { title: 'Cartera de Deudores', currentPage: 'cartera-deudores' });
 });
 
+// KPIs Dashboard
+router.get('/kpis', checkRole(['Gerente', 'Director', 'Administrador']), (req, res) => {
+  res.render('kpis', { title: 'KPI Dashboard', currentPage: 'kpis' });
+});
+
 // Solo Administrador
 router.get('/usuarios', checkRole(['Administrador']), (req, res) => {
   res.render('usuarios', { title: 'Gestión de Usuarios', currentPage: 'usuarios' });

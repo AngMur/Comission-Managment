@@ -328,7 +328,7 @@ router.get('/by-role/:roleName', authenticate, async (req, res) => {
     // ── 2. Buscar usuarios con ese rol ────────────────────────────────────────
     const users = await db.collection('usuarios')
       .find({ role: role._id, active: true })
-      .project({ _id: 1, name: 1, username: 1, picture: 1 })
+      .project({ _id: 1, name: 1, username: 1, picture: 1, manager_id: 1 })
       .toArray();
 
     return res.status(200).json({
