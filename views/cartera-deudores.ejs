@@ -463,10 +463,14 @@
       </div>
     `;
 
+    const avatarHtml = d.picture 
+      ? `<img src="${d.picture}" class="avatar" style="object-fit: cover;" alt="Avatar" />`
+      : `<div class="avatar ${d.avc}">${d.av}</div>`;
+
     return `
     <div class="debtor-card" id="card-${d.id}">
       <div class="debtor-main" onclick="toggleCard('${d.id}')">
-        <div class="avatar ${d.avc}">${d.av}</div>
+        ${avatarHtml}
         <div class="debtor-info">
           <div class="debtor-name">${d.name}</div>
           <div class="debtor-role">${d.role}</div>

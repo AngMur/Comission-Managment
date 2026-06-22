@@ -347,7 +347,7 @@ router.get('/by-role/:roleName', authenticate, async (req, res) => {
     });
   }
 });
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, upload.single('picture'), async (req, res) => {
     if (req.user.roleName !== 'Administrador') {
         return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción' });
     }
@@ -357,7 +357,7 @@ router.put('/:id', authenticate, async (req, res) => {
         const { id } = req.params;
         if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'ID inválido' });
 
-        const { name, email, role, password, active, phone, blood_type, birth_date, emergency_contact_name, emergency_contact_phone, picture, username } = req.body;
+        const { name, email, role, password, active, phone, blood_type, birth_date, emergency_contact_name, emergency_contact_phone, username, removePicture } = req.body;
         const updateData = { updated_at: new Date() };
 
         if (name !== undefined) updateData.name = name;
@@ -368,18 +368,96 @@ router.put('/:id', authenticate, async (req, res) => {
         if (emergency_contact_name !== undefined) updateData.emergency_contact_name = emergency_contact_name;
         if (emergency_contact_phone !== undefined) updateData.emergency_contact_phone = emergency_contact_phone;
         if (username !== undefined) updateData.username = username;
-        if (picture !== undefined) updateData.picture = picture;
         
         if (role) updateData.role = new ObjectId(role);
         if (password && password.trim() !== '') updateData.password = password;
-        if (active !== undefined) updateData.active = active;
+        if (active !== undefined) updateData.active = (active === 'true' || active === true);
+
+        // Manage Picture
+        const currentUser = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });
+        if (!currentUser) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+        const oldPicturePath = currentUser.picture ? path.join(__dirname, '../public', currentUser.picture) : null;
+
+        if (req.file) {
+            updateData.picture = `/uploads/avatars/${req.file.filename}`;
+            if (oldPicturePath && fs.existsSync(oldPicturePath)) {
+                fs.unlinkSync(oldPicturePath);
+            }
+        } else if (removePicture === 'true') {
+            updateData.picture = null;
+            if (oldPicturePath && fs.existsSync(oldPicturePath)) {
+                fs.unlinkSync(oldPicturePath);
+            }
+        }
 
         const result = await db.collection('usuarios').updateOne({ _id: new ObjectId(id) }, { $set: updateData });
-        if (result.matchedCount === 0) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
 
-        return res.json({ success: true, message: 'Usuario actualizado correctamente' });
+        let isSelf = false;
+        let finalPicture = updateData.picture !== undefined ? updateData.picture : currentUser.picture;
+        let finalName = updateData.name !== undefined ? updateData.name : currentUser.name;
+
+        if (req.user.id === id) {
+            isSelf = true;
+            const updatedUser = await db.collection('usuarios').aggregate([
+                { $match: { _id: new ObjectId(id) } },
+                { $lookup: { from: 'roles', localField: 'role', foreignField: '_id', as: 'roleObj' } },
+                { $unwind: { path: '$roleObj', preserveNullAndEmptyArrays: true } }
+            ]).toArray();
+            
+            if (updatedUser.length > 0) {
+                const userForCookie = updatedUser[0];
+                userForCookie.role = userForCookie.roleObj;
+                setAuthCookie(res, userForCookie);
+            }
+        }
+
+        return res.json({ success: true, message: 'Usuario actualizado correctamente', data: { isSelf, picture: finalPicture, name: finalName } });
     } catch (err) {
         return res.status(500).json({ success: false, message: 'Error al actualizar usuario', error: err.message });
+    }
+});
+
+router.delete('/:id/picture', authenticate, async (req, res) => {
+    if (req.user.roleName !== 'Administrador') {
+        return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción' });
+    }
+    const client = req.app.locals.mongoClient;
+    const db = client.db(DB_NAME);
+    try {
+        const { id } = req.params;
+        if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'ID inválido' });
+
+        const currentUser = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });
+        if (!currentUser) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+        if (currentUser.picture) {
+            const oldPicturePath = path.join(__dirname, '../public', currentUser.picture);
+            if (fs.existsSync(oldPicturePath)) {
+                fs.unlinkSync(oldPicturePath);
+            }
+            await db.collection('usuarios').updateOne({ _id: new ObjectId(id) }, { $set: { picture: null, updated_at: new Date() } });
+        }
+
+        let isSelf = false;
+        if (req.user.id === id) {
+            isSelf = true;
+            const updatedUser = await db.collection('usuarios').aggregate([
+                { $match: { _id: new ObjectId(id) } },
+                { $lookup: { from: 'roles', localField: 'role', foreignField: '_id', as: 'roleObj' } },
+                { $unwind: { path: '$roleObj', preserveNullAndEmptyArrays: true } }
+            ]).toArray();
+            
+            if (updatedUser.length > 0) {
+                const userForCookie = updatedUser[0];
+                userForCookie.role = userForCookie.roleObj;
+                setAuthCookie(res, userForCookie);
+            }
+        }
+
+        return res.json({ success: true, message: 'Foto eliminada correctamente', data: { isSelf, picture: null, name: currentUser.name } });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: 'Error al eliminar foto', error: err.message });
     }
 });
 

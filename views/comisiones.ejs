@@ -129,12 +129,12 @@
     }
     .mbtn:hover { background: var(--bg); }
     .mbtn-danger {
-      background: var(--text-1);
+      background: var(--red-tx);
       color: #fff;
-      border-color: var(--text-1);
+      border-color: var(--red-tx);
     }
-    .mbtn-danger:hover { background: #1c3030; }
-    .mbtn-danger:disabled { opacity: .5; cursor: not-allowed; }
+    .mbtn-danger:hover { filter: brightness(1.1); }
+    .mbtn-danger:disabled { opacity: .5; cursor: not-allowed; filter: none; }
     .mbtn-danger .spinner-sm {
       width: 13px; height: 13px;
       border: 2px solid rgba(255,255,255,.3);
@@ -812,10 +812,9 @@ async function doEliminar(comisionId) {
       return;
     }
 
-    // Quitar la card del DOM sin recargar toda la lista
-    rows = rows.filter(r => r.comision_id?.toString() !== comisionId &&
+    DATA = DATA.filter(r => r.comision_id?.toString() !== comisionId &&
                             r._id?.toString()       !== comisionId);
-    renderRows();
+    render();
     toast('Comisión eliminada correctamente');
 
   } catch(e) {

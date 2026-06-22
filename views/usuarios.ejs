@@ -82,7 +82,7 @@
     /* Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity .3s; }
     .modal-overlay.show { display: flex; opacity: 1; }
-    .modal-content { background: var(--bg); border: 1px solid var(--border-md); border-radius: 16px; width: 90%; max-width: 450px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform .3s; }
+    .modal-content { background: var(--bg); border: 1px solid var(--border-md); border-radius: 16px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform .3s; }
     .modal-overlay.show .modal-content { transform: translateY(0); }
     
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -220,6 +220,19 @@
         </div>
       </div>
 
+      <div class="form-group" style="margin-top: 15px;">
+        <label class="form-label">Foto de Perfil</label>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div id="editPicturePreview" class="avatar" style="width: 50px; height: 50px; font-size: 18px; flex-shrink: 0;">?</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+            <input type="file" class="form-input" id="editPicture" accept="image/*" />
+            <button type="button" class="btn btn-secondary" id="btnDeletePicture" style="color: var(--red-tx); border-color: rgba(231,76,60,0.3); background: rgba(231,76,60,0.1); width: fit-content; padding: 6px 12px; font-size: 12px;" onclick="deleteProfilePicture()">
+              <i class="fas fa-trash" style="margin-right: 4px;"></i> Eliminar foto de perfil
+            </button>
+          </div>
+        </div>
+      </div>
+
       <label class="checkbox-wrap" style="margin-top: 15px;">
         <input type="checkbox" id="editActive" />
         <span class="checkbox-label">Cuenta activa en el sistema</span>
@@ -304,9 +317,13 @@
       const cardClass = isInactive ? 'user-card inactive' : 'user-card';
       const statusBadge = isInactive ? `<span class="badge badge-inactive">Inactivo</span>` : '';
 
+      const avatarHtml = u.picture 
+        ? `<img src="${u.picture}" class="avatar" style="object-fit: cover;" alt="Avatar" />`
+        : `<div class="avatar">${initials}</div>`;
+
       container.innerHTML += `
         <div class="${cardClass}">
-          <div class="avatar">${initials}</div>
+          ${avatarHtml}
           <div class="user-info">
             <div class="user-name">
               ${name}
@@ -368,6 +385,20 @@
     }
     document.getElementById('editPassword').value = '';
     document.getElementById('editActive').checked = user.active !== false;
+
+    // Picture preview
+    const preview = document.getElementById('editPicturePreview');
+    const btnDelete = document.getElementById('btnDeletePicture');
+    if (user.picture) {
+      preview.innerHTML = `<img src="${user.picture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
+      btnDelete.style.display = 'inline-flex';
+    } else {
+      const name = user.name || '?';
+      const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+      preview.innerHTML = initials;
+      btnDelete.style.display = 'none';
+    }
+    document.getElementById('editPicture').value = '';
     
     modal.classList.add('show');
   }
@@ -376,23 +407,46 @@
     modal.classList.remove('show');
   }
 
+  document.getElementById('editPicture').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('editPicturePreview');
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
+      }
+      reader.readAsDataURL(file);
+    } else {
+      // Revert to original if cancelled? 
+      // But actually if they just click cancel, file input might clear.
+      // Let's just leave the preview as is, or recalculate from initials
+    }
+  });
+
   document.getElementById('editForm').addEventListener('submit', async e => {
     e.preventDefault();
     const id = document.getElementById('editId').value;
-    const body = {
-      name: document.getElementById('editName').value,
-      email: document.getElementById('editEmail').value,
-      username: document.getElementById('editUsername').value,
-      phone: document.getElementById('editPhone').value,
-      blood_type: document.getElementById('editBloodType').value,
-      birth_date: document.getElementById('editBirthDate').value || null,
-      emergency_contact_name: document.getElementById('editEmergencyName').value,
-      emergency_contact_phone: document.getElementById('editEmergencyPhone').value,
-      role: document.getElementById('editRole').value,
-      active: document.getElementById('editActive').checked
-    };
+    
+    const formData = new FormData();
+    formData.append('name', document.getElementById('editName').value);
+    formData.append('email', document.getElementById('editEmail').value);
+    formData.append('username', document.getElementById('editUsername').value);
+    formData.append('phone', document.getElementById('editPhone').value);
+    formData.append('blood_type', document.getElementById('editBloodType').value);
+    const bd = document.getElementById('editBirthDate').value;
+    if (bd) formData.append('birth_date', bd);
+    formData.append('emergency_contact_name', document.getElementById('editEmergencyName').value);
+    formData.append('emergency_contact_phone', document.getElementById('editEmergencyPhone').value);
+    formData.append('role', document.getElementById('editRole').value);
+    formData.append('active', document.getElementById('editActive').checked);
+
     const pwd = document.getElementById('editPassword').value;
-    if (pwd.trim() !== '') body.password = pwd;
+    if (pwd.trim() !== '') formData.append('password', pwd);
+
+    const pictureFile = document.getElementById('editPicture').files[0];
+    if (pictureFile) {
+        formData.append('picture', pictureFile);
+    }
 
     const btn = document.getElementById('btnSave');
     btn.disabled = true;
@@ -401,12 +455,14 @@
     try {
       const res = await fetch('/api/users/' + id, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: formData
       });
       const json = await res.json();
       if (json.success) {
         showAlert('Usuario guardado correctamente', 'success');
+        if (json.data && json.data.isSelf) {
+          updateHeaderAvatar(json.data);
+        }
         closeModal();
         await loadUsers();
       } else {
@@ -447,6 +503,76 @@
       }
     } catch(err) {
       showAlert('Error de red', 'error');
+    }
+  }
+
+  async function deleteProfilePicture() {
+    const id = document.getElementById('editId').value;
+    if (!id) return;
+
+    if (!confirm("¿Estás seguro de que deseas eliminar esta foto de perfil permanentemente?")) return;
+
+    const btnDelete = document.getElementById('btnDeletePicture');
+    const oldText = btnDelete.innerHTML;
+    btnDelete.disabled = true;
+    btnDelete.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+
+    try {
+      const res = await fetch('/api/users/' + id + '/picture', { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        showAlert('Foto eliminada correctamente', 'success');
+        if (json.data && json.data.isSelf) {
+          updateHeaderAvatar(json.data);
+        }
+        
+        // Update preview to initials
+        const name = document.getElementById('editName').value || '?';
+        const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+        document.getElementById('editPicturePreview').innerHTML = initials;
+        
+        // Hide delete button
+        btnDelete.style.display = 'none';
+
+        await loadUsers();
+      } else {
+        showAlert(json.message || 'Error al eliminar foto', 'error');
+      }
+    } catch (err) {
+      showAlert('Error de red', 'error');
+    } finally {
+      btnDelete.disabled = false;
+      btnDelete.innerHTML = oldText;
+    }
+  }
+
+  function updateHeaderAvatar(data) {
+    const headerAvatarEl = document.querySelector('.app-header-avatar');
+    if (!headerAvatarEl) return;
+    
+    if (data.picture) {
+      if (headerAvatarEl.tagName.toLowerCase() === 'div') {
+        const img = document.createElement('img');
+        img.src = data.picture;
+        img.alt = "Avatar";
+        img.className = "app-header-avatar";
+        img.style.objectFit = "cover";
+        headerAvatarEl.parentNode.replaceChild(img, headerAvatarEl);
+      } else {
+        headerAvatarEl.src = data.picture;
+      }
+    } else {
+      const name = data.name || '?';
+      const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+      
+      if (headerAvatarEl.tagName.toLowerCase() === 'img') {
+        const div = document.createElement('div');
+        div.className = "app-header-avatar";
+        div.textContent = initials;
+        headerAvatarEl.parentNode.replaceChild(div, headerAvatarEl);
+      } else {
+        headerAvatarEl.textContent = initials;
+      }
     }
   }
 

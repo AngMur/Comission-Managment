@@ -302,7 +302,7 @@ router.get('/historial', authenticate, async (req, res) => {
         });
       }
       const g = groups.get(key);
-      const fase = { operation_date: c.operation_date, sale_price: c.sale_price, total_commission: c.total_commission, participantes: c.participantes };
+      const fase = { _id: c._id.toString(), operation_date: c.operation_date, sale_price: c.sale_price, total_commission: c.total_commission, participantes: c.participantes };
       const concept = String(c.concept?.text ?? c.concept ?? '').toLowerCase();
       if (concept.includes('escritura')) { if (!g.escritura) g.escritura = fase; }
       else                               { if (!g.contrato) g.contrato = fase; }
@@ -757,6 +757,23 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
+    // ── 1.5 Validar si ya existe una comisión con la misma ubicación y concepto ─
+    if (location && location.id && concept && concept.id) {
+      const existingComision = await db.collection('comisiones-ubicaciones').findOne({
+        'location.id': location.id,
+        'concept.id': concept.id
+      });
+      if (existingComision) {
+        return res.status(400).json({
+          success: false,
+          data: null,
+          message: 'Ya existe una comisión registrada para esta ubicación y este concepto.',
+          error: null,
+        });
+      }
+    }
+
+
     const typeMap = {
       Tradicional: 'traditional',
       Compartida:  'shared',
@@ -1061,6 +1078,23 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
       commission_type, sale_price, operation_date,
       register_date, client_name, participants,
     } = req.body;
+
+    // ── 1.5 Validar si ya existe una comisión con la misma ubicación y concepto ─
+    if (location && location.id && concept && concept.id) {
+      const existingComision = await db.collection('comisiones-ubicaciones').findOne({
+        'location.id': location.id,
+        'concept.id': concept.id,
+        _id: { $ne: new ObjectId(id) } // Excluir la comisión actual
+      });
+      if (existingComision) {
+        return res.status(400).json({
+          success: false,
+          data: null,
+          message: 'Ya existe una comisión registrada para esta ubicación y este concepto.',
+          error: null,
+        });
+      }
+    }
 
     // ── 2. Obtener estatus "Pendiente Verificacion" (order: 1) ────────────────
     const [statusInicial, percentagesDoc] = await Promise.all([

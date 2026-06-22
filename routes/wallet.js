@@ -675,6 +675,7 @@ router.get('/cartera', authenticate, async (req, res) => {
                 role: user.roleInfo?.name || 'Asesor',
                 av: av,
                 avc: 'av-a',
+                picture: user.picture || null,
                 deuda,
                 comision,
                 saldo,

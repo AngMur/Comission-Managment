@@ -506,7 +506,11 @@
         const allData = { desarrollos: [], ubicaciones: [], expedientes: [] };
 
         async function fetchFromAPI(endpoint) {
-            if (endpoint == "/v10/conceptos") return [{id:1,nombre:"Contrato"},{id:2,nombre:"Escritura"}];
+            if (endpoint == "/v10/conceptos") {
+                const data = [{id:1,nombre:"Contrato"},{id:2,nombre:"Escritura"}];
+                allData.conceptos = data;
+                return data;
+            }
             if (apiCache[endpoint]) return apiCache[endpoint];
             try {
                 const response = await fetch(`${endpoint}`);
@@ -517,7 +521,7 @@
                     if (result.data.desarrollos) { data = result.data.desarrollos; allData.desarrollos = [...data]; }
                     else if (result.data.companias) { data = result.data.companias; }
                     else if (result.data.ubicaciones) { data = result.data.ubicaciones; allData.ubicaciones = [...data]; }
-                    else if (result.data.conceptos) { data = result.data.conceptos; }
+                    else if (result.data.conceptos) { data = result.data.conceptos; allData.conceptos = [...data]; }
                     else if (result.data.expedientes) { data = result.data.expedientes; allData.expedientes = [...data]; }
                     else if (result.data && endpoint == "/api/users/by-role/Gerente") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
                     else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name, manager_id: user.manager_id })); }
@@ -528,9 +532,11 @@
         }
 
 // Fuera de DOMContentLoaded — scope global
-const params     = new URLSearchParams(window.location.search);
-const editId     = params.get('edit');
-const isEditMode = !!editId;
+const params         = new URLSearchParams(window.location.search);
+const editId         = params.get('edit');
+const fromContratoId = params.get('fromContrato');
+const isEditMode     = !!editId;
+const isFromContrato = !!fromContratoId;
 
 const CURRENT_USER = <%- JSON.stringify(user || {}) %>;
 
@@ -543,7 +549,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelector('h1').textContent = 'Editar Comisión';
         document.querySelector('.btn-primary').innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
         await loadComisionForEdit(editId); // ← ahora allData ya está lleno
+    } else if (isFromContrato) {
+        document.querySelector('h1').textContent = 'Registrar Comisión de Escritura';
+        await loadComisionForEdit(fromContratoId, true);
     } else {
+        const contratoC = allData.conceptos?.find(c => c.nombre && c.nombre.toLowerCase() === 'contrato');
+        if (contratoC) setSelectValue('concepto', String(contratoC.id));
+        const cSelect = document.querySelector('.custom-select[data-field="concepto"]');
+        if (cSelect) {
+            cSelect.style.pointerEvents = 'none';
+            cSelect.style.opacity = '0.6';
+        }
+
         if (CURRENT_USER && CURRENT_USER.roleName === 'Gerente') {
             const manager1 = document.querySelector('.custom-select[data-field="gerente"][data-row="1"]');
             if (manager1) {
@@ -563,7 +580,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
         /// EDIDDIDIT
-async function loadComisionForEdit(comisionId) {
+async function loadComisionForEdit(comisionId, fromContratoMode = false) {
   try {
     const r = await fetch(`/api/comisiones/obtener/${comisionId}`, { credentials: 'include' });
     const j = await r.json();
@@ -573,9 +590,11 @@ async function loadComisionForEdit(comisionId) {
     const participantes = j.data.participantes; // por si también los necesitas
 
     // ── Fechas ────────────────────────────────────────────────────────────────
-    document.getElementById('fechaRegistro').value = c.register_date?.split('T')[0] || '';
-    document.getElementById('fechaContrato').value = c.operation_date?.split('T')[0] || '';
-    document.getElementById('fechaContrato').classList.add('valid');
+    if (!fromContratoMode) {
+      document.getElementById('fechaRegistro').value = c.register_date?.split('T')[0] || '';
+      document.getElementById('fechaContrato').value = c.operation_date?.split('T')[0] || '';
+      document.getElementById('fechaContrato').classList.add('valid');
+    }
 
     // ── Precio ────────────────────────────────────────────────────────────────
     const sp = document.getElementById('salePrice');
@@ -583,9 +602,23 @@ async function loadComisionForEdit(comisionId) {
     sp.dataset.raw = rawPrice;
     sp.value = rawPrice ? '$' + rawPrice.toLocaleString('es-MX') : '';
     sp.classList.add('valid');
+    if (fromContratoMode) {
+      sp.readOnly = true;
+      sp.style.opacity = '0.6';
+    }
 
     // ── Concepto ──────────────────────────────────────────────────────────────
-    setSelectValue('concepto', String(c.concept?.id));
+    if (fromContratoMode) {
+      const escrituraC = allData.conceptos?.find(cn => cn.nombre && cn.nombre.toLowerCase() === 'escritura');
+      if (escrituraC) setSelectValue('concepto', String(escrituraC.id));
+    } else {
+      setSelectValue('concepto', String(c.concept?.id));
+    }
+    const cSelect = document.querySelector('.custom-select[data-field="concepto"]');
+    if (cSelect) {
+      cSelect.style.pointerEvents = 'none';
+      cSelect.style.opacity = '0.6';
+    }
 
     // ── Compañía ──────────────────────────────────────────────────────────────
     setSelectValue('compania', String(c.company?.id));
@@ -603,6 +636,17 @@ async function loadComisionForEdit(comisionId) {
     // ── Expediente ────────────────────────────────────────────────────────────
     if (c.expediente_id) {
       setSelectValue('expediente', String(c.expediente_id));
+    }
+
+    // Bloqueo adicional si fromContratoMode
+    if (fromContratoMode) {
+      ['compania', 'desarrollo', 'ubicacion', 'expediente'].forEach(f => {
+        const sel = document.querySelector(`.custom-select[data-field="${f}"]`);
+        if (sel) {
+          sel.style.pointerEvents = 'none';
+          sel.style.opacity = '0.6';
+        }
+      });
     }
 
     // ── Tipo de comisión ──────────────────────────────────────────────────────

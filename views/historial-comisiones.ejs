@@ -376,22 +376,27 @@ function buildParticipants(participantes) {
   }).join('');
 }
 
-function buildPhaseCol(fase, tipo) {
+function buildPhaseCol(fase, tipo, loc) {
   if (!fase) fase = {};
   const isC   = tipo === 'contrato';
   const cls   = isC ? 'contrato-col' : 'escritura-col';
   const label = isC ? 'Contrato' : 'Escritura';
   const icon  = isC ? 'fas fa-file-signature' : 'fas fa-stamp';
   const total = phaseTotal(fase);
-  return `
-    <div class="phase-col ${cls}">
-      <div class="phase-col-header">
-        <div class="phase-col-icon"><i class="${icon}"></i></div>
-        <div>
-          <div class="phase-col-title">${label}</div>
-          <div class="phase-col-date"><i class="fas fa-calendar-alt" style="margin-right:4px;opacity:0.6;"></i>${fmtDate(fase.operation_date)}</div>
-        </div>
+
+  let contentHtml = '';
+  if (!isC && !fase._id && loc && loc.contrato && loc.contrato._id) {
+    contentHtml = `
+      <div style="padding: 2rem; display: flex; justify-content: center; align-items: center; height: 100%;">
+        <a href="/registrar-comision?fromContrato=${loc.contrato._id}" style="text-decoration: none;">
+          <button style="background: transparent; border: 1px solid var(--green); color: var(--green); padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; transition: all 0.2s;" onmouseover="this.style.background='rgba(96,230,26,0.1)'" onmouseout="this.style.background='transparent'">
+            Registrar comisión de escritura
+          </button>
+        </a>
       </div>
+    `;
+  } else {
+    contentHtml = `
       <div class="phase-price-row">
         <div>
           <div class="phase-price-label">Precio de venta</div>
@@ -403,6 +408,21 @@ function buildPhaseCol(fase, tipo) {
         </div>
       </div>
       <div class="p-list">${buildParticipants(fase.participantes)}</div>
+    `;
+  }
+
+  return `
+    <div class="phase-col ${cls}">
+      <div class="phase-col-header">
+        <div class="phase-col-icon"><i class="${icon}"></i></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div>
+            <div class="phase-col-title">${label}</div>
+            <div class="phase-col-date"><i class="fas fa-calendar-alt" style="margin-right:4px;opacity:0.6;"></i>${fmtDate(fase.operation_date)}</div>
+          </div>
+        </div>
+      </div>
+      ${contentHtml}
     </div>`;
 }
 
@@ -435,8 +455,8 @@ function buildLocationBlock(loc, idx) {
     </div>
     <div class="phases-body" id="pb-${loc.id}">
       <div class="phases-grid">
-        ${buildPhaseCol(loc.contrato, 'contrato')}
-        ${buildPhaseCol(loc.escritura, 'escritura')}
+        ${buildPhaseCol(loc.contrato, 'contrato', loc)}
+        ${buildPhaseCol(loc.escritura, 'escritura', loc)}
       </div>
       <div class="loc-totals-row">
         <div class="loc-total-cell">
