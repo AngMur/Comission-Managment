@@ -28,6 +28,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+function toTitleCase(str) {
+    if (!str || typeof str !== 'string') return str;
+    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 /**
  * POST /api/users
  */
@@ -39,7 +44,7 @@ router.post('/', authenticate, upload.single('picture'), async (req, res) => {
     try {
         const db = req.app.locals.mongoClient.db(DB_NAME);
 
-        const {
+        let {
             name,
             email,
             phone,
@@ -53,6 +58,9 @@ router.post('/', authenticate, upload.single('picture'), async (req, res) => {
             permissions,
             manager_id,
         } = req.body;
+
+        name = toTitleCase(name);
+        emergency_contact_name = toTitleCase(emergency_contact_name);
 
         const picture = req.file ? `/uploads/avatars/${req.file.filename}` : null;
 
@@ -357,7 +365,12 @@ router.put('/:id', authenticate, upload.single('picture'), async (req, res) => {
         const { id } = req.params;
         if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'ID inválido' });
 
-        const { name, email, role, password, active, phone, blood_type, birth_date, emergency_contact_name, emergency_contact_phone, username, removePicture } = req.body;
+        const { email, role, password, active, phone, blood_type, birth_date, emergency_contact_phone, username, removePicture } = req.body;
+        let { name, emergency_contact_name } = req.body;
+
+        name = name !== undefined ? toTitleCase(name) : undefined;
+        emergency_contact_name = emergency_contact_name !== undefined ? toTitleCase(emergency_contact_name) : undefined;
+
         const updateData = { updated_at: new Date() };
 
         if (name !== undefined) updateData.name = name;

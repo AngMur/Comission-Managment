@@ -724,6 +724,8 @@ router.post('/', authenticate, async (req, res) => {
       client_name,
       expediente_id,
       participants,
+      is_cancellation,
+      penalty_target,
     } = req.body;
 
     const created_by = new ObjectId(req.user.id); 
@@ -758,7 +760,7 @@ router.post('/', authenticate, async (req, res) => {
     }
 
     // ── 1.5 Validar si ya existe una comisión con la misma ubicación y concepto ─
-    if (location && location.id && concept && concept.id) {
+    if (location && location.id && concept && concept.id && !is_cancellation) {
       const existingComision = await db.collection('comisiones-ubicaciones').findOne({
         'location.id': location.id,
         'concept.id': concept.id
@@ -773,6 +775,25 @@ router.post('/', authenticate, async (req, res) => {
       }
     }
 
+    // ── 1.8 Liberar ubicación previa si es cancelación ───────────────────────
+    if (is_cancellation && location && location.id) {
+      const statusCancelada = await db.collection('estatus').findOne({ name: 'Cancelada' });
+      if (statusCancelada) {
+         const comisionesAnteriores = await db.collection('comisiones-ubicaciones')
+            .find({ 'location.id': location.id, status: { $ne: statusCancelada._id } }).toArray();
+         if (comisionesAnteriores.length > 0) {
+            const idsAnteriores = comisionesAnteriores.map(c => c._id);
+            await db.collection('comisiones-ubicaciones').updateMany(
+               { _id: { $in: idsAnteriores } },
+               { $set: { status: statusCancelada._id, updated_at: new Date() } }
+            );
+            await db.collection('comisiones-participantes').updateMany(
+               { comision_id: { $in: idsAnteriores } },
+               { $set: { status: statusCancelada._id, updated_at: new Date() } }
+            );
+         }
+      }
+    }
 
     const typeMap = {
       Tradicional: 'traditional',
@@ -814,21 +835,30 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
+    const ALLOWED_PERCENTAGES = [0.012, 0.01, 0.009, 0.008, 0.006, 0.005, 0.0042, 0.0036, 0.003, 0.0028, 0.0025, 0.0024, 0.0015, 0.00125, 0.001, 0.00075, 0.0005];
+
     // ── 3. Construir documentos de participantes ──────────────────────────────
-    const advisorKeys = ['advisor1', 'advisor2'];
+    const advisorKeys = ['advisor1', 'advisor2', 'advisor3'];
     const managerKeys = ['manager1', 'manager2', 'manager3'];
     const now         = new Date();
 
-    const buildParticipante = (userId, percentageKey, roleInComision) => {
-      const percentage = pType[percentageKey];
-      if (percentage === undefined) return null; // clave no existe (ej: advisor2 en Tradicional)
+    const buildParticipante = (userId, percentageKey, roleInComision, inputPercentage) => {
+      const parsedPct = parseFloat(inputPercentage);
+      if (isNaN(parsedPct) || !ALLOWED_PERCENTAGES.some(p => Math.abs(p - parsedPct) < 0.000001)) {
+        throw new Error(`El porcentaje ingresado para el usuario no es válido o no está permitido.`);
+      }
+
+      let commAmount = sale_price * parsedPct;
+      if (is_cancellation) {
+        commAmount = 0;
+      }
 
       return {
         comision_id:         null, // se rellena después del insert de ubicación
         user:                new ObjectId(userId),
         role_in_comision:    roleInComision,
-        percentage,
-        commission_amount:   sale_price * percentage,
+        percentage:          parsedPct,
+        commission_amount:   commAmount,
         adjusted_commission: null,
         verification:        false,
         status:              statusInicial._id,
@@ -838,14 +868,24 @@ router.post('/', authenticate, async (req, res) => {
       };
     };
 
-    const participanteDocs = [
-      ...participants.advisors
-        .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor'))
-        .filter(Boolean),
-      ...participants.managers
-        .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente'))
-        .filter(Boolean),
-    ];
+    let participanteDocs;
+    try {
+      participanteDocs = [
+        ...participants.advisors
+          .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor', a.percentage))
+          .filter(Boolean),
+        ...participants.managers
+          .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente', m.percentage))
+          .filter(Boolean),
+      ];
+    } catch (validationError) {
+      return res.status(400).json({
+        success: false,
+        data:    null,
+        message: validationError.message,
+        error:   null,
+      });
+    }
 
     // ── 4. Calcular comisión total ────────────────────────────────────────────
     const total_commission = participanteDocs.reduce(
@@ -887,6 +927,24 @@ router.post('/', authenticate, async (req, res) => {
     await db
       .collection('comisiones-participantes')
       .insertMany(participantesConId);
+
+    // ── 6.5 Crear deuda si es cancelación a miembros ──────────────────────────
+    if (is_cancellation && penalty_target === 'miembros') {
+        const debtsToInsert = participanteDocs.map(p => ({
+            user_id: p.user,
+            type: 'penalty',
+            description: `Penalización por cancelación - ${location.text || location.id}`,
+            total_amount: toDecimal(sale_price * p.percentage),
+            remaining_balance: toDecimal(sale_price * p.percentage),
+            status: 'active',
+            created_by: created_by,
+            created_at: now,
+            updated_at: now,
+        }));
+        if (debtsToInsert.length > 0) {
+            await db.collection('debts').insertMany(debtsToInsert);
+        }
+    }
 
     // ── 7. Notificar a cada participante ──────────────────────────────────────
     await notify(db, participantesConId.map(p => p.user),
@@ -1118,19 +1176,22 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
     }
 
     const now = new Date();
-    const advisorKeys = ['advisor1', 'advisor2'];
+    const advisorKeys = ['advisor1', 'advisor2', 'advisor3'];
     const managerKeys = ['manager1', 'manager2', 'manager3'];
 
     // ── 3. Recalcular participantes con porcentajes frescos ───────────────────
-    const buildParticipante = (userId, percentageKey, roleInComision) => {
-      const percentage = pType[percentageKey];
-      if (percentage === undefined) return null;
+    const buildParticipante = (userId, percentageKey, roleInComision, inputPercentage) => {
+      const parsedPct = parseFloat(inputPercentage);
+      if (isNaN(parsedPct) || !ALLOWED_PERCENTAGES.some(p => Math.abs(p - parsedPct) < 0.000001)) {
+        throw new Error(`El porcentaje ingresado para el usuario no es válido o no está permitido.`);
+      }
+
       return {
         comision_id:         new ObjectId(id),
         user:                new ObjectId(userId),
         role_in_comision:    roleInComision,
-        percentage,
-        commission_amount:   sale_price * percentage,
+        percentage:          parsedPct,
+        commission_amount:   sale_price * parsedPct,
         adjusted_commission: null,
         verification:        false,          // ← reset
         status:              statusInicial._id, // ← reset
@@ -1140,14 +1201,22 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
       };
     };
 
-    const participanteDocs = [
-      ...(participants.advisors || [])
-        .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor'))
-        .filter(Boolean),
-      ...(participants.managers || [])
-        .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente'))
-        .filter(Boolean),
-    ];
+    let participanteDocs;
+    try {
+      participanteDocs = [
+        ...(participants.advisors || [])
+          .map((a, i) => buildParticipante(a.user, advisorKeys[i], 'asesor', a.percentage))
+          .filter(Boolean),
+        ...(participants.managers || [])
+          .map((m, i) => buildParticipante(m.user, managerKeys[i], 'gerente', m.percentage))
+          .filter(Boolean),
+      ];
+    } catch (validationError) {
+      return res.status(400).json({
+        success: false, data: null,
+        message: validationError.message, error: null,
+      });
+    }
 
     const total_commission = participanteDocs.reduce(
       (sum, p) => sum + p.commission_amount, 0
