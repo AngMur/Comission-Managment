@@ -471,7 +471,8 @@
 const $ = id => document.getElementById(id);
 
 function fmt(n) {
-  return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0 });
+  const val = Number(n);
+  return (val < 0 ? '-' : '') + '$' + Math.abs(val).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 function fmtDate(d) {
   if (!d) return '—';
@@ -658,26 +659,32 @@ function render() {
 
 function cardHTML(c) {
   const st = STATUS_MAP[c.status?.name] || { cls: 'b-v', label: c.status?.name || '—' };
-
-  // Botones editar/eliminar solo para Gerente
-  // const gerenteActions = USER.roleName === 'Gerente' ? `
-  //   <button class="btn-icon edit"   title="Editar comisión"   onclick="editarComision('${c._id}')"><i class="ti ti-pencil"></i></button>
-  //   <button class="btn-icon delete" title="Eliminar comisión" onclick="eliminarComision('${c._id}')"><i class="ti ti-trash"></i></button>
-  // ` : '';
+  
+  const isCancelacion = (c.concept?.text || c.concept || '').toString().toLowerCase().includes('cancelaci');
 
   const isCreador = c.created_by === USER.id;
-  console.log(c.created_by);
   const gerenteActions = isCreador ? `
     <button class="btn-icon edit"   title="Editar"   onclick="editarComision('${c._id}')"><i class="ti ti-pencil"></i></button>
     <button class="btn-icon delete" title="Eliminar" onclick="eliminarComision('${c._id}', '${c.location?.text}')"><i class="ti ti-trash"></i></button>
   ` : '';
 
+  let dispTotal = c.total_commission;
+  if (isCancelacion && c.total_commission === 0 && c.participantes) {
+    const totalPct = c.participantes.reduce((sum, p) => sum + (p.percentage || 0), 0);
+    dispTotal = -(c.sale_price * totalPct);
+  }
+
   const partRows = (c.participantes || []).map(p => {
     const isMe = p.usuario?._id === USER.id;
     let rightHtml;
+    
+    const dispAmount = (isCancelacion && p.commission_amount === 0) 
+      ? -(c.sale_price * (p.percentage || 0)) 
+      : p.commission_amount;
+
     if (isMe && c.status?.name === 'Pendiente Verificacion') {
       rightHtml = `
-        <span class="p-amount">${fmt(p.commission_amount)}</span>
+        <span class="p-amount">${fmt(dispAmount)}</span>
         <button class="btn-verify ${p.verification ? 'verified' : ''}"
           onclick="verificar('${c._id}')"
           ${p.verification ? 'disabled' : ''}>
@@ -686,7 +693,7 @@ function cardHTML(c) {
         </button>`;
     } else {
       rightHtml = `
-        <span class="p-amount">${fmt(p.commission_amount)}</span>
+        <span class="p-amount">${fmt(dispAmount)}</span>
         <span class="p-verified ${p.verification ? 'yes' : 'no'}">
           <i class="ti ${p.verification ? 'ti-circle-check' : 'ti-circle'}" style="font-size:13px"></i>
           ${p.verification ? 'Verificado' : 'Pendiente'}
@@ -739,7 +746,7 @@ function cardHTML(c) {
 <div class="meta-item"><div class="lbl">Tipo</div><div class="val">${c.commission_type || '—'}</div></div>
 <div class="meta-item"><div class="lbl">Concepto</div><div class="val">${c.concept?.text || '—'}</div></div>
 <div class="meta-item"><div class="lbl">Precio venta</div><div class="val">${fmt(c.sale_price)}</div></div>
-<div class="meta-item"><div class="lbl">Comisión total</div><div class="val">${fmt(c.total_commission)}</div></div>
+<div class="meta-item"><div class="lbl">${isCancelacion ? 'Descomisión total' : 'Comisión total'}</div><div class="val" ${isCancelacion ? 'style="color: var(--red-tx);"' : ''}>${fmt(dispTotal)}</div></div>
 <div class="meta-item"><div class="lbl">Fecha operación</div><div class="val">${fmtDate(c.operation_date)}</div></div>
       </div>
       ${corrBanner}

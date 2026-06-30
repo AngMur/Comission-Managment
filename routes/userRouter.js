@@ -56,7 +56,7 @@ router.post('/', authenticate, upload.single('picture'), async (req, res) => {
             username,
             password,
             permissions,
-            manager_id,
+            manager_ids,
         } = req.body;
 
         name = toTitleCase(name);
@@ -138,8 +138,11 @@ router.post('/', authenticate, upload.single('picture'), async (req, res) => {
             created_at: new Date(),
         };
 
-        if (manager_id) {
-            newUser.manager_id = new ObjectId(manager_id);
+        if (manager_ids && manager_ids.length > 0) {
+            let ids = Array.isArray(manager_ids) ? manager_ids : [manager_ids];
+            newUser.manager_ids = ids.map(id => new ObjectId(id));
+        } else {
+            newUser.manager_ids = [];
         }
 
         const result = await db.collection('usuarios').insertOne(newUser);
@@ -336,7 +339,7 @@ router.get('/by-role/:roleName', authenticate, async (req, res) => {
     // ── 2. Buscar usuarios con ese rol ────────────────────────────────────────
     const users = await db.collection('usuarios')
       .find({ role: role._id, active: true })
-      .project({ _id: 1, name: 1, username: 1, picture: 1, manager_id: 1 })
+      .project({ _id: 1, name: 1, username: 1, picture: 1, manager_ids: 1 })
       .toArray();
 
     return res.status(200).json({
@@ -365,7 +368,7 @@ router.put('/:id', authenticate, upload.single('picture'), async (req, res) => {
         const { id } = req.params;
         if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'ID inválido' });
 
-        const { email, role, password, active, phone, blood_type, birth_date, emergency_contact_phone, username, removePicture } = req.body;
+        const { email, role, password, active, phone, blood_type, birth_date, emergency_contact_phone, username, removePicture, manager_ids } = req.body;
         let { name, emergency_contact_name } = req.body;
 
         name = name !== undefined ? toTitleCase(name) : undefined;
@@ -385,6 +388,17 @@ router.put('/:id', authenticate, upload.single('picture'), async (req, res) => {
         if (role) updateData.role = new ObjectId(role);
         if (password && password.trim() !== '') updateData.password = password;
         if (active !== undefined) updateData.active = (active === 'true' || active === true);
+        
+        if (manager_ids !== undefined) {
+            if (!manager_ids || manager_ids === '') {
+                updateData.manager_ids = [];
+            } else {
+                let ids = Array.isArray(manager_ids) ? manager_ids : [manager_ids];
+                // Formdata might send empty strings if no checkboxes are checked, filter them out
+                ids = ids.filter(id => id.trim() !== '');
+                updateData.manager_ids = ids.map(id => new ObjectId(id));
+            }
+        }
 
         // Manage Picture
         const currentUser = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });

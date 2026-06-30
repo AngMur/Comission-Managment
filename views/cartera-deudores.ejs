@@ -313,8 +313,8 @@
     if (!d.log || !d.log.length) return '<div class="disabled-msg">Sin movimientos registrados.</div>';
     return '<div class="log-list">' + d.log.map(l => `
       <div class="log-item">
-        <span class="log-type ${l.tipo === 'deu' ? 'red' : l.tipo === 'com' ? 'green' : 'amber'}">
-          ${l.tipo === 'deu' ? '− Débito' : l.tipo === 'com' ? '+ Comisión' : '+ Crédito'}
+        <span class="log-type ${l.tipo === 'deu' ? 'red' : l.tipo === 'pen' ? 'red' : l.tipo === 'com' ? 'green' : 'amber'}">
+          ${l.tipo === 'deu' ? '− Débito' : l.tipo === 'pen' ? '+ Deuda' : l.tipo === 'com' ? '+ Comisión' : '+ Crédito'}
         </span>
         <span class="log-desc">${l.t}</span>
         <span class="log-monto">${fmt(l.monto)}</span>

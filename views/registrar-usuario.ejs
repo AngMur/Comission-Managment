@@ -248,11 +248,11 @@
                         </div>
 
                         <div class="form-group" id="managerGroup" style="display: none;">
-                            <label class="form-label">Gerente Asignado <span class="required">*</span></label>
-                            <select class="form-select" id="manager_id">
-                                <option value="">Seleccionar gerente</option>
-                            </select>
-                            <span class="error-message" id="manager_idError">Selecciona un gerente</span>
+                            <label class="form-label">Gerente(s) Asignado(s) <span class="required">*</span></label>
+                            <div id="managersContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; background: rgba(56,197,245,0.05); border: 1px solid rgba(56,197,245,0.2); border-radius: 12px; padding: 15px;">
+                                <span style="color: #8fada0; font-size: 0.9rem;">Cargando gerentes...</span>
+                            </div>
+                            <span class="error-message" id="manager_idError">Selecciona al menos un gerente</span>
                         </div>
 
                         <div class="form-group">
@@ -366,31 +366,50 @@
         async function handleRoleChange(roleId) {
             const role = rolesCache.find(r => r._id === roleId);
             const managerGroup = document.getElementById('managerGroup');
-            const managerSelect = document.getElementById('manager_id');
+            const managersContainer = document.getElementById('managersContainer');
             if (role && role.name === 'Asesor') {
                 managerGroup.style.display = 'flex';
-                managerSelect.setAttribute('required', 'required');
-                if (managerSelect.options.length <= 1) {
+                if (managersContainer.innerHTML.includes('Cargando gerentes...')) {
                     try {
                         const res = await fetch('/api/users/by-role/Gerente');
                         const result = await res.json();
                         if (result.success && result.data) {
-                            managerSelect.innerHTML = '<option value="">Seleccionar gerente</option>';
+                            managersContainer.innerHTML = '';
                             result.data.forEach(m => {
-                                const opt = document.createElement('option');
-                                opt.value = m._id;
-                                opt.textContent = m.name;
-                                managerSelect.appendChild(opt);
+                                const lbl = document.createElement('label');
+                                lbl.className = 'custom-checkbox';
+                                lbl.style.display = 'flex';
+                                lbl.style.alignItems = 'center';
+                                lbl.style.width = '100%';
+                                
+                                const inp = document.createElement('input');
+                                inp.type = 'checkbox';
+                                inp.name = 'manager_ids';
+                                inp.value = m._id;
+                                
+                                const span = document.createElement('span');
+                                span.className = 'checkmark';
+                                span.style.position = 'relative';
+                                
+                                const text = document.createElement('span');
+                                text.className = 'checkbox-label';
+                                text.style.marginLeft = '25px';
+                                text.textContent = m.name;
+                                
+                                lbl.appendChild(inp);
+                                lbl.appendChild(span);
+                                lbl.appendChild(text);
+                                managersContainer.appendChild(lbl);
                             });
                         }
                     } catch (err) {
                         console.error('Error loading managers', err);
+                        managersContainer.innerHTML = '<span style="color: #e74c3c;">Error al cargar gerentes</span>';
                     }
                 }
             } else {
                 managerGroup.style.display = 'none';
-                managerSelect.removeAttribute('required');
-                managerSelect.value = '';
+                document.querySelectorAll('input[name="manager_ids"]').forEach(cb => cb.checked = false);
             }
         }
 
@@ -445,8 +464,8 @@
                 formData.append('username', document.getElementById('usuario').value.trim());
                 formData.append('password', document.getElementById('contrasena').value);
                 
-                const managerId = document.getElementById('manager_id').value;
-                if (managerId) formData.append('manager_id', managerId);
+                const managerCheckboxes = document.querySelectorAll('input[name="manager_ids"]:checked');
+                managerCheckboxes.forEach(cb => formData.append('manager_ids', cb.value));
                 
                 if (fotoBase64 instanceof File) {
                     formData.append('picture', fotoBase64);
@@ -499,6 +518,13 @@
             // Usuario mínimo 4 chars
             if (document.getElementById('usuario').value.length < 4) {
                 document.getElementById('usuarioError').classList.add('show'); ok = false;
+            }
+            
+            if (document.getElementById('managerGroup').style.display === 'flex') {
+                const checkedManagers = document.querySelectorAll('input[name="manager_ids"]:checked');
+                if (checkedManagers.length === 0) {
+                    document.getElementById('manager_idError').classList.add('show'); ok = false;
+                }
             }
 
             // Contraseña mínimo 6 chars

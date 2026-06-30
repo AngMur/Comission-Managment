@@ -115,6 +115,8 @@
 
     .loading-state { text-align: center; padding: 40px; color: var(--text-3); font-size: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
     .loading-state i { font-size: 24px; color: var(--green-tx); }
+    .accordion-content.show { display: block !important; }
+    .fa-chevron-down.rotate { transform: rotate(180deg); }
   </style>
 </head>
 <body>
@@ -198,6 +200,13 @@
             <option value="B+">B+</option><option value="B-">B-</option>
             <option value="AB+">AB+</option><option value="AB-">AB-</option>
           </select>
+        </div>
+
+        <div class="form-group" id="editManagerGroup" style="display: none; grid-column: 1 / -1;">
+          <label class="form-label">Gerente(s) Asignado(s)</label>
+          <div id="editManagersContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 15px;">
+             <span style="color: var(--text-2); font-size: 0.9rem;">Cargando gerentes...</span>
+          </div>
         </div>
 
         <div class="form-group">
@@ -304,7 +313,24 @@
       return;
     }
 
+    const admins = [];
+    const directors = [];
+    const gerentes = [];
+    const asesores = [];
+    const others = [];
+
     list.forEach(u => {
+        const roleName = u.role?.name || '';
+        if (roleName === 'Administrador') admins.push(u);
+        else if (roleName === 'Director') directors.push(u);
+        else if (roleName === 'Gerente') gerentes.push(u);
+        else if (roleName === 'Asesor') asesores.push(u);
+        else others.push(u);
+    });
+
+    let html = '';
+
+    const renderCard = (u, isSubItem = false) => {
       const name = u.name || 'Desconocido';
       const initials = name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
       const roleName = u.role?.name || 'Sin rol';
@@ -316,14 +342,15 @@
       
       const isInactive = u.active === false;
       const cardClass = isInactive ? 'user-card inactive' : 'user-card';
+      const marginClass = isSubItem ? 'style="margin-left: 30px; margin-top: 5px; background: rgba(0,0,0,0.15);"' : '';
       const statusBadge = isInactive ? `<span class="badge badge-inactive">Inactivo</span>` : '';
 
       const avatarHtml = u.picture 
         ? `<img src="${u.picture}" class="avatar" style="object-fit: cover;" alt="Avatar" />`
         : `<div class="avatar">${initials}</div>`;
 
-      container.innerHTML += `
-        <div class="${cardClass}">
+      return `
+        <div class="${cardClass}" ${marginClass}>
           ${avatarHtml}
           <div class="user-info">
             <div class="user-name">
@@ -344,7 +371,68 @@
           </div>
         </div>
       `;
-    });
+    };
+
+    if (admins.length > 0) {
+        html += `<h3 style="margin: 20px 0 10px; color: var(--text-2); font-size: 13px; text-transform: uppercase;">Administradores</h3>`;
+        admins.forEach(u => html += renderCard(u));
+    }
+    if (directors.length > 0) {
+        html += `<h3 style="margin: 20px 0 10px; color: var(--text-2); font-size: 13px; text-transform: uppercase;">Directores</h3>`;
+        directors.forEach(u => html += renderCard(u));
+    }
+    if (others.length > 0) {
+        html += `<h3 style="margin: 20px 0 10px; color: var(--text-2); font-size: 13px; text-transform: uppercase;">Otros</h3>`;
+        others.forEach(u => html += renderCard(u));
+    }
+
+    if (gerentes.length > 0) {
+        html += `<h3 style="margin: 20px 0 10px; color: var(--text-2); font-size: 13px; text-transform: uppercase;">Gerentes (Equipos)</h3>`;
+        gerentes.forEach(g => {
+            const myAsesores = asesores.filter(a => a.manager_ids && a.manager_ids.includes(g._id));
+            
+            html += `
+            <div class="accordion-item" style="margin-bottom: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;">
+                <div class="accordion-header" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(255,255,255,0.02);" onclick="this.nextElementSibling.classList.toggle('show'); this.querySelector('.fa-chevron-down').classList.toggle('rotate');">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        ${g.picture ? `<img src="${g.picture}" class="avatar" style="width:36px;height:36px;flex-shrink:0;object-fit:cover;" />` : `<div class="avatar" style="width:36px;height:36px;flex-shrink:0;">${g.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}</div>`}
+                        <div>
+                            <div style="font-weight: 700; color: #fff;">${g.name} <span class="badge badge-gerente" style="margin-left:5px;">Gerente</span></div>
+                            <div style="font-size: 12px; color: var(--text-2); margin-top:2px;"><i class="fas fa-users"></i> ${myAsesores.length} asesores asignados</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn-action edit" onclick='event.stopPropagation(); openEditModal(${JSON.stringify(g).replace(/'/g, "&apos;")})'><i class="fas fa-pen"></i></button>
+                        ${g.active === false ? `<button class="btn-action activate" onclick="event.stopPropagation(); toggleActive('${g._id}', true)"><i class="fas fa-user-check"></i></button>` : `<button class="btn-action delete" onclick="event.stopPropagation(); toggleActive('${g._id}', false)"><i class="fas fa-user-times"></i></button>`}
+                        <i class="fas fa-chevron-down" style="color: var(--text-2); transition: transform 0.3s; margin-left: 5px;"></i>
+                    </div>
+                </div>
+                <div class="accordion-content" style="padding: 0 10px 10px; display: none;">
+                    ${myAsesores.map(a => renderCard(a, true)).join('')}
+                    ${myAsesores.length === 0 ? `<div style="padding: 15px; text-align: center; color: var(--text-3); font-size: 12px;">No hay asesores asignados a este gerente</div>` : ''}
+                </div>
+            </div>`;
+        });
+    }
+
+    const unassignedAsesores = asesores.filter(a => !a.manager_ids || a.manager_ids.length === 0);
+    if (unassignedAsesores.length > 0) {
+        html += `
+            <div class="accordion-item" style="margin-bottom: 10px; background: rgba(231,76,60,0.05); border: 1px solid rgba(231,76,60,0.2); border-radius: var(--radius); overflow: hidden;">
+                <div class="accordion-header" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="this.nextElementSibling.classList.toggle('show'); this.querySelector('.fa-chevron-down').classList.toggle('rotate');">
+                    <div style="font-weight: 700; color: #fff; display: flex; align-items: center;"><i class="fas fa-exclamation-triangle" style="color: var(--red-tx); margin-right: 8px;"></i> Asesores sin Gerente</div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span style="font-size: 12px; color: var(--text-2);">${unassignedAsesores.length} asesores</span>
+                        <i class="fas fa-chevron-down" style="color: var(--text-2); transition: transform 0.3s;"></i>
+                    </div>
+                </div>
+                <div class="accordion-content" style="padding: 0 10px 10px; display: none;">
+                    ${unassignedAsesores.map(a => renderCard(a, true)).join('')}
+                </div>
+            </div>`;
+    }
+
+    container.innerHTML = html;
   }
 
   // Buscador
@@ -361,7 +449,52 @@
   // Modal
   const modal = document.getElementById('editModal');
   
-  function openEditModal(user) {
+  async function handleEditRoleChange(roleId) {
+     const role = rolesData.find(r => r._id === roleId);
+     const managerGroup = document.getElementById('editManagerGroup');
+     const container = document.getElementById('editManagersContainer');
+     if (role && role.name === 'Asesor') {
+         managerGroup.style.display = 'block';
+         if (container.innerHTML.includes('Cargando')) {
+             try {
+                const res = await fetch('/api/users/by-role/Gerente');
+                const result = await res.json();
+                if(result.success) {
+                   container.innerHTML = '';
+                   result.data.forEach(m => {
+                       const lbl = document.createElement('label');
+                       lbl.style.display = 'flex';
+                       lbl.style.alignItems = 'center';
+                       lbl.style.gap = '10px';
+                       lbl.style.cursor = 'pointer';
+                       const inp = document.createElement('input');
+                       inp.type = 'checkbox';
+                       inp.name = 'edit_manager_ids';
+                       inp.value = m._id;
+                       inp.style.cursor = 'pointer';
+                       inp.style.width = '18px';
+                       inp.style.height = '18px';
+                       inp.style.accentColor = '#60e61a';
+                       const span = document.createElement('span');
+                       span.className = 'checkbox-label';
+                       span.style.color = '#fff';
+                       span.style.fontSize = '0.95rem';
+                       span.textContent = m.name;
+                       lbl.appendChild(inp);
+                       lbl.appendChild(span);
+                       container.appendChild(lbl);
+                   });
+                }
+             } catch(e) {}
+         }
+     } else {
+         managerGroup.style.display = 'none';
+     }
+  }
+
+  document.getElementById('editRole').addEventListener('change', (e) => handleEditRoleChange(e.target.value));
+
+  async function openEditModal(user) {
     document.getElementById('editId').value = user._id;
     document.getElementById('editName').value = user.name || '';
     document.getElementById('editEmail').value = user.email || '';
@@ -381,8 +514,15 @@
 
     if (user.role && user.role._id) {
       document.getElementById('editRole').value = user.role._id;
+      await handleEditRoleChange(user.role._id);
+      if (user.role.name === 'Asesor' && user.manager_ids) {
+          document.querySelectorAll('input[name="edit_manager_ids"]').forEach(cb => {
+              cb.checked = user.manager_ids.includes(cb.value);
+          });
+      }
     } else {
       document.getElementById('editRole').value = '';
+      document.getElementById('editManagerGroup').style.display = 'none';
     }
     document.getElementById('editPassword').value = '';
     document.getElementById('editActive').checked = user.active !== false;
@@ -440,6 +580,17 @@
     formData.append('emergency_contact_phone', document.getElementById('editEmergencyPhone').value);
     formData.append('role', document.getElementById('editRole').value);
     formData.append('active', document.getElementById('editActive').checked);
+
+    if (document.getElementById('editManagerGroup').style.display === 'block') {
+        const selected = document.querySelectorAll('input[name="edit_manager_ids"]:checked');
+        if (selected.length === 0) {
+            formData.append('manager_ids', '');
+        } else {
+            selected.forEach(cb => formData.append('manager_ids', cb.value));
+        }
+    } else {
+        formData.append('manager_ids', '');
+    }
 
     const pwd = document.getElementById('editPassword').value;
     if (pwd.trim() !== '') formData.append('password', pwd);

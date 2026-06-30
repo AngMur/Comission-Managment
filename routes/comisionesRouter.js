@@ -10,6 +10,8 @@ const {
 
 const DB_NAME = 'roles_usuarios';
 
+const toDecimal = (value) => Decimal128.fromString(value.toString());
+
 // ── Helpers de notificaciones ─────────────────────────────────────────────────
 async function notify(db, userIds, message, now = new Date()) {
   const ids = (Array.isArray(userIds) ? userIds : [userIds]).filter(Boolean);
@@ -835,8 +837,6 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
-    const ALLOWED_PERCENTAGES = [0.012, 0.01, 0.009, 0.008, 0.006, 0.005, 0.0042, 0.0036, 0.003, 0.0028, 0.0025, 0.0024, 0.0015, 0.00125, 0.001, 0.00075, 0.0005];
-
     // ── 3. Construir documentos de participantes ──────────────────────────────
     const advisorKeys = ['advisor1', 'advisor2', 'advisor3'];
     const managerKeys = ['manager1', 'manager2', 'manager3'];
@@ -844,7 +844,7 @@ router.post('/', authenticate, async (req, res) => {
 
     const buildParticipante = (userId, percentageKey, roleInComision, inputPercentage) => {
       const parsedPct = parseFloat(inputPercentage);
-      if (isNaN(parsedPct) || !ALLOWED_PERCENTAGES.some(p => Math.abs(p - parsedPct) < 0.000001)) {
+      if (isNaN(parsedPct) || parsedPct < 0 || parsedPct > 1) {
         throw new Error(`El porcentaje ingresado para el usuario no es válido o no está permitido.`);
       }
 
@@ -1182,7 +1182,7 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
     // ── 3. Recalcular participantes con porcentajes frescos ───────────────────
     const buildParticipante = (userId, percentageKey, roleInComision, inputPercentage) => {
       const parsedPct = parseFloat(inputPercentage);
-      if (isNaN(parsedPct) || !ALLOWED_PERCENTAGES.some(p => Math.abs(p - parsedPct) < 0.000001)) {
+      if (isNaN(parsedPct) || parsedPct < 0 || parsedPct > 1) {
         throw new Error(`El porcentaje ingresado para el usuario no es válido o no está permitido.`);
       }
 

@@ -49,7 +49,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
     let allowedAsesores = null;
 
     if (user.roleName === 'Gerente') {
-      const myAsesores = await db.collection('usuarios').find({ manager_id: new ObjectId(user.id) }).toArray();
+      const myAsesores = await db.collection('usuarios').find({ manager_ids: new ObjectId(user.id) }).toArray();
       const myAsesoresIds = myAsesores.map(a => a._id);
       
       allowedManagers = [new ObjectId(user.id)];

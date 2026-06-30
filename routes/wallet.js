@@ -599,9 +599,9 @@ router.get('/cartera', authenticate, async (req, res) => {
                     from: 'debts',
                     let: { userId: '$_id' },
                     pipeline: [
-                        { $match: { $expr: { $eq: ['$user_id', '$$userId'] }, status: 'active' } }
+                        { $match: { $expr: { $eq: ['$user_id', '$$userId'] } } }
                     ],
-                    as: 'active_debts'
+                    as: 'all_debts'
                 }
             },
             {
@@ -622,7 +622,9 @@ router.get('/cartera', authenticate, async (req, res) => {
             let comision = 0;
             let saldo = 0;
 
-            user.active_debts.forEach(d => {
+            const active_debts = user.all_debts.filter(d => d.status === 'active');
+
+            active_debts.forEach(d => {
                 deuda += parseFloat(d.remaining_balance?.toString() || 0);
             });
 
@@ -656,16 +658,32 @@ router.get('/cartera', authenticate, async (req, res) => {
                 }
             }
 
-            const log = user.transactions.slice(0, 10).map(t => {
-                let tipo = t.type === 'debit' ? 'deu' : (t.concept === 'commission' ? 'com' : 'sal');
-                return {
+            let allLogs = [
+                ...user.transactions.map(t => ({
                     id: t._id,
                     t: t.description || t.concept,
-                    tipo: tipo,
+                    tipo: t.type === 'debit' ? 'deu' : (t.concept === 'commission' ? 'com' : 'sal'),
                     monto: parseFloat(t.amount?.toString() || 0),
-                    fecha: new Date(t.created_at).toISOString().slice(0, 10),
-                };
-            });
+                    fecha: t.created_at
+                })),
+                ...user.all_debts.map(d => ({
+                    id: d._id,
+                    t: d.description || (d.type === 'loan' ? 'Préstamo' : 'Penalización'),
+                    tipo: 'pen',
+                    monto: parseFloat(d.total_amount?.toString() || 0),
+                    fecha: d.created_at
+                }))
+            ];
+
+            allLogs.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            const log = allLogs.slice(0, 10).map(l => ({
+                id: l.id,
+                t: l.t,
+                tipo: l.tipo,
+                monto: l.monto,
+                fecha: new Date(l.fecha).toISOString().slice(0, 10),
+            }));
 
             const av = (user.name || '').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
@@ -679,7 +697,7 @@ router.get('/cartera', authenticate, async (req, res) => {
                 deuda,
                 comision,
                 saldo,
-                active_debts: user.active_debts.map(d => ({ id: d._id, balance: parseFloat(d.remaining_balance?.toString() || 0) })),
+                active_debts: active_debts.map(d => ({ id: d._id, balance: parseFloat(d.remaining_balance?.toString() || 0) })),
                 log
             };
         });

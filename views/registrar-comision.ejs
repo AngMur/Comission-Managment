@@ -125,6 +125,8 @@
         .pct-select:hover { border-color: rgba(96, 230, 26, 0.4); }
         .pct-select:focus { border-color: #60e61a; box-shadow: 0 0 0 3px rgba(96, 230, 26, 0.1); }
         .pct-select option { background: #111a11; color: #fff; }
+        .pct-custom-input { background: rgba(30, 30, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 0 10px; color: #ffffff; font-size: 0.95rem; font-family: inherit; outline: none; height: 48px; width: 80px; transition: all 0.3s ease; }
+        .pct-custom-input:focus { border-color: #60e61a; box-shadow: 0 0 0 3px rgba(96, 230, 26, 0.1); }
         .participant-group { display: flex; gap: 10px; }
         .participant-group .custom-select { flex: 1; }
         .select-dropdown::-webkit-scrollbar { width: 8px; }
@@ -327,8 +329,9 @@
                                         <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar gerente..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
                                     </div>
                                     <select class="pct-select" data-field="pct-gerente" data-row="1">
-                                        <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option>
+                                        <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.0035">0.35%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option><option value="0">0.0%</option><option value="custom">Otro...</option>
                                     </select>
+                                    <input type="number" class="pct-custom-input" data-field="pct-custom-gerente" data-row="1" style="display:none;" placeholder="%" step="0.01" min="0">
                                 </div>
                                 <div class="field-error" data-for="gerente-1"><i class="fas fa-exclamation-circle"></i> Por favor selecciona un gerente.</div>
                             </div>
@@ -340,8 +343,9 @@
                                         <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar asesor..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
                                     </div>
                                     <select class="pct-select" data-field="pct-asesor" data-row="1">
-                                        <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option>
+                                        <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.0035">0.35%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option><option value="0">0.0%</option><option value="custom">Otro...</option>
                                     </select>
+                                    <input type="number" class="pct-custom-input" data-field="pct-custom-asesor" data-row="1" style="display:none;" placeholder="%" step="0.01" min="0">
                                 </div>
                                 <div class="field-error" data-for="asesor-1"><i class="fas fa-exclamation-circle"></i> Por favor selecciona un asesor.</div>
                             </div>
@@ -554,7 +558,7 @@
                     else if (result.data.conceptos) { data = result.data.conceptos; allData.conceptos = [...data]; }
                     else if (result.data.expedientes) { data = result.data.expedientes; allData.expedientes = [...data]; }
                     else if (result.data && endpoint == "/api/users/by-role/Gerente") { data = result.data.map(user => ({ id: user._id, nombre: user.name })); }
-                    else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name, manager_id: user.manager_id })); }
+                    else if (result.data && endpoint == "/api/users/by-role/Asesor") { data = result.data.map(user => ({ id: user._id, nombre: user.name, manager_ids: user.manager_ids })); }
                     apiCache[endpoint] = data;
                     return data;
                 } else { throw new Error('Formato de respuesta inválido'); }
@@ -957,7 +961,7 @@ else if (field === 'ubicacion') {
             const asesorSelector = document.querySelector(`.custom-select[data-field="asesor"][data-row="${row}"]`);
             if (!asesorSelector) return;
             const asesoresAll = apiCache['/api/users/by-role/Asesor'] || [];
-            const asesoresFiltrados = asesoresAll.filter(a => a.manager_id == gerenteId);
+            const asesoresFiltrados = asesoresAll.filter(a => a.manager_ids && a.manager_ids.includes(gerenteId));
             
             const display = asesorSelector.querySelector('.select-display');
             const placeholder = asesorSelector.querySelector('.select-search input').placeholder;
@@ -1170,8 +1174,9 @@ else if (field === 'ubicacion') {
                             <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar gerente..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
                         </div>
                         <select class="pct-select" data-field="pct-gerente" data-row="${rowCounter}">
-                            <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option>
+                            <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.0035">0.35%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option><option value="0">0.0%</option><option value="custom">Otro...</option>
                         </select>
+                        <input type="number" class="pct-custom-input" data-field="pct-custom-gerente" data-row="${rowCounter}" style="display:none;" placeholder="%" step="0.01" min="0">
                     </div>
                 </div>
                 <div class="form-group">
@@ -1182,8 +1187,9 @@ else if (field === 'ubicacion') {
                             <div class="select-dropdown"><div class="select-search"><input type="text" placeholder="Buscar asesor..."><i class="fas fa-search"></i></div><div class="select-options"></div></div>
                         </div>
                         <select class="pct-select" data-field="pct-asesor" data-row="${rowCounter}">
-                            <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option>
+                            <option value="0.012">1.2%</option><option value="0.01">1%</option><option value="0.009">0.9%</option><option value="0.008">0.8%</option><option value="0.006">0.6%</option><option value="0.005">0.5%</option><option value="0.0042">0.42%</option><option value="0.0036">0.36%</option><option value="0.0035">0.35%</option><option value="0.003">0.3%</option><option value="0.0028">0.28%</option><option value="0.0025">0.25%</option><option value="0.0024">0.24%</option><option value="0.0015">0.15%</option><option value="0.00125">0.125%</option><option value="0.001">0.1%</option><option value="0.00075">0.075%</option><option value="0.0005">0.05%</option><option value="0">0.0%</option><option value="custom">Otro...</option>
                         </select>
+                        <input type="number" class="pct-custom-input" data-field="pct-custom-asesor" data-row="${rowCounter}" style="display:none;" placeholder="%" step="0.01" min="0">
                     </div>
                 </div>`;
             container.appendChild(newRow);
@@ -1280,6 +1286,17 @@ else if (field === 'ubicacion') {
         document.addEventListener('change', (e) => {
             if (e.target.classList.contains('pct-select')) {
                 e.target.dataset.userEdited = 'true';
+                const row = e.target.dataset.row;
+                const fieldSplit = e.target.dataset.field.split('-'); // pct-gerente -> ['pct', 'gerente']
+                const customInput = document.querySelector(`.pct-custom-input[data-field="pct-custom-${fieldSplit[1]}"][data-row="${row}"]`);
+                if (customInput) {
+                    if (e.target.value === 'custom') {
+                        customInput.style.display = 'block';
+                        customInput.focus();
+                    } else {
+                        customInput.style.display = 'none';
+                    }
+                }
             }
         });
 
@@ -1308,8 +1325,17 @@ else if (field === 'ubicacion') {
                 const pctGerenteSel = row.querySelector(`.pct-select[data-field="pct-gerente"][data-row="${rowNum}"]`);
                 const pctAsesorSel = row.querySelector(`.pct-select[data-field="pct-asesor"][data-row="${rowNum}"]`);
                 
-                const mgrPct = pctGerenteSel ? parseFloat(pctGerenteSel.value) : 0;
-                const advPct = pctAsesorSel ? parseFloat(pctAsesorSel.value) : 0;
+                let mgrPct = pctGerenteSel ? parseFloat(pctGerenteSel.value) : 0;
+                let advPct = pctAsesorSel ? parseFloat(pctAsesorSel.value) : 0;
+
+                if (pctGerenteSel && pctGerenteSel.value === 'custom') {
+                    const customInput = row.querySelector(`.pct-custom-input[data-field="pct-custom-gerente"][data-row="${rowNum}"]`);
+                    mgrPct = customInput && customInput.value ? parseFloat(customInput.value) / 100 : 0;
+                }
+                if (pctAsesorSel && pctAsesorSel.value === 'custom') {
+                    const customInput = row.querySelector(`.pct-custom-input[data-field="pct-custom-asesor"][data-row="${rowNum}"]`);
+                    advPct = customInput && customInput.value ? parseFloat(customInput.value) / 100 : 0;
+                }
 
                 if (manager && manager.id) managers.push({ user: manager.id, name:manager.text, percentage: mgrPct, commission: salePrice * mgrPct });
                 if (advisor && advisor.id) advisors.push({ user: advisor.id, name:advisor.text, percentage: advPct, commission: salePrice * advPct });
