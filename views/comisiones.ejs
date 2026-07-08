@@ -474,6 +474,9 @@ function fmt(n) {
   const val = Number(n);
   return (val < 0 ? '-' : '') + '$' + Math.abs(val).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
+function fmtPct(n) {
+  return Number(n || 0).toLocaleString('es-MX', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
 function fmtDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
@@ -684,7 +687,7 @@ function cardHTML(c) {
 
     if (isMe && c.status?.name === 'Pendiente Verificacion') {
       rightHtml = `
-        <span class="p-amount">${fmt(dispAmount)}</span>
+        <span class="p-amount">${fmt(dispAmount)} (${fmtPct(p.percentage)})</span>
         <button class="btn-verify ${p.verification ? 'verified' : ''}"
           onclick="verificar('${c._id}')"
           ${p.verification ? 'disabled' : ''}>
@@ -693,7 +696,7 @@ function cardHTML(c) {
         </button>`;
     } else {
       rightHtml = `
-        <span class="p-amount">${fmt(dispAmount)}</span>
+        <span class="p-amount">${fmt(dispAmount)} (${fmtPct(p.percentage)})</span>
         <span class="p-verified ${p.verification ? 'yes' : 'no'}">
           <i class="ti ${p.verification ? 'ti-circle-check' : 'ti-circle'}" style="font-size:13px"></i>
           ${p.verification ? 'Verificado' : 'Pendiente'}
