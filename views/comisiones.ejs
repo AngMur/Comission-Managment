@@ -222,6 +222,7 @@
     .b-pp { background: var(--blue-bg);  color: var(--blue-tx);  border-color: var(--blue-br);  }
     .b-pg { background: var(--green-bg); color: var(--green-tx); border-color: var(--green-br); }
     .b-co { background: var(--red-bg);   color: var(--red-tx);   border-color: var(--red-br);   }
+    .b-ca { background: var(--gray-bg);  color: var(--gray-tx);  border-color: var(--gray-br);  }
 
     /* ── Meta grid ── */
     .card-meta {
@@ -446,9 +447,11 @@
       <option value="Pendiente Pago">Pendiente pago</option>
       <option value="Pagada">Pagada</option>
       <option value="Correccion">Corrección</option>
+      <option value="Cancelada">Cancelada</option>
     </select>
     <select class="filter-select" id="filterCompany"><option value="">Todas las empresas</option></select>
     <select class="filter-select" id="filterDev"><option value="">Todos los desarrollos</option></select>
+    <select class="filter-select" id="filterConcept"><option value="">Todos los conceptos</option></select>
     
     <div style="display: flex; gap: 8px; align-items: center; background: var(--surface); padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
       <span style="font-size: 12px; color: var(--text-2);">Desde:</span>
@@ -496,7 +499,7 @@ function toast(msg) {
 
 let USER = null;
 let DATA = [];
-const FILTERS = { search: '', status: '', company: '', dev: '' };
+const FILTERS = { search: '', status: '', company: '', dev: '', concept: '' };
 
 function getFiltered() {
   return DATA.filter(c => {
@@ -507,6 +510,7 @@ function getFiltered() {
     }
     if (FILTERS.company && (c.company?.text    || '') !== FILTERS.company) return false;
     if (FILTERS.dev     && (c.development?.text || '') !== FILTERS.dev)    return false;
+    if (FILTERS.concept && (c.concept?.text || c.concept || '') !== FILTERS.concept) return false;
     if (FILTERS.search) {
       const hay = [
         c.location?.text, c.development?.text, c.company?.text,
@@ -519,7 +523,7 @@ function getFiltered() {
 }
 
 function updateFilterClear() {
-  const active = FILTERS.search || FILTERS.status || FILTERS.company || FILTERS.dev || $('filterFrom').value || $('filterTo').value;
+  const active = FILTERS.search || FILTERS.status || FILTERS.company || FILTERS.dev || FILTERS.concept || $('filterFrom').value || $('filterTo').value;
   $('filterClear').classList.toggle('hidden', !active);
 }
 
@@ -531,6 +535,7 @@ const STATUS_MAP = {
   'Pendiente Pago':         { cls: 'b-pp', label: 'Pendiente pago'         },
   'Pagada':                 { cls: 'b-pg', label: 'Pagada'                 },
   'Correccion':             { cls: 'b-co', label: 'Corrección'             },
+  'Cancelada':              { cls: 'b-ca', label: 'Cancelada'              },
 };
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
@@ -637,13 +642,17 @@ async function loadComisiones(misComisiones) {
 function populateFilterDropdowns() {
   const companies    = [...new Set(DATA.map(c => c.company?.text).filter(Boolean))].sort();
   const developments = [...new Set(DATA.map(c => c.development?.text).filter(Boolean))].sort();
+  const concepts     = [...new Set(DATA.map(c => c.concept?.text || c.concept).filter(Boolean))].sort();
   const selC = $('filterCompany');
   const selD = $('filterDev');
+  const selConcept = $('filterConcept');
   // Limpiar opciones previas salvo el primer "Todas"
   while (selC.options.length > 1) selC.remove(1);
   while (selD.options.length > 1) selD.remove(1);
+  while (selConcept.options.length > 1) selConcept.remove(1);
   companies.forEach(n => { const o = document.createElement('option'); o.value = o.textContent = n; selC.appendChild(o); });
   developments.forEach(n => { const o = document.createElement('option'); o.value = o.textContent = n; selD.appendChild(o); });
+  concepts.forEach(n => { const o = document.createElement('option'); o.value = o.textContent = n; selConcept.appendChild(o); });
 }
 
 function render() {
@@ -963,12 +972,17 @@ document.addEventListener('DOMContentLoaded', () => {
     FILTERS.dev = this.value;
     updateFilterClear(); render();
   });
+  $('filterConcept').addEventListener('change', function() {
+    FILTERS.concept = this.value;
+    updateFilterClear(); render();
+  });
   $('filterClear').addEventListener('click', () => {
-    FILTERS.search = FILTERS.status = FILTERS.company = FILTERS.dev = '';
+    FILTERS.search = FILTERS.status = FILTERS.company = FILTERS.dev = FILTERS.concept = '';
     $('filterSearch').value  = '';
     $('filterStatus').value  = '';
     $('filterCompany').value = '';
     $('filterDev').value     = '';
+    $('filterConcept').value = '';
     
     // Si habían fechas, recargar del servidor sin fechas
     const hadDates = $('filterFrom').value || $('filterTo').value;

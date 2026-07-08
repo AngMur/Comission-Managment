@@ -258,15 +258,15 @@
                         </div>
 
                         <div class="form-group">
-                            <label><i class="fas fa-folder-open"></i> Expediente</label>
-                            <div class="custom-select" data-field="expediente" data-api="/v10/expedientes">
+                            <label><i class="fas fa-folder-open"></i> Expediente <span class="req">*</span></label>
+                            <div class="custom-select" data-field="expediente" data-api="/v10/expedientes" data-required="true">
                                 <div class="select-display placeholder">Seleccionar expediente<i class="fas fa-chevron-down select-arrow"></i></div>
                                 <div class="select-dropdown">
                                     <div class="select-search"><input type="text" placeholder="Buscar expediente o cliente..."><i class="fas fa-search"></i></div>
                                     <div class="select-options"></div>
                                 </div>
                             </div>
-                            <div class="field-error" data-for="expediente"><i class="fas fa-exclamation-circle"></i> Opcional</div>
+                            <div class="field-error" data-for="expediente"><i class="fas fa-exclamation-circle"></i> Por favor selecciona un expediente.</div>
                         </div>
 
                     </div>
@@ -1099,7 +1099,7 @@ else if (field === 'ubicacion') {
             let valid = true;
             let firstInvalid = null;
 
-            ['compania', 'desarrollo', 'ubicacion', 'concepto'].forEach(field => {
+            ['compania', 'desarrollo', 'ubicacion', 'concepto', 'expediente'].forEach(field => {
                 const sel = document.querySelector(`.custom-select[data-field="${field}"]`);
                 const display = sel ? sel.querySelector('.select-display') : null;
                 if (!display || !display.dataset.value) {

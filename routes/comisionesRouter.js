@@ -734,11 +734,11 @@ router.post('/', authenticate, async (req, res) => {
     // console.log(created_by);
 
     // ── 1. Validaciones ───────────────────────────────────────────────────────
-    if (!company || !development || !location || !concept) {
+    if (!company || !development || !location || !concept || !expediente_id) {
       return res.status(400).json({
         success: false,
         data:    null,
-        message: 'Faltan campos obligatorios de ubicación',
+        message: 'Faltan campos obligatorios de ubicación o expediente',
         error:   null,
       });
     }
@@ -1430,7 +1430,7 @@ router.delete('/eliminar/:id', authenticate, async (req, res) => {
       .collection('estatus')
       .findOne({ _id: comision.status });
 
-    if (statusActual?.order !== 1) {
+    if (statusActual?.order !== 1 && statusActual?.name !== 'Cancelada') {
       return res.status(400).json({
         success: false, data: null,
         message: `No se puede eliminar una comisión en estatus "${statusActual?.name}"`,
