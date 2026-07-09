@@ -141,3 +141,38 @@
   loadNotifs();
 })();
 </script>
+<script>
+  (function() {
+    function checkMidnightA() {
+      const now = new Date();
+      if (now.getHours() === 0 && now.getMinutes() === 0) {
+        if (!document.getElementById('midnight-a-overlay')) {
+          const overlay = document.createElement('div');
+          overlay.id = 'midnight-a-overlay';
+          overlay.style.position = 'fixed';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100vw';
+          overlay.style.height = '100vh';
+          overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+          overlay.style.color = 'var(--accent, #7af028)';
+          overlay.style.display = 'flex';
+          overlay.style.alignItems = 'center';
+          overlay.style.justifyContent = 'center';
+          overlay.style.fontSize = '80vh';
+          overlay.style.fontWeight = 'bold';
+          overlay.style.zIndex = '999999';
+          overlay.style.fontFamily = 'sans-serif';
+          overlay.innerText = 'A';
+          overlay.onclick = function() { overlay.remove(); };
+          document.body.appendChild(overlay);
+        }
+      } else {
+        const overlay = document.getElementById('midnight-a-overlay');
+        if (overlay) overlay.remove();
+      }
+    }
+    setInterval(checkMidnightA, 30000);
+    checkMidnightA();
+  })();
+</script>
