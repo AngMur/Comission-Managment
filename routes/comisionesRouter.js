@@ -1124,10 +1124,11 @@ router.patch('/editar/:id/', authenticate, async (req, res) => {
       });
     }
 
-    if (comision.created_by.toString() !== userId.toString()) {
+    const isAdmin = req.user.roleName === 'Administrador';
+    if (!isAdmin && comision.created_by.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false, data: null,
-        message: 'Solo el creador puede editar esta comisión', error: null,
+        message: 'Solo el creador o un Administrador pueden editar esta comisión', error: null,
       });
     }
 

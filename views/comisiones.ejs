@@ -675,10 +675,15 @@ function cardHTML(c) {
   const isCancelacion = (c.concept?.text || c.concept || '').toString().toLowerCase().includes('cancelaci');
 
   const isCreador = c.created_by === USER.id;
-  const gerenteActions = isCreador ? `
-    <button class="btn-icon edit"   title="Editar"   onclick="editarComision('${c._id}')"><i class="ti ti-pencil"></i></button>
-    <button class="btn-icon delete" title="Eliminar" onclick="eliminarComision('${c._id}', '${c.location?.text}')"><i class="ti ti-trash"></i></button>
-  ` : '';
+  const isAdmin = USER.roleName === 'Administrador';
+  
+  let gerenteActions = '';
+  if (isCreador || isAdmin) {
+    gerenteActions += `<button class="btn-icon edit"   title="Editar"   onclick="editarComision('${c._id}')"><i class="ti ti-pencil"></i></button>\n`;
+  }
+  if (isCreador) {
+    gerenteActions += `    <button class="btn-icon delete" title="Eliminar" onclick="eliminarComision('${c._id}', '${c.location?.text}')"><i class="ti ti-trash"></i></button>\n`;
+  }
 
   let dispTotal = c.total_commission;
   if (isCancelacion && c.total_commission === 0 && c.participantes) {
